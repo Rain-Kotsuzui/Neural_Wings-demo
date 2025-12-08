@@ -1,0 +1,39 @@
+{
+    "version": "0.1.0",
+    "configurations": [
+        {
+            "name": "Debug Game",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Debug/${workspaceFolderBasename}.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "CMake Build"
+        },
+        {
+            "name": "Run Game (Release)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/Release/${workspaceFolderBasename}.exe", 
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "integratedTerminal",
+            "preLaunchTask": "CMake Build Release" 
+        },
+        {
+            "name": "Debug Web (Chrome)",
+            "type": "chrome", 
+            "request": "launch",
+            "url": "http://localhost:8000/Neural_Wings-demo.html", 
+            "webRoot": "${workspaceFolder}/src",
+            "userDataDir": true,
+            "preLaunchTask": "Start Web Server"
+        }
+    ]
+}

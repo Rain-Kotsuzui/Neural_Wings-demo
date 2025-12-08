@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Test</title>
+    <style>
+        body {
+            font-family: arial;
+            margin: 0;
+            padding: 0;
+            background-color: #111; /* 背景深灰色，保护眼睛 */
+            display: flex;
+            justify-content: center; /* 水平居中 */
+            align-items: center;     /* 垂直居中 */
+            height: 100vh;           /* 占满全屏高度 */
+            overflow: hidden;        /* 禁止滚动条 */
+        }
+
+        canvas {
+            display: block;
+            outline: none;           /* 去掉点击时的蓝框 */
+            background-color: black; /* 游戏没加载出来时显示黑色 */
+            box-shadow: 0 0 20px rgba(0,0,0,0.5); /* 加一点阴影更有质感 */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 这里的 canvas id 必须是 "canvas"，Emscripten 会找它 -->
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+
+    <script type='text/javascript'>
+        var Module = {
+            canvas: (function() {
+                var canvas = document.getElementById('canvas');
+                return canvas;
+            })()
+        };
+    </script>
+
+    {{{ SCRIPT }}}
+    
+</body>
+</html>
