@@ -1,0 +1,13 @@
+{
+    "window": {
+        "width": 1600,
+        "height": 900,
+        "title": "Neural Wings"
+    },
+    "performance": {
+        "targetFPS": 144
+    },
+    "application": {
+        "initialScreen": "MAIN_MENU"
+    }
+}

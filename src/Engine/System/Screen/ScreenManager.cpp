@@ -1,0 +1,83 @@
+#include "ScreenManager.h"
+#include "Engine/System/Time/TimeManager.h" 
+#include "raylib.h"     
+
+ScreenManager::ScreenManager(const EngineConfig& config, std::unique_ptr<ScreenFactory> factory) 
+    : m_factory(std::move(factory))
+{
+    InitWindow(config.screenWidth, config.screenHeight, config.windowTitle.c_str());
+    SetTargetFPS(config.targetFPS);
+    SetExitKey(KEY_NULL);
+    m_currentScreen = m_factory->Create(config.initialScreen);
+    
+    if (m_currentScreen) {
+        m_currentScreen->OnEnter();
+    }
+}
+
+ScreenManager::~ScreenManager() {
+    if (m_currentScreen) {
+        m_currentScreen->OnExit();
+    }
+    CloseWindow();
+}
+
+// 主循环
+void ScreenManager::Run() {
+    if (!m_currentScreen) {
+        return;
+    }
+
+    TimeManager timeManager;
+    float accumulator = 0.0f;
+
+    while (!WindowShouldClose() && m_currentScreen->GetNextScreenState() != ScreenState::EXIT) {
+        
+        // --- 1. 更新时间 ---
+        timeManager.Tick();
+        accumulator += timeManager.GetDeltaTime();
+
+        // --- 2. 固定更新循环 (FixedUpdate) ---
+        // 这个循环确保无论渲染帧率如何波动，物理和逻辑都以固定的频率执行
+        while (accumulator >= timeManager.GetFixedDeltaTime()) {
+            m_currentScreen->FixedUpdate(timeManager.GetFixedDeltaTime());
+            accumulator -= timeManager.GetFixedDeltaTime();
+        }
+
+        // --- 3. 可变更新 (Update) ---
+        m_currentScreen->Update(timeManager.GetDeltaTime());
+
+        // --- 4. 绘制 (Draw) ---
+        BeginDrawing();
+        ClearBackground(BLACK); // 默认黑色背景
+        m_currentScreen->Draw();
+        EndDrawing();
+
+        // --- 5. 在帧末尾检查是否需要切换屏幕 ---
+        ScreenState nextState = m_currentScreen->GetNextScreenState();
+        if (nextState != ScreenState::NONE) {
+            ChangeScreen(nextState);
+        }
+    }
+}
+
+// 屏幕切换
+void ScreenManager::ChangeScreen(ScreenState newState) {
+    if (newState == ScreenState::EXIT || newState == ScreenState::NONE) {
+        return;
+    }
+    // 1. 通知当前屏幕退出，并释放其资源
+    if (m_currentScreen) {
+        m_currentScreen->OnExit();
+    }
+    // 2. 使用工厂创建一个新的屏幕实例
+    m_currentScreen = m_factory->Create(newState);
+
+    // 3. 如果新屏幕创建成功，则通知它进入
+    if (m_currentScreen) {
+        m_currentScreen->OnEnter();
+    } else {
+        m_currentScreen = m_factory->Create(ScreenState::MAIN_MENU);
+        if(m_currentScreen) m_currentScreen->OnEnter();
+    }
+}

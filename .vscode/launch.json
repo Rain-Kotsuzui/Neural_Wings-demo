@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Debug Game",
-            "type": "cppdbg",
+            "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Debug/${workspaceFolderBasename}.exe",
             "args": [],
@@ -11,7 +11,6 @@
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "gdb",
             "preLaunchTask": "CMake Build"
         },
         {
