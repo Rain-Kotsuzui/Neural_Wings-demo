@@ -11,7 +11,7 @@ public:
     void Run();
 
 private:
-    void ChangeScreen(ScreenState newState);
+    void ChangeScreen(int newState);
 
     std::unique_ptr<GameScreen> m_currentScreen;
     std::unique_ptr<ScreenFactory> m_factory;

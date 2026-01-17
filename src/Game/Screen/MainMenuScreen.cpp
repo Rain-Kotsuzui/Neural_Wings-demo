@@ -6,7 +6,7 @@
 
 
 MainMenuScreen::MainMenuScreen() 
-    : m_nextScreenState(ScreenState::NONE)
+    : m_nextScreenState(static_cast<int>(ScreenStateID::NONE))
 {
 }
 
@@ -27,7 +27,7 @@ void MainMenuScreen::FixedUpdate(float fixedDeltaTime) {
 void MainMenuScreen::Update(float deltaTime) {
     // 在每一帧的开始，重置状态请求。
     // 只有当用户在本帧点击按钮时，它才会被改变。
-    m_nextScreenState = ScreenState::NONE;
+    m_nextScreenState = static_cast<int>(ScreenStateID::NONE);
 }
 
 // 每帧绘制
@@ -49,7 +49,7 @@ void MainMenuScreen::Draw() {
 
     // 4. 点击事件
     if (GuiButton({ centerX - buttonWidth / 2, 300, buttonWidth, buttonHeight }, "Play Game")) {
-        m_nextScreenState = ScreenState::GAMEPLAY;
+        m_nextScreenState = static_cast<int>(ScreenStateID::GAMEPlAY);
     }
     
     GuiDisable(); 
@@ -57,11 +57,11 @@ void MainMenuScreen::Draw() {
     GuiEnable();
 
     if (GuiButton({ centerX - buttonWidth / 2, 300 + (buttonHeight + spacing) * 2, buttonWidth, buttonHeight }, "Exit")) {
-        m_nextScreenState = ScreenState::EXIT;
+        m_nextScreenState =static_cast<int>(ScreenStateID::EXIT);
     }
 }
 
 // 向 ScreenManager 报告下一个状态
-ScreenState MainMenuScreen::GetNextScreenState() const {
+int MainMenuScreen::GetNextScreenState() const {
     return m_nextScreenState;
 }

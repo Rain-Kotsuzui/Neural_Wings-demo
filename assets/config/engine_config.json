@@ -6,8 +6,5 @@
     },
     "performance": {
         "targetFPS": 144
-    },
-    "application": {
-        "initialScreen": "MAIN_MENU"
     }
 }

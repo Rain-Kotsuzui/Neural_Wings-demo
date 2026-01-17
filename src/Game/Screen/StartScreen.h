@@ -1,11 +1,10 @@
 #pragma once
 #include "Engine/System/Screen/GameScreen.h"
-class GameplayScreen : public GameScreen
-{
+#include "ScreenState.h"
+class StartScreen : public GameScreen {
 public:
-    GameplayScreen();
-    virtual ~GameplayScreen() = default;
-    // --- 实现 IGameScreen 接口 ---
+    StartScreen();
+    virtual ~StartScreen() = default;
 
     void OnEnter() override;
     void FixedUpdate(float fixedDeltaTime) override;
@@ -16,9 +15,12 @@ public:
 
 private:
     int m_nextScreenState;
-    // 游戏世界系统
-    // std::unique_ptr<GameWorld> m_world;
-    // std::unique_ptr<PhysicsSystem> m_physicsSystem;
-    // std::unique_ptr<UIManager> m_uiManager;
-    // ...
+
+    float m_elapsedTime;   
+    float m_alpha;         
+    
+    const float DURATION = 3.0f; 
+    const float FADE_IN_TIME = 1.0f; 
+    const float FADE_OUT_TIME = 1.0f; 
+
 };

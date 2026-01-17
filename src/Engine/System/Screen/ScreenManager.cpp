@@ -31,7 +31,7 @@ void ScreenManager::Run() {
     TimeManager timeManager;
     float accumulator = 0.0f;
 
-    while (!WindowShouldClose() && m_currentScreen->GetNextScreenState() != ScreenState::EXIT) {
+    while (!WindowShouldClose() && m_currentScreen->GetNextScreenState() != SCREEN_STATE_EXIT) {
         
         // --- 1. 更新时间 ---
         timeManager.Tick();
@@ -54,16 +54,16 @@ void ScreenManager::Run() {
         EndDrawing();
 
         // --- 5. 在帧末尾检查是否需要切换屏幕 ---
-        ScreenState nextState = m_currentScreen->GetNextScreenState();
-        if (nextState != ScreenState::NONE) {
+        int nextState = m_currentScreen->GetNextScreenState();
+        if (nextState != SCREEN_STATE_NONE) {
             ChangeScreen(nextState);
         }
     }
 }
 
 // 屏幕切换
-void ScreenManager::ChangeScreen(ScreenState newState) {
-    if (newState == ScreenState::EXIT || newState == ScreenState::NONE) {
+void ScreenManager::ChangeScreen(int newState) {
+    if (newState == SCREEN_STATE_EXIT || newState == SCREEN_STATE_NONE) {
         return;
     }
     // 1. 通知当前屏幕退出，并释放其资源
@@ -77,7 +77,7 @@ void ScreenManager::ChangeScreen(ScreenState newState) {
     if (m_currentScreen) {
         m_currentScreen->OnEnter();
     } else {
-        m_currentScreen = m_factory->Create(ScreenState::MAIN_MENU);
+        m_currentScreen = m_factory->Create(SCREEN_STATE_ERROR);
         if(m_currentScreen) m_currentScreen->OnEnter();
     }
 }

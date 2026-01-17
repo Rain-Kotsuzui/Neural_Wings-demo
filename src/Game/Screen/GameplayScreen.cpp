@@ -1,8 +1,9 @@
 #include "GameplayScreen.h"
 #include "raylib.h"
+#include "ScreenState.h"
 
 GameplayScreen::GameplayScreen()
-    : m_nextScreenState(ScreenState::NONE)
+    : m_nextScreenState(static_cast<int>(ScreenStateID::NONE))
 {
 }
 
@@ -24,10 +25,10 @@ void GameplayScreen::FixedUpdate(float fixedDeltaTime) {
 }
 
 void GameplayScreen::Update(float deltaTime) {
-    m_nextScreenState = ScreenState::NONE;
+    m_nextScreenState = static_cast<int>(ScreenStateID::NONE);
 
     if (IsKeyPressed(KEY_ESCAPE)) {
-        m_nextScreenState = ScreenState::MAIN_MENU;
+        m_nextScreenState = static_cast<int>(ScreenStateID::MAIN_MENU);
     }
     
     // m_scriptingSystem->Update(*m_world, deltaTime);
@@ -45,6 +46,6 @@ void GameplayScreen::Draw() {
 }
 
 // 向 ScreenManager 报告下一个状态
-ScreenState GameplayScreen::GetNextScreenState() const {
+int GameplayScreen::GetNextScreenState() const {
     return m_nextScreenState;
 }

@@ -8,10 +8,10 @@ class ScreenFactory {
 public:
     using ScreenCreator = std::function<std::unique_ptr<GameScreen>()>;
 
-    void Register(ScreenState state, ScreenCreator creator);
+    void Register(int state, ScreenCreator creator);
 
-    std::unique_ptr<GameScreen> Create(ScreenState state);
+    std::unique_ptr<GameScreen> Create(int state);
 
 private:
-    std::unordered_map<ScreenState, ScreenCreator> m_creators;
+    std::unordered_map<int, ScreenCreator> m_creators;
 };

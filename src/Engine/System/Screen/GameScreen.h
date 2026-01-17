@@ -1,13 +1,13 @@
 #pragma once
 
-enum class ScreenState {
-    NONE,         
-    MAIN_MENU,   
-    GAMEPLAY,     
-    EXIT         
-};
+constexpr int SCREEN_STATE_MAIN_MENU = 0;
+constexpr int SCREEN_STATE_START = -1;
+constexpr int SCREEN_STATE_NONE = -2;
+constexpr int SCREEN_STATE_EXIT = -3;
+constexpr int SCREEN_STATE_ERROR = -4;
 
-class GameScreen {
+class GameScreen
+{
 public:
     virtual ~GameScreen() = default;
 
@@ -26,7 +26,6 @@ public:
     // 卸载资源、清理
     virtual void OnExit() = 0;
 
-
     // 状态
-    virtual ScreenState GetNextScreenState() const = 0;
+    virtual int GetNextScreenState() const = 0;
 };
