@@ -2,6 +2,7 @@
 
 #include "Game/Screen/MainMenuScreen.h"
 #include "Game/Screen/GameplayScreen.h"
+#include "Game/Screen/OptionsScreen.h"
 
 int main()
 {
@@ -15,6 +16,8 @@ int main()
                       { return std::make_unique<MainMenuScreen>(); });
     factory->Register(ScreenState::GAMEPLAY, []()
                       { return std::make_unique<GameplayScreen>(); });
+    factory->Register(ScreenState::OPTIONS, []()
+                      { return std::make_unique<OptionsScreen>(); });
 
     // 3. 创建 ScreenManager
     ScreenManager app(config, std::move(factory));

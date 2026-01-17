@@ -52,9 +52,9 @@ void MainMenuScreen::Draw() {
         m_nextScreenState = ScreenState::GAMEPLAY;
     }
     
-    GuiDisable(); 
-    GuiButton({ centerX - buttonWidth / 2, 300 + buttonHeight + spacing, buttonWidth, buttonHeight }, "Options (Coming Soon)");
-    GuiEnable();
+    if (GuiButton({ centerX - buttonWidth / 2, 300 + buttonHeight + spacing, buttonWidth, buttonHeight }, "Options")) {
+        m_nextScreenState = ScreenState::OPTIONS;
+    }
 
     if (GuiButton({ centerX - buttonWidth / 2, 300 + (buttonHeight + spacing) * 2, buttonWidth, buttonHeight }, "Exit")) {
         m_nextScreenState = ScreenState::EXIT;

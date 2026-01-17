@@ -3,7 +3,8 @@
 enum class ScreenState {
     NONE,         
     MAIN_MENU,   
-    GAMEPLAY,     
+    GAMEPLAY,
+    OPTIONS,
     EXIT         
 };
 
