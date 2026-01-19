@@ -1,6 +1,7 @@
 #include "Matrix3.h"
 #include "Engine/Math/Core/MathCommon.h"
 #include <cmath>
+#include <stdexcept>
 
 Matrix3::Matrix3()
 {
@@ -62,6 +63,31 @@ Vector3 Matrix3::operator*(const Vector3 &v) const
         m[2][0] * v.x + m[2][1] * v.y + m[2][2] * v.z);
 }
 
+Matrix3 Matrix3::operator*(float scalar) const
+{
+    Matrix3 result(*this);
+    for (int r = 0; r < 3; ++r)
+    {
+        for (int c = 0; c < 3; ++c)
+        {
+            result.m[r][c] *= scalar;
+        }
+    }
+    return result;
+}
+
+Matrix3 &Matrix3::operator*=(float scalar)
+{
+    for (int r = 0; r < 3; ++r)
+    {
+        for (int c = 0; c < 3; ++c)
+        {
+            m[r][c] *= scalar;
+        }
+    }
+    return *this;
+}
+
 Matrix3 Matrix3::Transposed() const
 {
     return Matrix3(
@@ -87,7 +113,7 @@ Matrix3 Matrix3::Inverted() const
     float det = Determinant();
     if (std::fabs(det) <= MATH_EPSILON)
     {
-        return Matrix3::Zero();
+        throw std::runtime_error("Matrix3::Inverted failed: matrix is not invertible.");
     }
 
     float invDet = 1.0f / det;

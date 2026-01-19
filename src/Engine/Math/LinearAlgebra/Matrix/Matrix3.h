@@ -16,9 +16,16 @@ struct Matrix3
 
     Matrix3 operator*(const Matrix3 &other) const;
     Vector3 operator*(const Vector3 &v) const;
+    Matrix3 operator*(float scalar) const;
+    Matrix3 &operator*=(float scalar);
 
     Matrix3 Transposed() const;
     float Determinant() const;
     bool IsInvertible() const;
     Matrix3 Inverted() const;
 };
+
+inline Matrix3 operator*(float scalar, const Matrix3 &mat)
+{
+    return mat * scalar;
+}

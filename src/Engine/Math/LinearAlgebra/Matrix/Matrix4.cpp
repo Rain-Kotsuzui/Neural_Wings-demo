@@ -90,6 +90,31 @@ Vector4 Matrix4::operator*(const Vector4 &v) const
         m[3][0] * v.x + m[3][1] * v.y + m[3][2] * v.z + m[3][3] * v.w);
 }
 
+Matrix4 Matrix4::operator*(float scalar) const
+{
+    Matrix4 result(*this);
+    for (int r = 0; r < 4; ++r)
+    {
+        for (int c = 0; c < 4; ++c)
+        {
+            result.m[r][c] *= scalar;
+        }
+    }
+    return result;
+}
+
+Matrix4 &Matrix4::operator*=(float scalar)
+{
+    for (int r = 0; r < 4; ++r)
+    {
+        for (int c = 0; c < 4; ++c)
+        {
+            m[r][c] *= scalar;
+        }
+    }
+    return *this;
+}
+
 Matrix4 Matrix4::Transposed() const
 {
     return Matrix4(

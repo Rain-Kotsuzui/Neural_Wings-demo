@@ -20,6 +20,13 @@ struct Matrix4
 
     Matrix4 operator*(const Matrix4 &other) const;
     Vector4 operator*(const Vector4 &v) const;
+    Matrix4 operator*(float scalar) const;
+    Matrix4 &operator*=(float scalar);
 
     Matrix4 Transposed() const;
 };
+
+inline Matrix4 operator*(float scalar, const Matrix4 &mat)
+{
+    return mat * scalar;
+}

@@ -30,3 +30,8 @@ struct Vector4
     static float Distance(const Vector4 &a, const Vector4 &b);
     static Vector4 Lerp(const Vector4 &a, const Vector4 &b, float t);
 };
+
+inline Vector4 operator*(float scalar, const Vector4 &v)
+{
+    return v * scalar;
+}

@@ -28,3 +28,8 @@ struct Vector2
     static float Distance(const Vector2 &a, const Vector2 &b);
     static Vector2 Lerp(const Vector2 &a, const Vector2 &b, float t);
 };
+
+inline Vector2 operator*(float scalar, const Vector2 &v)
+{
+    return v * scalar;
+}
