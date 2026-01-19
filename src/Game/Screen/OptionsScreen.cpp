@@ -25,22 +25,28 @@ void OptionsScreen::Update(float deltaTime)
         m_nextScreenState = static_cast<int>(ScreenStateID::MAIN_MENU);
     }
 
-    // 检测全屏状态变化并应用
-    bool currentFullscreen = IsWindowFullscreen();
-    if (m_fullscreen != currentFullscreen)
-    {
+    // 处理全屏状态变更
 #if defined(PLATFORM_WEB)
-        // Web平台：使用Emscripten的全屏API
-        // 注意：Web端全屏需要用户手势触发，这里通过checkbox点击触发
-        if (m_fullscreen)
-        {
-            // 请求全屏（已在Draw中通过GuiCheckBox的用户交互触发）
-        }
-#else
-        // Desktop平台：使用Raylib的ToggleFullscreen
-        ToggleFullscreen();
-#endif
+    bool desiredFull = m_fullscreen;
+    int fs = emscripten_run_script_int("(document.fullscreenElement ? 1 : 0)");
+    bool appliedFull = (fs != 0);
+    if (desiredFull && !appliedFull)
+    {
+        emscripten_run_script("document.documentElement.requestFullscreen().catch(function(e){ console.warn('requestFullscreen failed', e); });");
     }
+    else if (!desiredFull && appliedFull)
+    {
+        emscripten_run_script("document.exitFullscreen().catch(function(e){ console.warn('exitFullscreen failed', e); });");
+    }
+#else
+    bool desiredFull = m_fullscreen;
+    bool actualFull = IsWindowFullscreen();
+    if (desiredFull != actualFull)
+    {
+        ToggleFullscreen();
+        m_fullscreen = IsWindowFullscreen();
+    }
+#endif
 }
 
 void OptionsScreen::Draw()
@@ -114,27 +120,7 @@ void OptionsScreen::Draw()
 
     // Fullscreen
     DrawText("Fullscreen:", leftX, startY + 8, 20, LIGHTGRAY);
-    bool prevFullscreen = m_fullscreen;
     GuiCheckBox({leftX + labelWidth + 20, startY, 30, 30}, "", &m_fullscreen);
-    if (prevFullscreen != m_fullscreen)
-    {
-#if defined(PLATFORM_WEB)
-        // Web: 使用浏览器 Fullscreen API via Emscripten
-        if (m_fullscreen)
-        {
-            emscripten_run_script("if (!document.fullscreenElement) { document.documentElement.requestFullscreen().catch(function(e){ console.warn('requestFullscreen failed', e); }); }");
-        }
-        else
-        {
-            emscripten_run_script("if (document.fullscreenElement) { document.exitFullscreen().catch(function(e){ console.warn('exitFullscreen failed', e); }); }");
-        }
-        // 不要立即覆盖用户的 m_fullscreen（浏览器的 fullscreenchange 是异步的），保留用户的选择
-#else
-        // Desktop平台直接切换并同步实际窗口状态
-        ToggleFullscreen();
-        m_fullscreen = IsWindowFullscreen();
-#endif
-    }
     startY += lineHeight;
 
     // Target FPS
