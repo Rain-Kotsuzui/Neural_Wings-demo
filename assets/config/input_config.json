@@ -1,0 +1,74 @@
+{
+    "keybindings": [
+        {
+            "action": "Forward",
+            "keys": [
+                "W",
+                "UP"
+            ]
+        },
+        {
+            "action": "Backward",
+            "keys": [
+                "S",
+                "DOWN"
+            ]
+        },
+        {
+            "action": "Left",
+            "keys": [
+                "A",
+                "LEFT"
+            ]
+        },
+        {
+            "action": "Right",
+            "keys": [
+                "D",
+                "RIGHT"
+            ]
+        },
+        {
+            "action": "PitchUp",
+            "keys": [
+                "LEFT_CONTROL"
+            ]
+        },
+        {
+            "action": "PitchDown",
+            "keys": [
+                "SPACE"
+            ]
+        },
+        {
+            "action": "Fire",
+            "keys": [
+                "MOUSE_LEFT_BUTTON"
+            ]
+        },
+        {
+            "action": "Exit",
+            "keys": [
+                "ESC"
+            ]
+        }
+    ],
+    "axisbindings": [
+        {
+            "axis": "LookHorizontal",
+            "type": "MouseX",
+            "sensitivity": 0.2
+        },
+        {
+            "axis": "LookVertical",
+            "type": "MouseY",
+            "sensitivity": 0.2,
+            "invert": true
+        },
+        {
+            "axis": "Yaw",
+            "positiveKey": "E",
+            "negativeKey": "Q"
+        }
+    ]
+}

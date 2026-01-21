@@ -1,8 +1,9 @@
 #include "CameraManager.h"
+#include "raymath.h"
 #include <fstream>
 #include <iostream>
 
-Camera3D& CameraManager::CreateCamera(const std::string& name) {
+mCamera& CameraManager::CreateCamera(const std::string& name) {
     return m_cameras[name];
 }
 
@@ -22,11 +23,14 @@ bool CameraManager::CreateCameraFromConfig(const json& configData) {
         configData.value("target", json::array({0.f, 0.f, 0.f}))[1],
         configData.value("target", json::array({0.f, 0.f, 0.f}))[2]
     };
+    cam.direction=Vector3Normalize(Vector3Subtract(cam.target, cam.position));
+
     cam.up = Vector3{
         configData.value("up", json::array({0.f, 1.f, 0.f}))[0],
         configData.value("up", json::array({0.f, 1.f, 0.f}))[1],
         configData.value("up", json::array({0.f, 1.f, 0.f}))[2]
     };
+    cam.right = Vector3CrossProduct(cam.direction, cam.up);
     cam.fovy = configData.value("fovy", 60.0f);
 
     std::string proj = configData.value("projection", "PERSPECTIVE");
@@ -81,7 +85,7 @@ bool CameraManager::LoadConfig(const std::string& filePath) {
     return true;
 }
 
-Camera3D* CameraManager::GetCamera(const std::string& name) {
+mCamera* CameraManager::GetCamera(const std::string& name) {
     auto it = m_cameras.find(name);
     if (it != m_cameras.end()) {
         return &(it->second);
@@ -89,7 +93,7 @@ Camera3D* CameraManager::GetCamera(const std::string& name) {
     return nullptr;
 }
 
-Camera3D* CameraManager::GetMainCamera() {
+mCamera* CameraManager::GetMainCamera() {
     if (m_mainCameraName.empty()) return nullptr;
     return GetCamera(m_mainCameraName);
 }
