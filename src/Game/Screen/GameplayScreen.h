@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/System/Screen/GameScreen.h"
+#include "Engine/System/Input/InputManager.h"
 #include "Engine/Core/GameWorld.h"
 #include "Engine/Graphics/Renderer.h"
 #include "Engine/Graphics/CameraManager.h"
@@ -23,6 +24,7 @@ private:
     std::unique_ptr<GameWorld> m_world;
     std::unique_ptr<Renderer> m_renderer;
     std::unique_ptr<CameraManager> m_cameraManager;
+    std::unique_ptr<InputManager> m_inputManager;
 
     void ConfigureRenderer();
     // std::unique_ptr<PhysicsSystem> m_physicsSystem;

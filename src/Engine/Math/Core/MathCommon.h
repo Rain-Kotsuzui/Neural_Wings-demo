@@ -19,7 +19,7 @@ inline bool NearlyEqual(float a, float b, float epsilon = MATH_EPSILON)
     return std::fabs(a - b) <= epsilon;
 }
 
-inline float Clamp(float value, float minValue, float maxValue)
-{
-    return value < minValue ? minValue : (value > maxValue ? maxValue : value);
-}
+// inline float Clamp(float value, float minValue, float maxValue)
+// {
+//     return value < minValue ? minValue : (value > maxValue ? maxValue : value);
+// }
