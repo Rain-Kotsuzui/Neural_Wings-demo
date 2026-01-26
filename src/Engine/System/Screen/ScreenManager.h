@@ -3,6 +3,7 @@
 #include "ScreenFactory.h"
 #include "Engine/Config/EngineConfig.h"
 #include "Engine/System/Time/TimeManager.h"
+#include "Engine/UI/UltralightLayer.h"
 #include <memory>
 
 class ScreenManager {
@@ -12,6 +13,7 @@ public:
     //void Run();
     
     void ApplySettings(const EngineConfig& config);
+    UltralightLayer* GetUILayer();
 
     bool UpdateFrame(); 
     void Shutdown();
@@ -20,6 +22,7 @@ private:
 
     std::unique_ptr<GameScreen> m_currentScreen;
     std::unique_ptr<ScreenFactory> m_factory;
+    std::unique_ptr<UltralightLayer> m_uiLayer;
 
     TimeManager m_timeManager;
     float m_accumulator;
