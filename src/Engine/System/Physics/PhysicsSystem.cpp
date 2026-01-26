@@ -53,11 +53,18 @@ void PhysicsSystem::Integrate(GameWorld &world, float fixedDeltaTime)
             // 4. p = p + v * t
             tf.position += rb.velocity * fixedDeltaTime;
 
+            // angluar velocity
             Matrix3f rotationMatrix = tf.rotation.toMatrix();
             Matrix3f worldInverseInertia = rotationMatrix * rb.inverseInertiaTensor * rotationMatrix.transposed();
+            Matrix3f worldInertia = worldInverseInertia.inverse();
+            Vector3f cL=worldInertia * rb.angularVelocity;
+            Vector3f gyroscopicTorque =cL^rb.angularVelocity;
+            rb.accumulatedTorques+=gyroscopicTorque;
 
             Vector3f angularAcceleration = worldInverseInertia * rb.accumulatedTorques;
             rb.angularVelocity += angularAcceleration * fixedDeltaTime;
+            std::cout<<"angular velocity: "<<rb.angularVelocity.Length()<<std::endl;
+            
             float angularDragFactor = 1.0f - (rb.angularDrag * fixedDeltaTime);
             if (angularDragFactor < 0)
                 angularDragFactor = 0;

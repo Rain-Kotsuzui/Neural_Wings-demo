@@ -45,7 +45,10 @@ struct RigidbodyComponent : public IComponent
         inverseInertiaTensor = Matrix3f::identity();
         inverseInertiaTensor.setDiag(1.0f / ixx, 1.0f / iyy, 1.0f / izz);
     }
-
+    void SetDiagInertia(float xx, float yy, float zz) {
+        inverseInertiaTensor = Matrix3f::identity();
+        inverseInertiaTensor.setDiag(1.0f / xx, 1.0f / yy, 1.0f / zz);
+    }
     // 施加力
     void AddForce(Vector3f force)
     {

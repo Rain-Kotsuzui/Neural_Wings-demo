@@ -63,9 +63,15 @@ void GameplayScreen::OnEnter()
     Cube->AddComponent<TransformComponent>(Vector3f(0.0f, 10.0f, 0.0f));
     RigidbodyComponent*  rbPtr=&Cube->AddComponent<RigidbodyComponent>();
     rbPtr->mass=100.0f;
-    rbPtr->drag=0.1f;
+    rbPtr->drag=0.0f;
+    rbPtr->angularDrag=0.001f;
     rbPtr->velocity=Vector3f(0.0f,0.0f,0.0f);
-    rbPtr->angularVelocity=Vector3f(0.0f,0.0f,0.0f);
+    rbPtr->angularVelocity=Vector3f(0.1f,0.1f,5.1f);
+
+    Vector3f size= Vector3f(0.1f, 3.0f, 4.2f);
+    TransformComponent* trPtr = &Cube->GetComponent<TransformComponent>();
+    trPtr->scale = size;
+    rbPtr->SetBoxInertia(size);
 
     RenderComponent* rdPtr = &Cube->AddComponent<RenderComponent>();
 
