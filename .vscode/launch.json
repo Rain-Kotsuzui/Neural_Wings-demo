@@ -11,7 +11,7 @@
       "cwd": "${workspaceFolder}/build/Debug",
       "environment": [],
       "externalConsole": false,
-      "preLaunchTask": "CMake Build"
+      "preLaunchTask": "Build Debug (UI + CMake)"
     },
     {
       "name": "Run Game (Release)",
@@ -23,7 +23,7 @@
       "cwd": "${workspaceFolder}/build/Release",
       "environment": [],
       "console": "integratedTerminal",
-      "preLaunchTask": "CMake Build Release"
+      "preLaunchTask": "Build Release (UI + CMake)"
     },
     {
       "name": "Debug Web (Chrome)",

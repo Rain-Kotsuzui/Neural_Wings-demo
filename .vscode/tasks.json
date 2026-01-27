@@ -43,6 +43,56 @@
       "dependsOn": "Ensure Build Dir",
       "problemMatcher": "$msCompile"
     },
+    //ui
+    {
+      "label": "UI Install",
+      "type": "shell",
+      "command": "npm",
+      "args": ["install"],
+      "options": {
+        "cwd": "${workspaceFolder}/ui"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "UI Dev",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": {
+        "cwd": "${workspaceFolder}/ui"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "UI Build",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "options": {
+        "cwd": "${workspaceFolder}/ui"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Debug (UI + CMake)",
+      "type": "shell",
+      "command": "cmd",
+      "args": ["/c", "echo Build Debug (UI + CMake)"],
+      "dependsOn": ["UI Build", "CMake Build"],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
+    {
+      "label": "Build Release (UI + CMake)",
+      "type": "shell",
+      "command": "cmd",
+      "args": ["/c", "echo Build Release (UI + CMake)"],
+      "dependsOn": ["UI Build", "CMake Build Release"],
+      "dependsOrder": "sequence",
+      "problemMatcher": []
+    },
     //web
     {
       "label": "Start Web Server",

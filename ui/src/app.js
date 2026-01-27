@@ -1,10 +1,10 @@
-const { createApp, ref, computed, onMounted } = Vue;
+import { ref, computed, onMounted } from "vue";
 
 // Global state for C++ communication
 window.vueAppState = window.vueAppState || {};
 window.vueAppState.vueAppReady = false;
 
-createApp({
+export default {
   setup() {
     const route = ref(window.location.hash || "#/start");
     const fullscreen = ref(null);
@@ -99,11 +99,11 @@ createApp({
       ) {
         return;
       }
-      // 将当前值保存到全局状态
+      // Save current values to global state
       window.vueAppState.fullscreen = fullscreen.value;
       window.vueAppState.resolution = selectedResolution.value;
       window.vueAppState.targetFPS = targetFPS.value;
-      window.vueAppState.settingsSaveRequested = true; // 设置保存请求标志
+      window.vueAppState.settingsSaveRequested = true;
 
       console.log("Settings save requested:", {
         fullscreen: fullscreen.value,
@@ -199,4 +199,4 @@ createApp({
       </main>
     </div>
   `,
-}).mount("#app");
+};
