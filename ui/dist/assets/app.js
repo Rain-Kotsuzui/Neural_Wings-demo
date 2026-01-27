@@ -9,6 +9,7 @@ createApp({
     const route = ref(window.location.hash || "#/start");
     const fullscreen = ref(null);
     const selectedResolution = ref("");
+    const isResolutionOpen = ref(false);
     const targetFPS = ref(null);
 
     const resolutions = [
@@ -59,6 +60,9 @@ createApp({
       normalize();
       window.__applyEngineSettings = applySettings;
       window.vueAppState.vueAppReady = true;
+      document.addEventListener("click", () => {
+        isResolutionOpen.value = false;
+      });
     });
 
     const isStart = computed(() => route.value.startsWith("#/start"));
@@ -72,6 +76,15 @@ createApp({
 
     const changeResolution = (newRes) => {
       selectedResolution.value = newRes;
+    };
+
+    const toggleResolution = () => {
+      isResolutionOpen.value = !isResolutionOpen.value;
+    };
+
+    const chooseResolution = (newRes) => {
+      selectedResolution.value = newRes;
+      isResolutionOpen.value = false;
     };
 
     const changeFPS = (newFPS) => {
@@ -106,10 +119,13 @@ createApp({
       isOptions,
       fullscreen,
       selectedResolution,
+      isResolutionOpen,
       targetFPS,
       resolutions,
       toggleFullscreen,
       changeResolution,
+      toggleResolution,
+      chooseResolution,
       changeFPS,
       saveSettings,
     };
@@ -145,12 +161,22 @@ createApp({
             </div>
             <div class="row">
               <span>分辨率</span>
-              <select v-model="selectedResolution" @change="changeResolution(selectedResolution)" class="chip">
-                <option disabled value="">请选择</option>
-                <option v-for="res in resolutions" :key="res.value" :value="res.value">
-                  {{ res.label }}
-                </option>
-              </select>
+              <div class="dropdown" @click.stop>
+                <button class="chip dropdown-toggle" @click="toggleResolution">
+                  {{ selectedResolution || "请选择" }}
+                  <span class="caret"></span>
+                </button>
+                <div v-if="isResolutionOpen" class="dropdown-menu">
+                  <button
+                    v-for="res in resolutions"
+                    :key="res.value"
+                    class="dropdown-item"
+                    @click="chooseResolution(res.value)"
+                  >
+                    {{ res.label }}
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="row">
               <span>帧率上限</span>

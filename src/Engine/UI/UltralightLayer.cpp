@@ -58,6 +58,17 @@ void UltralightLayer::Shutdown()
 void UltralightLayer::SetVisible(bool visible)
 {
     m_visible = visible;
+    if (m_view)
+    {
+        if (m_visible)
+        {
+            m_view->Focus();
+        }
+        else
+        {
+            m_view->Unfocus();
+        }
+    }
 }
 
 bool UltralightLayer::IsVisible() const
@@ -72,6 +83,7 @@ void UltralightLayer::LoadRoute(const std::string &route)
 
     const std::string url = BuildIndexUrl(route);
     m_view->LoadURL(ultralight::String(url.c_str()));
+    m_view->Focus();
 }
 
 void UltralightLayer::Resize(uint32_t width, uint32_t height)
@@ -106,6 +118,11 @@ void UltralightLayer::HandleInput()
         return;
 
     Vector2 mouse = GetMousePosition();
+    const bool mousePressed = IsMouseButtonPressed(MOUSE_LEFT_BUTTON);
+    if (mousePressed)
+    {
+        m_view->Focus();
+    }
 
     MouseEvent moveEvent;
     moveEvent.type = MouseEvent::kType_MouseMoved;
@@ -114,7 +131,7 @@ void UltralightLayer::HandleInput()
     moveEvent.button = MouseEvent::kButton_None;
     m_view->FireMouseEvent(moveEvent);
 
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+    if (mousePressed)
     {
         MouseEvent downEvent;
         downEvent.type = MouseEvent::kType_MouseDown;

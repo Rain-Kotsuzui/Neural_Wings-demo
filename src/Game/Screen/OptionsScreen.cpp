@@ -17,12 +17,14 @@ OptionsScreen::~OptionsScreen()
 }
 void OptionsScreen::OnEnter()
 {
-    m_currentConfig.load("assets/config/engine_config.json");
-
     // Prefer the runtime-applied settings so the UI reflects the actual window.
     if (screenManager)
     {
         m_currentConfig = screenManager->GetActiveConfig();
+    }
+    else
+    {
+        m_currentConfig.load("assets/config/engine_config.json");
     }
 
     // As an extra guard, sync window size/fullscreen from raylib.
@@ -209,7 +211,6 @@ void OptionsScreen::ApplyConfigToUI()
     script << "if (window.__applyEngineSettings) { "
            << "window.__applyEngineSettings({fullscreen: " << (m_currentConfig.fullScreen ? "true" : "false")
            << ", resolution: \"" << resolution << "\", targetFPS: "
-           << static_cast<int>(m_currentConfig.targetFPS) << "}); }"
-           << ";window.vueAppState.settingsSaveRequested = false;";
+           << static_cast<int>(m_currentConfig.targetFPS) << "}); }";
     screenManager->GetUILayer()->ExecuteScript(script.str());
 }
