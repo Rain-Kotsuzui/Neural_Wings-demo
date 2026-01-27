@@ -11,7 +11,7 @@
       "cwd": "${workspaceFolder}/build/Debug",
       "environment": [],
       "externalConsole": false,
-      "preLaunchTask": "CMake Build"
+      "preLaunchTask": "Build All (UI + Debug)"
     },
     {
       "name": "Run Game (Release)",

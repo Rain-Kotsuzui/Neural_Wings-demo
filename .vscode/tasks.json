@@ -25,6 +25,12 @@
       "problemMatcher": "$gcc"
     },
     {
+      "label": "Build All (UI + Debug)",
+      "dependsOrder": "sequence",
+      "dependsOn": ["UI: Build", "CMake Build"],
+      "problemMatcher": []
+    },
+    {
       "label": "Super Clean (Desktop)",
       "type": "shell",
       "command": "powershell",
@@ -98,6 +104,47 @@
         "Remove-Item -Path '${workspaceFolder}/build_web' -Recurse -Force"
       ],
       "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "UI: Install",
+      "type": "shell",
+      "command": "npm",
+      "args": ["ci"],
+      "options": {
+        "cwd": "${workspaceFolder}/ui"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "UI: Dev",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "dev"],
+      "options": {
+        "cwd": "${workspaceFolder}/ui"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "UI: Build",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "build"],
+      "options": {
+        "cwd": "${workspaceFolder}/ui"
+      },
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "UI: Preview",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "preview"],
+      "options": {
+        "cwd": "${workspaceFolder}/ui"
+      },
+      "problemMatcher": []
     }
   ]
 }
