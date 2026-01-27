@@ -12,13 +12,16 @@ namespace
 } // namespace
 
 ScreenManager::ScreenManager(const EngineConfig &config, std::unique_ptr<ScreenFactory> factory)
-    : m_factory(std::move(factory))
+    : m_factory(std::move(factory)), m_activeConfig(config)
 {
     InitWindow(config.screenWidth, config.screenHeight, config.windowTitle.c_str());
     SetTargetFPS(config.targetFPS);
     m_timeManager = TimeManager(static_cast<float>(config.targetFPS));
     m_accumulator = 0.0f;
     SetExitKey(KEY_NULL);
+    m_activeConfig.screenWidth = GetScreenWidth();
+    m_activeConfig.screenHeight = GetScreenHeight();
+    m_activeConfig.fullScreen = IsWindowFullscreen();
     m_uiLayer = std::make_unique<UltralightLayer>();
     m_uiLayer->Initialize(
         static_cast<uint32_t>(GetScreenWidth()),
@@ -71,6 +74,21 @@ void ScreenManager::ApplySettings(const EngineConfig &newConfig)
     }
 #endif
     SetTargetFPS(newConfig.targetFPS);
+
+    // Persist the last applied settings and sync to the actual runtime window.
+    m_activeConfig = newConfig;
+    m_activeConfig.fullScreen = IsWindowFullscreen();
+    if (!m_activeConfig.fullScreen)
+    {
+        m_activeConfig.screenWidth = GetScreenWidth();
+        m_activeConfig.screenHeight = GetScreenHeight();
+    }
+    m_activeConfig.targetFPS = newConfig.targetFPS;
+}
+
+const EngineConfig &ScreenManager::GetActiveConfig() const
+{
+    return m_activeConfig;
 }
 
 UltralightLayer *ScreenManager::GetUILayer()

@@ -1,21 +1,15 @@
 const { createApp, ref, computed, onMounted } = Vue;
 
 // Global state for C++ communication
-window.vueAppState = {
-  currentRoute: "#/start",
-  // 游戏设置状态
-  fullscreen: false,
-  resolution: "1920x1080",
-  targetFPS: 120,
-  settingsSaveRequested: false, // 保存请求标志
-};
+window.vueAppState = window.vueAppState || {};
+window.vueAppState.vueAppReady = false;
 
 createApp({
   setup() {
     const route = ref(window.location.hash || "#/start");
-    const fullscreen = ref(false);
-    const selectedResolution = ref("1920x1080");
-    const targetFPS = ref(120);
+    const fullscreen = ref(null);
+    const selectedResolution = ref("");
+    const targetFPS = ref(null);
 
     const resolutions = [
       { label: "1280x720", value: "1280x720" },
@@ -29,9 +23,42 @@ createApp({
       window.vueAppState.currentRoute = route.value;
     };
 
+    const applySettings = (settings) => {
+      const state = settings || {};
+      if (typeof state.fullscreen === "boolean") {
+        fullscreen.value = state.fullscreen;
+      }
+
+      if (typeof state.resolution === "string" && state.resolution) {
+        const exists = resolutions.some((r) => r.value === state.resolution);
+        if (exists) {
+          selectedResolution.value = state.resolution;
+        }
+      }
+
+      if (state.targetFPS !== undefined && state.targetFPS !== null) {
+        const fps = Number(state.targetFPS);
+        if (!Number.isNaN(fps)) {
+          targetFPS.value = fps;
+        }
+      }
+
+      if (fullscreen.value !== null) {
+        window.vueAppState.fullscreen = fullscreen.value;
+      }
+      if (selectedResolution.value) {
+        window.vueAppState.resolution = selectedResolution.value;
+      }
+      if (targetFPS.value !== null) {
+        window.vueAppState.targetFPS = targetFPS.value;
+      }
+    };
+
     onMounted(() => {
       window.addEventListener("hashchange", normalize);
       normalize();
+      window.__applyEngineSettings = applySettings;
+      window.vueAppState.vueAppReady = true;
     });
 
     const isStart = computed(() => route.value.startsWith("#/start"));
@@ -39,6 +66,7 @@ createApp({
     const isOptions = computed(() => route.value.startsWith("#/options"));
 
     const toggleFullscreen = () => {
+      if (fullscreen.value === null) return;
       fullscreen.value = !fullscreen.value;
     };
 
@@ -51,6 +79,13 @@ createApp({
     };
 
     const saveSettings = () => {
+      if (
+        fullscreen.value === null ||
+        !selectedResolution.value ||
+        targetFPS.value === null
+      ) {
+        return;
+      }
       // 将当前值保存到全局状态
       window.vueAppState.fullscreen = fullscreen.value;
       window.vueAppState.resolution = selectedResolution.value;
@@ -104,13 +139,14 @@ createApp({
           <div class="form">
             <div class="row">
               <span>全屏</span>
-              <button class="chip" @click="toggleFullscreen" :class="{ active: fullscreen }">
-                {{ fullscreen ? "开启" : "关闭" }}
+              <button class="chip" @click="toggleFullscreen" :class="{ active: fullscreen === true }">
+                {{ fullscreen === null ? "未设置" : (fullscreen ? "开启" : "关闭") }}
               </button>
             </div>
             <div class="row">
               <span>分辨率</span>
               <select v-model="selectedResolution" @change="changeResolution(selectedResolution)" class="chip">
+                <option disabled value="">请选择</option>
                 <option v-for="res in resolutions" :key="res.value" :value="res.value">
                   {{ res.label }}
                 </option>
@@ -119,8 +155,8 @@ createApp({
             <div class="row">
               <span>帧率上限</span>
               <div class="fps-control">
-                <input type="range" v-model.number="targetFPS" @change="changeFPS(targetFPS)" min="30" max="240" step="10" />
-                <span class="chip">{{ targetFPS }} FPS</span>
+                <input type="range" v-model.number="targetFPS" @change="changeFPS(targetFPS)" min="30" max="240" step="10" :disabled="targetFPS === null" />
+                <span class="chip">{{ targetFPS === null ? "--" : targetFPS }} FPS</span>
               </div>
             </div>
           </div>

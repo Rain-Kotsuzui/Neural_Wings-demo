@@ -6,6 +6,7 @@
 #include <emscripten/emscripten.h>
 #endif
 #include <cstdio>
+#include <sstream>
 OptionsScreen::OptionsScreen()
     : m_nextScreenState(static_cast<int>(ScreenStateID::NONE))
 {
@@ -18,12 +19,33 @@ void OptionsScreen::OnEnter()
 {
     m_currentConfig.load("assets/config/engine_config.json");
 
+    // Prefer the runtime-applied settings so the UI reflects the actual window.
+    if (screenManager)
+    {
+        m_currentConfig = screenManager->GetActiveConfig();
+    }
+
+    // As an extra guard, sync window size/fullscreen from raylib.
+    m_currentConfig.fullScreen = IsWindowFullscreen();
+    if (!m_currentConfig.fullScreen)
+    {
+        m_currentConfig.screenWidth = GetScreenWidth();
+        m_currentConfig.screenHeight = GetScreenHeight();
+    }
+
     m_modifiedConfig = m_currentConfig;
+    m_pendingSync = true;
 
     if (screenManager && screenManager->GetUILayer())
     {
-        screenManager->GetUILayer()->SetVisible(true);
-        screenManager->GetUILayer()->LoadRoute("options");
+        auto *uiLayer = screenManager->GetUILayer();
+        uiLayer->SetVisible(true);
+        // Reset readiness so we don't sync against the previous page state.
+        uiLayer->ExecuteScript(
+            "window.vueAppState = window.vueAppState || {};"
+            "window.vueAppState.vueAppReady = false;"
+            "window.vueAppState.settingsSaveRequested = false;");
+        uiLayer->LoadRoute("options");
     }
 }
 void OptionsScreen::OnExit()
@@ -60,6 +82,15 @@ void OptionsScreen::Update(float deltaTime)
     // 检查 Vue 中的设置是否被保存
     if (screenManager && screenManager->GetUILayer())
     {
+        if (m_pendingSync)
+        {
+            std::string readyStr = screenManager->GetUILayer()->GetAppState("vueAppReady");
+            if (readyStr == "true")
+            {
+                ApplyConfigToUI();
+                m_pendingSync = false;
+            }
+        }
         ApplyVueSettings();
     }
 }
@@ -156,9 +187,29 @@ void OptionsScreen::ApplyVueSettings()
             screenManager->ApplySettings(m_modifiedConfig);
         }
 
+        // Keep the current snapshot in sync after applying.
+        m_currentConfig = m_modifiedConfig;
+
         // Reset save request flag
         screenManager->GetUILayer()->ExecuteScript("window.vueAppState.settingsSaveRequested = false;");
 
         printf("[OptionsScreen] Settings applied to engine\n");
     }
+}
+
+void OptionsScreen::ApplyConfigToUI()
+{
+    if (!screenManager || !screenManager->GetUILayer())
+        return;
+
+    const std::string resolution = std::to_string(m_currentConfig.screenWidth) + "x" +
+                                   std::to_string(m_currentConfig.screenHeight);
+
+    std::ostringstream script;
+    script << "if (window.__applyEngineSettings) { "
+           << "window.__applyEngineSettings({fullscreen: " << (m_currentConfig.fullScreen ? "true" : "false")
+           << ", resolution: \"" << resolution << "\", targetFPS: "
+           << static_cast<int>(m_currentConfig.targetFPS) << "}); }"
+           << ";window.vueAppState.settingsSaveRequested = false;";
+    screenManager->GetUILayer()->ExecuteScript(script.str());
 }

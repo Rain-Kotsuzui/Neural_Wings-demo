@@ -19,9 +19,11 @@ public:
 
 private:
     int m_nextScreenState;
+    bool m_pendingSync = false;
 
     EngineConfig m_currentConfig;  // 原始配置
     EngineConfig m_modifiedConfig; // 修改后配置
     void SaveConfig();
     void ApplyVueSettings(); // Apply settings from Vue to m_modifiedConfig
+    void ApplyConfigToUI();
 };

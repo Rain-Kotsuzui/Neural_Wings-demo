@@ -22,6 +22,7 @@ struct EngineConfig : public Config
             {"performance", {{"targetFPS", targetFPS}}},
         };
     }
+
 protected:
     void ParseJson(const json &configJson) override
     {
@@ -29,8 +30,18 @@ protected:
         this->screenHeight = configJson.at("window").value("height", this->screenHeight);
         this->windowTitle = configJson.at("window").value("title", this->windowTitle);
         this->targetFPS = configJson.at("performance").value("targetFPS", this->targetFPS);
-        this->fullScreen = configJson.at("window").value("fullScreen", this->fullScreen);
+        if (configJson.contains("window"))
+        {
+            const auto &windowJson = configJson.at("window");
+            if (windowJson.contains("fullscreen"))
+            {
+                this->fullScreen = windowJson.value("fullscreen", this->fullScreen);
+            }
+            else
+            {
+                this->fullScreen = windowJson.value("fullScreen", this->fullScreen);
+            }
+        }
         this->initialScreen = SCREEN_STATE_START;
     }
-    
 };

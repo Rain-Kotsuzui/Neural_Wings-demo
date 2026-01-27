@@ -13,6 +13,7 @@ public:
     //void Run();
     
     void ApplySettings(const EngineConfig& config);
+    const EngineConfig& GetActiveConfig() const;
     UltralightLayer* GetUILayer();
 
     bool UpdateFrame(); 
@@ -26,4 +27,8 @@ private:
 
     TimeManager m_timeManager;
     float m_accumulator;
+
+    // Track the last applied runtime configuration so screens can sync from
+    // the actual window state instead of only the config file on disk.
+    EngineConfig m_activeConfig;
 };
