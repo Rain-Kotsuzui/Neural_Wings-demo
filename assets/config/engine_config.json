@@ -3,7 +3,7 @@
         "targetFPS": 94.16666412353516
     },
     "window": {
-        "fullscreen": true,
+        "fullscreen": false,
         "height": 900,
         "title": "Neural Wings",
         "width": 1600
