@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-if (MSVC)
+if(MSVC)
     # /FS allows concurrent cl.exe processes to share the same PDB
     # (VS generators enable parallel builds by default).
     set(CMAKE_CXX_FLAGS_DEBUG "/MDd /Od /Zi /EHsc /FS")
@@ -35,14 +35,14 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-  enet
-  GIT_REPOSITORY https://github.com/lsalzman/enet.git
-  GIT_TAG master
+    enet
+    GIT_REPOSITORY https://github.com/lsalzman/enet.git
+    GIT_TAG master
 )
 
 set(ULTRALIGHT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/ultralight")
 
-set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) 
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(raylib raygui nlohmann_json enet)
@@ -50,12 +50,12 @@ FetchContent_MakeAvailable(raylib raygui nlohmann_json enet)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-if (MSVC)
+if(MSVC)
     # Ensure PDB is shared safely when cl.exe runs in parallel.
     target_compile_options(${PROJECT_NAME} PRIVATE /FS)
 endif()
 
-target_include_directories(${PROJECT_NAME} PRIVATE 
+target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
     ${raygui_SOURCE_DIR}/src
     ${ULTRALIGHT_ROOT}/include
@@ -71,21 +71,21 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
 )
 include_directories(${CMAKE_SOURCE_DIR}/src)
 
-if (EMSCRIPTEN)
+if(EMSCRIPTEN)
     set(PLATFORM "Web")
     add_definitions(-DPLATFORM_WEB)
-    
+
 else()
     set(PLATFORM "Desktop")
     add_definitions(-DPLATFORM_DESKTOP)
 endif()
 
 message(STATUS "当前平台: ${PLATFORM}")
-if (PLATFORM STREQUAL "Web")
+if(PLATFORM STREQUAL "Web")
     set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".html")
 
-    target_link_options(${PROJECT_NAME} PRIVATE 
-        "-sUSE_GLFW=3" 
+    target_link_options(${PROJECT_NAME} PRIVATE
+        "-sUSE_GLFW=3"
         "-sASYNCIFY"
         "--shell-file" "${CMAKE_CURRENT_SOURCE_DIR}/src/shell.html"
         "--preload-file" "${CMAKE_CURRENT_SOURCE_DIR}/assets@assets"
@@ -93,7 +93,7 @@ if (PLATFORM STREQUAL "Web")
 
     # Try to find npm to build the Vue UI automatically for web builds.
     find_program(NPM_EXECUTABLE npm)
-    if (NPM_EXECUTABLE)
+    if(NPM_EXECUTABLE)
         add_custom_target(WebUI
             COMMAND ${NPM_EXECUTABLE} ci
             COMMAND ${NPM_EXECUTABLE} run build
@@ -113,30 +113,30 @@ if (PLATFORM STREQUAL "Web")
     )
 
 else()
-    
+
     target_link_libraries(${PROJECT_NAME} PRIVATE enet)
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_SOURCE_DIR}/assets"
-    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
-)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/assets"
+    )
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${ULTRALIGHT_ROOT}/bin"
-    "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
-)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${ULTRALIGHT_ROOT}/bin"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>"
+    )
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${ULTRALIGHT_ROOT}/resources"
-    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
-)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${ULTRALIGHT_ROOT}/resources"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/resources"
+    )
 
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    "${CMAKE_CURRENT_SOURCE_DIR}/ui"
-    "$<TARGET_FILE_DIR:${PROJECT_NAME}>/ui"
-)
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_CURRENT_SOURCE_DIR}/ui"
+        "$<TARGET_FILE_DIR:${PROJECT_NAME}>/ui"
+    )
 endif()

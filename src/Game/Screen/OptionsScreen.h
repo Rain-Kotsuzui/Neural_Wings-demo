@@ -1,7 +1,7 @@
 #pragma once
 #include "Engine/System/Screen/GameScreen.h"
 #include "Engine/Config/EngineConfig.h"
-#include "ScreenState.h"
+#include "MyScreenState.h"
 
 class OptionsScreen : public GameScreen
 {
@@ -14,11 +14,11 @@ public:
     void Update(float deltaTime) override;
     void Draw() override;
     void OnExit() override;
-    int GetNextScreenState() const override;
-    int GetScreenState() const override;
+    ScreenState GetNextScreenState() const override;
+    ScreenState GetScreenState() const override;
 
 private:
-    int m_nextScreenState;
+    ScreenState m_nextScreenState;
     bool m_pendingSync = false;
 
     EngineConfig m_currentConfig;  // 原始配置

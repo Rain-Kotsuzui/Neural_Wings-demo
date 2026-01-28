@@ -21,13 +21,13 @@ int main()
     }
 
     auto factory = std::make_unique<ScreenFactory>();
-    factory->Register((static_cast<int>(ScreenStateID::START)), [](ScreenManager *manager)
+    factory->Register(SCREEN_STATE_START, [](ScreenManager *manager)
                       { return std::make_unique<StartScreen>(); });
-    factory->Register(static_cast<int>(ScreenStateID::MAIN_MENU), [](ScreenManager *manager)
+    factory->Register(MAIN_MENU, [](ScreenManager *manager)
                       { return std::make_unique<MainMenuScreen>(); });
-    factory->Register(static_cast<int>(ScreenStateID::GAMEPlAY), [](ScreenManager *manager)
+    factory->Register(GAMEPLAY, [](ScreenManager *manager)
                       { return std::make_unique<GameplayScreen>(); });
-    factory->Register(static_cast<int>(ScreenStateID::OPTIONS), [](ScreenManager *manager)
+    factory->Register(OPTIONS, [](ScreenManager *manager)
                       { return std::make_unique<OptionsScreen>(); });
 
     g_App = std::make_unique<ScreenManager>(config, std::move(factory));

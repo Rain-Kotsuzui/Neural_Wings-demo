@@ -1,14 +1,15 @@
 #include "OptionsScreen.h"
 #include "raylib.h"
 #include "Engine/System/Screen/ScreenManager.h"
-
+#include "Game/Screen/MyScreenState.h"
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
 #endif
 #include <cstdio>
 #include <sstream>
+
 OptionsScreen::OptionsScreen()
-    : m_nextScreenState(static_cast<int>(ScreenStateID::NONE))
+    : m_nextScreenState(SCREEN_STATE_NONE)
 {
 }
 OptionsScreen::~OptionsScreen()
@@ -47,7 +48,7 @@ void OptionsScreen::OnEnter()
             "window.vueAppState = window.vueAppState || {};"
             "window.vueAppState.vueAppReady = false;"
             "window.vueAppState.settingsSaveRequested = false;");
-        uiLayer->LoadRoute("options");
+        uiLayer->LoadRoute("menu");
     }
 }
 void OptionsScreen::OnExit()
@@ -62,23 +63,23 @@ void OptionsScreen::FixedUpdate(float fixedDeltaTime) {}
 
 void OptionsScreen::Update(float deltaTime)
 {
-    m_nextScreenState = static_cast<int>(ScreenStateID::NONE);
+    m_nextScreenState = SCREEN_STATE_NONE;
 
     // 检查 Vue 路由是否已变化
     if (screenManager && screenManager->GetUILayer())
     {
         std::string currentRoute = screenManager->GetUILayer()->GetCurrentRoute();
 
-        if (currentRoute == "#/menu")
+        if (currentRoute == "#/" + GAMEPLAY.getName())
         {
-            m_nextScreenState = static_cast<int>(ScreenStateID::MAIN_MENU);
+            m_nextScreenState = MAIN_MENU;
             return;
         }
     }
 
     if (IsKeyPressed(KEY_ESCAPE))
     {
-        m_nextScreenState = static_cast<int>(ScreenStateID::MAIN_MENU);
+        m_nextScreenState = MAIN_MENU;
     }
 
     // 检查 Vue 中的设置是否被保存
@@ -105,14 +106,14 @@ void OptionsScreen::Draw()
     }
 }
 
-int OptionsScreen::GetNextScreenState() const
+ScreenState OptionsScreen::GetNextScreenState() const
 {
     return m_nextScreenState;
 }
 
-int OptionsScreen::GetScreenState() const
+ScreenState OptionsScreen::GetScreenState() const
 {
-    return static_cast<int>(ScreenStateID::OPTIONS);
+    return OPTIONS;
 }
 
 #include <fstream>

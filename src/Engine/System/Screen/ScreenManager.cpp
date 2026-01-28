@@ -1,5 +1,6 @@
 #include "ScreenManager.h"
 #include "raylib.h"
+#include "ScreenState.h"
 
 namespace
 {

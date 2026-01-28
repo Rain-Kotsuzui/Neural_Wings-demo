@@ -5,6 +5,7 @@
 #include "Engine/Core/GameWorld.h"
 #include "Engine/Graphics/Renderer.h"
 #include "Engine/Graphics/CameraManager.h"
+#include "MyScreenState.h"
 
 class GameplayScreen : public GameScreen
 {
@@ -17,10 +18,11 @@ public:
     void Update(float deltaTime) override;
     void Draw() override;
     void OnExit() override;
-    int GetNextScreenState() const override;
-    int GetScreenState() const override;
+    ScreenState GetNextScreenState() const override;
+    ScreenState GetScreenState() const override;
+
 private:
-    int m_nextScreenState;
+    ScreenState m_nextScreenState;
     // 游戏世界系统
     std::unique_ptr<GameWorld> m_world;
     std::unique_ptr<Renderer> m_renderer;
@@ -28,7 +30,7 @@ private:
     std::unique_ptr<InputManager> m_inputManager;
 
     std::unique_ptr<PhysicsSystem> m_physicsSystem;
-    
+
     void ConfigureRenderer();
     // std::unique_ptr<PhysicsSystem> m_physicsSystem;
     // std::unique_ptr<UIManager> m_uiManager;

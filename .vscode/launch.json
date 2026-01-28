@@ -8,7 +8,7 @@
       "program": "${workspaceFolder}/build/Debug/${workspaceFolderBasename}.exe",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}/build/Debug",
+      "cwd": "${workspaceFolder}",
       "environment": [],
       "externalConsole": false,
       "preLaunchTask": "Build All (UI + Debug)"
@@ -20,7 +20,7 @@
       "program": "${workspaceFolder}/build/Release/${workspaceFolderBasename}.exe",
       "args": [],
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}/build/Release",
+      "cwd": "${workspaceFolder}",
       "environment": [],
       "console": "integratedTerminal",
       "preLaunchTask": "CMake Build Release"
