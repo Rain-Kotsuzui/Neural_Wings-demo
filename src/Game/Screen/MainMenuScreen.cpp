@@ -46,7 +46,7 @@ void MainMenuScreen::Update(float deltaTime)
             m_nextScreenState = GAMEPLAY;
             return;
         }
-        else if (currentRoute == "#/" + GAMEPLAY.getName())
+        else if (currentRoute == "#/" + OPTIONS.getName())
         {
             m_nextScreenState = OPTIONS;
             return;
