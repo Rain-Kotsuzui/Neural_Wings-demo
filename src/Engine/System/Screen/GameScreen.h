@@ -1,12 +1,7 @@
 #pragma once
 
-constexpr int SCREEN_STATE_MAIN_MENU = 0;
-constexpr int SCREEN_STATE_START = -1;
-constexpr int SCREEN_STATE_NONE = -2;
-constexpr int SCREEN_STATE_EXIT = -3;
-constexpr int SCREEN_STATE_ERROR = -4;
-
 class ScreenManager;
+class ScreenState;
 
 class GameScreen
 {
@@ -29,8 +24,8 @@ public:
     virtual void OnExit() = 0;
 
     // 状态
-    virtual int GetNextScreenState() const = 0;
-    virtual int GetScreenState() const = 0;
+    virtual ScreenState GetNextScreenState() const = 0;
+    virtual ScreenState GetScreenState() const = 0;
 
-    ScreenManager* screenManager = nullptr;
+    ScreenManager *screenManager = nullptr;
 };

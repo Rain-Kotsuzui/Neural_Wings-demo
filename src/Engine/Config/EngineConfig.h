@@ -2,6 +2,7 @@
 #include "Config.h"
 #include "Engine/System/Screen/GameScreen.h"
 #include <string>
+#include "Engine/System/Screen/ScreenState.h"
 
 struct EngineConfig : public Config
 {

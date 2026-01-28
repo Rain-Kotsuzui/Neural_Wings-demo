@@ -1,11 +1,11 @@
 #include "GameplayScreen.h"
 #include "raylib.h"
-#include "ScreenState.h"
+#include "Game/Screen/MyScreenState.h"
 #include "raymath.h"
 
 #include <iostream>
 GameplayScreen::GameplayScreen()
-    : m_nextScreenState(static_cast<int>(ScreenStateID::NONE))
+    : m_nextScreenState(SCREEN_STATE_NONE)
 {
     m_world = std::make_unique<GameWorld>();
     m_renderer = std::make_unique<Renderer>();
@@ -57,9 +57,8 @@ void GameplayScreen::OnEnter()
     DisableCursor();
     m_physicsSystem->AddStage(std::make_unique<SolarStage>(10.0f));
     // m_physicsSystem->AddStage(std::make_unique<GravityStage>());
-    //m_physicsSystem->AddStage(std::make_unique<TestStage>());
+    // m_physicsSystem->AddStage(std::make_unique<TestStage>());
     m_physicsSystem->AddStage(std::make_unique<CollisionStage>());
-
 
     Mesh cubeMesh = GenMeshCube(1.0f, 1.0f, 1.0f);
     Mesh sphereMesh = GenMeshSphere(1.0f, 32, 32);
@@ -69,15 +68,15 @@ void GameplayScreen::OnEnter()
     TransformComponent *trPtr = &Cube->AddComponent<TransformComponent>(Vector3f(0.0f, 6.0f, 0.0f));
     RigidbodyComponent *rbPtr = &Cube->AddComponent<RigidbodyComponent>();
 
-    Vector3f size = Vector3f::ONE*1.0f;
+    Vector3f size = Vector3f::ONE * 1.0f;
     trPtr->scale = size;
 
     rbPtr->mass = 1.0f;
     rbPtr->drag = 0.1f;
     rbPtr->angularDrag = 0.01f;
-    rbPtr->elasticity=1.0f;
+    rbPtr->elasticity = 1.0f;
     rbPtr->velocity = Vector3f(0.0f, 0.0f, 0.0f);
-    
+
     rbPtr->SetSphere(size);
     // rbPtr->SetAnglularVelocity(Vector3f(0.1f,4.1f,1.1f));
     rbPtr->collisionCallback = [](GameObject *other)
@@ -88,7 +87,6 @@ void GameplayScreen::OnEnter()
     RenderComponent *rdPtr = &Cube->AddComponent<RenderComponent>();
     rdPtr->model = LoadModelFromMesh(sphereMesh);
     rdPtr->tint = BLUE;
-
 
     Cube = &m_world->CreateGameObject();
 
@@ -101,7 +99,7 @@ void GameplayScreen::OnEnter()
     rbPtr->mass = 1.0f;
     rbPtr->drag = 0.1f;
     rbPtr->angularDrag = 0.01f;
-    rbPtr->elasticity=0.5f;
+    rbPtr->elasticity = 0.5f;
     rbPtr->velocity = Vector3f(0.0f, 0.0f, -0.0f);
 
     rbPtr->SetBox(size);
@@ -125,7 +123,7 @@ void GameplayScreen::OnEnter()
     rbPtr->mass = 10.0f;
     rbPtr->drag = 0.1f;
     rbPtr->angularDrag = 0.01f;
-    rbPtr->elasticity=0.5f;
+    rbPtr->elasticity = 0.5f;
     rbPtr->velocity = Vector3f(1.0f, 0.0f, -0.0f);
 
     rbPtr->SetSphere(size);
@@ -138,45 +136,43 @@ void GameplayScreen::OnEnter()
     rdPtr->model = LoadModelFromMesh(sphereMesh);
     rdPtr->tint = RED;
 
-
     Cube = &m_world->CreateGameObject();
-    trPtr=&Cube->AddComponent<TransformComponent>(Vector3f(2.0f, 5.0f, 0.0f));
-    rbPtr=&Cube->AddComponent<RigidbodyComponent>();
-    size= Vector3f(1.0f, 1.0f, 1.0f);
+    trPtr = &Cube->AddComponent<TransformComponent>(Vector3f(2.0f, 5.0f, 0.0f));
+    rbPtr = &Cube->AddComponent<RigidbodyComponent>();
+    size = Vector3f(1.0f, 1.0f, 1.0f);
     trPtr->scale = size;
-    rbPtr->mass=10.0f;
-    rbPtr->drag=0.1f;
+    rbPtr->mass = 10.0f;
+    rbPtr->drag = 0.1f;
     rbPtr->angularDrag = 0.01f;
-    rbPtr->elasticity=0.5f;
-    rbPtr->velocity=Vector3f(0.0f,0.0f,0.0f);
+    rbPtr->elasticity = 0.5f;
+    rbPtr->velocity = Vector3f(0.0f, 0.0f, 0.0f);
 
     rbPtr->SetBox(size);
     // rbPtr->SetAnglularVelocity(Vector3f(2.1f,0.1f,-3.1f));
-    rbPtr->collisionCallback=[](GameObject *other)
+    rbPtr->collisionCallback = [](GameObject *other)
     {
-        std::cout<<"BLACK "<<"Collision!"<<std::endl;
+        std::cout << "BLACK " << "Collision!" << std::endl;
     };
     rdPtr = &Cube->AddComponent<RenderComponent>();
     rdPtr->model = LoadModelFromMesh(cubeMesh);
     rdPtr->tint = BLACK;
 
-    
     Cube = &m_world->CreateGameObject();
-    trPtr=&Cube->AddComponent<TransformComponent>(Vector3f(5.0f, 5.0f, 0.0f));
-    rbPtr=&Cube->AddComponent<RigidbodyComponent>();
-    size= Vector3f(5.0f, 0.5f, 0.5f);
+    trPtr = &Cube->AddComponent<TransformComponent>(Vector3f(5.0f, 5.0f, 0.0f));
+    rbPtr = &Cube->AddComponent<RigidbodyComponent>();
+    size = Vector3f(5.0f, 0.5f, 0.5f);
     trPtr->scale = size;
-    rbPtr->mass=10.0f;
-    rbPtr->drag=0.1f;
+    rbPtr->mass = 10.0f;
+    rbPtr->drag = 0.1f;
     rbPtr->angularDrag = 0.01f;
-    rbPtr->elasticity=0.5f;
-    rbPtr->velocity=Vector3f(0.0f,0.0f,0.0f);
+    rbPtr->elasticity = 0.5f;
+    rbPtr->velocity = Vector3f(0.0f, 0.0f, 0.0f);
 
     rbPtr->SetBox(size);
     // rbPtr->SetAnglularVelocity(Vector3f(2.1f,0.1f,-3.1f));
-    rbPtr->collisionCallback=[](GameObject *other)
+    rbPtr->collisionCallback = [](GameObject *other)
     {
-        std::cout<<"BLACK "<<"Collision!"<<std::endl;
+        std::cout << "BLACK " << "Collision!" << std::endl;
     };
     rdPtr = &Cube->AddComponent<RenderComponent>();
     rdPtr->model = LoadModelFromMesh(cubeMesh);
@@ -207,11 +203,11 @@ void GameplayScreen::FixedUpdate(float fixedDeltaTime)
 
 void GameplayScreen::Update(float deltaTime)
 {
-    m_nextScreenState = static_cast<int>(ScreenStateID::NONE);
+    m_nextScreenState = SCREEN_STATE_NONE;
     m_inputManager->Update();
     if (m_inputManager->IsActionPressed("Exit"))
     {
-        m_nextScreenState = static_cast<int>(ScreenStateID::MAIN_MENU);
+        m_nextScreenState = MAIN_MENU;
     }
 
     // TODO:Camera更新
@@ -275,11 +271,11 @@ void GameplayScreen::Draw()
 }
 
 // 向 ScreenManager 报告下一个状态
-int GameplayScreen::GetNextScreenState() const
+ScreenState GameplayScreen::GetNextScreenState() const
 {
     return m_nextScreenState;
 }
-int GameplayScreen::GetScreenState() const
+ScreenState GameplayScreen::GetScreenState() const
 {
-    return static_cast<int>(ScreenStateID::GAMEPlAY);
+    return GAMEPLAY;
 }

@@ -1,5 +1,5 @@
 #include "StartScreen.h"
-#include "ScreenState.h"
+#include "MyScreenState.h"
 #include "Engine/System/Screen/ScreenManager.h"
 
 StartScreen::StartScreen()
@@ -21,7 +21,7 @@ void StartScreen::OnEnter()
     if (screenManager && screenManager->GetUILayer())
     {
         screenManager->GetUILayer()->SetVisible(true);
-        screenManager->GetUILayer()->LoadRoute("start");
+        screenManager->GetUILayer()->LoadRoute(SCREEN_STATE_START);
     }
 }
 
@@ -50,7 +50,7 @@ void StartScreen::Update(float deltaTime)
     else
     {
         m_alpha = 0.0f;
-        m_nextScreenState = static_cast<int>(ScreenStateID::MAIN_MENU);
+        m_nextScreenState = MAIN_MENU;
     }
 
     if (m_alpha < 0.0f)
@@ -76,11 +76,11 @@ void StartScreen::OnExit()
     }
 }
 
-int StartScreen::GetNextScreenState() const
+ScreenState StartScreen::GetNextScreenState() const
 {
     return m_nextScreenState;
 }
-int StartScreen::GetScreenState() const
+ScreenState StartScreen::GetScreenState() const
 {
-    return static_cast<int>(ScreenStateID::START);
+    return SCREEN_STATE_START;
 }

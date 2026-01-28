@@ -1,9 +1,9 @@
 #include "MainMenuScreen.h"
 #include "raylib.h"
 #include "Engine/System/Screen/ScreenManager.h"
-
+#include "Game/Screen/MyScreenState.h"
 MainMenuScreen::MainMenuScreen()
-    : m_nextScreenState(static_cast<int>(ScreenStateID::NONE))
+    : m_nextScreenState(SCREEN_STATE_NONE)
 {
 }
 MainMenuScreen::~MainMenuScreen()
@@ -16,7 +16,7 @@ void MainMenuScreen::OnEnter()
     if (screenManager && screenManager->GetUILayer())
     {
         screenManager->GetUILayer()->SetVisible(true);
-        screenManager->GetUILayer()->LoadRoute("menu");
+        screenManager->GetUILayer()->LoadRoute(MAIN_MENU);
     }
 }
 void MainMenuScreen::OnExit()
@@ -40,15 +40,17 @@ void MainMenuScreen::Update(float deltaTime)
     if (screenManager && screenManager->GetUILayer())
     {
         std::string currentRoute = screenManager->GetUILayer()->GetCurrentRoute();
+        std::cout << "cur: " << currentRoute << std::endl;
+        std::cout << "#/" + GAMEPLAY.getName() << std::endl;
 
-        if (currentRoute == "#/gameplay")
+        if (currentRoute == "#/" + GAMEPLAY.getName())
         {
-            m_nextScreenState = static_cast<int>(ScreenStateID::GAMEPlAY);
+            m_nextScreenState = GAMEPLAY;
             return;
         }
-        else if (currentRoute == "#/options")
+        else if (currentRoute == "#/" + GAMEPLAY.getName())
         {
-            m_nextScreenState = static_cast<int>(ScreenStateID::OPTIONS);
+            m_nextScreenState = OPTIONS;
             return;
         }
     }
@@ -64,11 +66,11 @@ void MainMenuScreen::Draw()
 }
 
 // 向 ScreenManager 报告下一个状态
-int MainMenuScreen::GetNextScreenState() const
+ScreenState MainMenuScreen::GetNextScreenState() const
 {
     return m_nextScreenState;
 }
-int MainMenuScreen::GetScreenState() const
+ScreenState MainMenuScreen::GetScreenState() const
 {
-    return static_cast<int>(ScreenStateID::MAIN_MENU);
+    return MAIN_MENU;
 }

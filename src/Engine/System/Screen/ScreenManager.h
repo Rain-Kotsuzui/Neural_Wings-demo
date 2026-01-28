@@ -4,20 +4,23 @@
 #include "Engine/Config/EngineConfig.h"
 #include "Engine/System/Time/TimeManager.h"
 #include "Engine/UI/UltralightLayer.h"
+
 #include <memory>
 
-class ScreenManager {
+class ScreenManager
+{
 public:
-    ScreenManager(const EngineConfig& config, std::unique_ptr<ScreenFactory> factory);
+    ScreenManager(const EngineConfig &config, std::unique_ptr<ScreenFactory> factory);
     ~ScreenManager();
-    //void Run();
-    
-    void ApplySettings(const EngineConfig& config);
-    const EngineConfig& GetActiveConfig() const;
-    UltralightLayer* GetUILayer();
+    // void Run();
 
-    bool UpdateFrame(); 
+    void ApplySettings(const EngineConfig &config);
+    const EngineConfig &GetActiveConfig() const;
+    UltralightLayer *GetUILayer();
+
+    bool UpdateFrame();
     void Shutdown();
+
 private:
     void ChangeScreen(int newState);
 
