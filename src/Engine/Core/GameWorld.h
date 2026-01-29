@@ -9,10 +9,11 @@
 class GameWorld
 {
 public:
-    GameWorld(std::function<void(Renderer &, PhysicsStageFactory &)> configCallback,
+    GameWorld(std::function<void(PhysicsStageFactory &)> configCallback,
               const std::string &cameraConfigPath = "assets/config/cameras_config.json",
               const std::string &sceneConfigPath = "assets/scenes/test_scene.json",
-              const std::string &inputConfigPath = "assets/config/input_config.json");
+              const std::string &inputConfigPath = "assets/config/input_config.json",
+              const std::string &renderView = "assets/view/test_view.json");
     ~GameWorld() = default;
 
     GameObject &CreateGameObject();
@@ -25,6 +26,10 @@ public:
     PhysicsSystem &GetPhysicsSystem() { return *m_physicsSystem; };
 
     ResourceManager &GetResourceManager() { return *m_resourceManager; };
+
+    Renderer &GetRenderer() { return *m_renderer; };
+    CameraManager &GetCameraManager() { return *m_cameraManager; };
+    InputManager &GetInputManager() { return *m_inputManager; };
 
 private:
     void DestroyWaitingObjects();

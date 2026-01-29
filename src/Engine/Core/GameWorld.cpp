@@ -4,10 +4,11 @@
 #include "Engine/Graphics/Graphics.h"
 #include <string>
 
-GameWorld::GameWorld(std::function<void(Renderer &, PhysicsStageFactory &)> configCallback,
+GameWorld::GameWorld(std::function<void(PhysicsStageFactory &)> configCallback,
                      const std::string &cameraConfigPath,
                      const std::string &sceneConfigPath,
-                     const std::string &inputConfigPath)
+                     const std::string &inputConfigPath,
+                     const std::string &renderView)
 {
 
     m_renderer = std::make_unique<Renderer>();
@@ -16,10 +17,11 @@ GameWorld::GameWorld(std::function<void(Renderer &, PhysicsStageFactory &)> conf
     m_physicsSystem = std::make_unique<PhysicsSystem>();
     m_physicsStageFactory = std::make_unique<PhysicsStageFactory>();
     m_resourceManager = std::make_unique<ResourceManager>();
-    configCallback(*m_renderer, *m_physicsStageFactory);
+    configCallback(*m_physicsStageFactory);
 
     m_cameraManager->LoadConfig(cameraConfigPath);
     m_sceneManager->LoadScene(sceneConfigPath, *this, *m_physicsSystem);
+    m_renderer->LoadViewConfig(renderView);
 
     if (!m_inputManager->LoadBindings(inputConfigPath))
     {
@@ -44,55 +46,6 @@ void GameWorld::FixedUpdate(float fixedDeltaTime)
 }
 bool GameWorld::Update(float deltaTime)
 {
-    m_inputManager->Update();
-    if (m_inputManager->IsActionPressed("Exit"))
-    {
-        return false;
-    }
-
-    // TODO:Camera更新
-    if (auto *mainCam = m_cameraManager->GetMainCamera())
-    {
-        Vector3f mainPos = mainCam->Position();
-
-        if (m_inputManager->IsActionDown("Forward"))
-        {
-            DrawText("Forward!", 200, 200, 20, GREEN);
-            mainPos += mainCam->Direction() * 0.3f;
-        }
-        if (m_inputManager->IsActionDown("Backward"))
-        {
-            DrawText("Backward!", 200, 200, 20, GREEN);
-            mainPos -= mainCam->Direction() * 0.1f;
-        }
-        if (m_inputManager->IsActionDown("Left"))
-        {
-            DrawText("Left!", 200, 200, 20, GREEN);
-            mainPos -= mainCam->Right() * 0.1f;
-        }
-        if (m_inputManager->IsActionDown("Right"))
-        {
-            DrawText("Right!", 200, 200, 20, GREEN);
-            mainPos += mainCam->Right() * 0.1f;
-        }
-        mainCam->UpdateFromDirection(mainPos, mainCam->Direction(), mainCam->Up());
-
-        float lookHorizontal = -m_inputManager->GetAxisValue("LookHorizontal") * PI / 180;
-        float lookVertical = m_inputManager->GetAxisValue("LookVertical") * PI / 180;
-        DrawText(TextFormat("LookHorizontal: %f", lookHorizontal), 200, 300, 20, GREEN);
-        DrawText(TextFormat("LookVertical: %f", lookVertical), 200, 350, 20, GREEN);
-        mainCam->Rotate(lookHorizontal, lookVertical);
-
-        if (auto *rearCam = m_cameraManager->GetCamera("rear_view"))
-        {
-            Vector3f mainPos = mainCam->Position();
-            Vector3f mainTarget = mainCam->Target();
-            Vector3f direction = mainTarget - mainPos;
-            direction.Normalize();
-
-            rearCam->UpdateFromDirection(mainPos, -direction, mainCam->Up());
-        }
-    }
 }
 
 const std::vector<std::unique_ptr<GameObject>> &GameWorld::GetGameObjects() const

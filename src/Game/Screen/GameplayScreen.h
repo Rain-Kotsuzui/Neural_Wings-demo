@@ -23,7 +23,6 @@ private:
     ScreenState m_nextScreenState;
     // 游戏世界系统
     std::unique_ptr<GameWorld> m_world;
-    void ConfigCallback(Renderer &renderer, PhysicsStageFactory &factory);
-    void ConfigureRenderer(Renderer &renderer);
+    void ConfigCallback(PhysicsStageFactory &factory);
     // ...
 };

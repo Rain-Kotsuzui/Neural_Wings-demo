@@ -8,43 +8,29 @@
 GameplayScreen::GameplayScreen()
     : m_nextScreenState(SCREEN_STATE_NONE)
 {
-    m_world = std::make_unique<GameWorld>([this](Renderer &renderer, PhysicsStageFactory &factory)
-                                          { this->ConfigCallback(renderer, factory); });
+    const std::string &cameraConfigPath = "assets/config/cameras_config.json";
+    const std::string &sceneConfigPath = "assets/scenes/test_scene.json";
+    const std::string &inputConfigPath = "assets/config/input_config.json";
+    const std::string &renderViewConfigPath = "assets/view/test_view.json";
+    m_world = std::make_unique<GameWorld>([this](PhysicsStageFactory &factory)
+                                          { this->ConfigCallback(factory); },
+                                          cameraConfigPath,
+                                          sceneConfigPath,
+                                          inputConfigPath,
+                                          renderViewConfigPath);
 }
 GameplayScreen::~GameplayScreen()
 {
     OnExit();
 }
 
-void GameplayScreen::ConfigCallback(Renderer &renderer, PhysicsStageFactory &factory)
+void GameplayScreen::ConfigCallback(PhysicsStageFactory &factory)
 {
-    ConfigureRenderer(renderer);
     // 注册后才可使用json配置
     factory.Register("solarStage", []()
                      { return std::make_unique<SolarStage>(); });
     factory.Register("collisionStage", []()
                      { return std::make_unique<CollisionStage>(); });
-}
-
-void GameplayScreen::ConfigureRenderer(Renderer &renderer)
-{
-    renderer.ClearRenderViews();
-
-    // 1. 主视图
-    RenderView mainView;
-    mainView.cameraName = "main_orbital";
-    mainView.viewport = {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()};
-    renderer.AddRenderView(mainView);
-
-    // 2.后视图
-    RenderView rearView;
-    rearView.cameraName = "rear_view";
-    int viewWidth = GetScreenWidth() / 5;
-    int viewHeight = GetScreenHeight() / 5;
-    rearView.viewport = {(float)GetScreenWidth() - viewWidth - 20, (float)GetScreenHeight() - viewHeight - 20, (float)viewWidth, (float)viewHeight};
-    rearView.clearBackground = true; // 不透明底
-    rearView.backgroundColor = Fade(BLACK, 0.7f);
-    renderer.AddRenderView(rearView);
 }
 
 // 当进入游戏场景时调用
@@ -77,8 +63,61 @@ void GameplayScreen::FixedUpdate(float fixedDeltaTime)
 void GameplayScreen::Update(float deltaTime)
 {
     m_nextScreenState = SCREEN_STATE_NONE;
+
     if (!m_world->Update(deltaTime))
         m_nextScreenState = MAIN_MENU;
+
+        auto &m_inputManager = m_world->GetInputManager();
+    auto &m_cameraManager = m_world->GetCameraManager();
+    m_inputManager.Update();
+    if (m_inputManager.IsActionPressed("Exit"))
+    {
+        m_nextScreenState = MAIN_MENU;
+    }
+
+    // TODO:Camera更新
+    if (auto *mainCam = m_cameraManager.GetMainCamera())
+    {
+        Vector3f mainPos = mainCam->Position();
+
+        if (m_inputManager.IsActionDown("Forward"))
+        {
+            DrawText("Forward!", 200, 200, 20, GREEN);
+            mainPos += mainCam->Direction() * 0.3f;
+        }
+        if (m_inputManager.IsActionDown("Backward"))
+        {
+            DrawText("Backward!", 200, 200, 20, GREEN);
+            mainPos -= mainCam->Direction() * 0.1f;
+        }
+        if (m_inputManager.IsActionDown("Left"))
+        {
+            DrawText("Left!", 200, 200, 20, GREEN);
+            mainPos -= mainCam->Right() * 0.1f;
+        }
+        if (m_inputManager.IsActionDown("Right"))
+        {
+            DrawText("Right!", 200, 200, 20, GREEN);
+            mainPos += mainCam->Right() * 0.1f;
+        }
+        mainCam->UpdateFromDirection(mainPos, mainCam->Direction(), mainCam->Up());
+
+        float lookHorizontal = -m_inputManager.GetAxisValue("LookHorizontal") * PI / 180;
+        float lookVertical = m_inputManager.GetAxisValue("LookVertical") * PI / 180;
+        DrawText(TextFormat("LookHorizontal: %f", lookHorizontal), 200, 300, 20, GREEN);
+        DrawText(TextFormat("LookVertical: %f", lookVertical), 200, 350, 20, GREEN);
+        mainCam->Rotate(lookHorizontal, lookVertical);
+
+        if (auto *rearCam = m_cameraManager.GetCamera("rear_view"))
+        {
+            Vector3f mainPos = mainCam->Position();
+            Vector3f mainTarget = mainCam->Target();
+            Vector3f direction = mainTarget - mainPos;
+            direction.Normalize();
+
+            rearCam->UpdateFromDirection(mainPos, -direction, mainCam->Up());
+        }
+    }
 }
 
 void GameplayScreen::Draw()

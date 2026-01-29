@@ -24,4 +24,20 @@ public:
         }
         return defaultValue;
     }
+    static Rectangle ToRectangle(const json &j)
+    {
+        if (j.is_array() && j.size() == 4)
+        {
+            float sw = (float)GetScreenWidth();
+            float sh = (float)GetScreenHeight();
+            float x = j[0].get<float>();
+            float y = j[1].get<float>();
+            float w = j[2].get<float>();
+            float h = j[3].get<float>();
+            return Rectangle{x <= 1 ? x * sw : x,
+                             y <= 1 ? y * sh : y,
+                             w <= 1 ? w * sw : w,
+                             h <= 1 ? h * sh : h};
+        }
+    }
 };
