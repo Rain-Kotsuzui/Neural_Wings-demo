@@ -1,26 +1,70 @@
 #include "GameObject.h"
 #include <iostream>
+#include <string>
 
-unsigned int GameObject::s_nextID = 0;
-
-GameObject::GameObject()
-    : m_id(s_nextID++)
+GameObject::GameObject(unsigned int s_nextID, std::string name, std::string tag)
+    : m_id(s_nextID), m_name(name), m_tag(tag), m_isWaitingDestroy(false), m_isDestroyed(false)
 {
 }
 GameObject::~GameObject()
 {
     std::cout << "Destroying GameObject " << m_id << std::endl;
 }
+
 unsigned int GameObject::GetID() const
 {
     return m_id;
 }
-// 用于删除GameObject
-void GameObject::Destroy()
+
+void GameObject::SetName(const std::string &name)
 {
-    m_isWaitingDestroy = true;
+    m_name = name;
+}
+void GameObject::SetTag(const std::string &tag)
+{
+    m_tag = tag;
+}
+std::string GameObject::GetName() const
+{
+    return m_name;
+}
+std::string GameObject::GetTag() const
+{
+    return m_tag;
 }
 
+GameWorld *GameObject::GetOwnerWorld() const
+{
+    return owner_world;
+}
+void GameObject::SetOwnerWorld(GameWorld *world)
+{
+    owner_world = world;
+}
+
+// 用于删除GameObject
+// 先销毁脚本
+void GameObject::OnDestroy()
+{
+    if (m_isDestroyed)
+        return;
+    m_isDestroyed = true;
+    if (this->HasComponent<ScriptComponent>())
+    {
+        auto &sc = this->GetComponent<ScriptComponent>();
+        for (auto &script : sc.scripts)
+        {
+            if (script)
+                script->OnDestroy();
+        }
+        sc.scripts.clear();
+    }
+    m_isWaitingDestroy = true;
+}
+void GameObject::SetIsWaitingDestroy(bool isWaitingDestroy)
+{
+    m_isWaitingDestroy = isWaitingDestroy;
+}
 bool GameObject::IsWaitingDestroy() const
 {
     return m_isWaitingDestroy;

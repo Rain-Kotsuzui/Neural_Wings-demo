@@ -46,7 +46,14 @@ bool SceneManager::LoadScene(const std::string &scenePath, GameWorld &gameWorld,
         for (const auto &entityData : sceneData["entities"])
         {
             std::string prefabPath = entityData["prefab"];
-            GameObject &obj = GameObjectFactory::CreateFromPrefab(prefabPath, gameWorld);
+            std::string objectName = entityData.value("name", "");
+            std::string objectTag = entityData.value("tag", "Untagged");
+            GameObject &obj = GameObjectFactory::CreateFromPrefab(objectName, objectTag, prefabPath, gameWorld);
+
+            obj.SetOwnerWorld(&gameWorld);
+
+            if (!obj.HasComponent<TransformComponent>())
+                obj.AddComponent<TransformComponent>();
             auto &tf = obj.GetComponent<TransformComponent>();
             if (entityData.contains("position"))
             {
@@ -65,6 +72,67 @@ bool SceneManager::LoadScene(const std::string &scenePath, GameWorld &gameWorld,
                     auto &rb = obj.GetComponent<RigidbodyComponent>();
                     rb.SetHitbox(tf.scale);
                 }
+            }
+
+            if (entityData.contains("physics"))
+            {
+                AddRigidbody(obj, entityData["physics"]);
+            }
+            if (entityData.contains("renderScale") && obj.HasComponent<RenderComponent>())
+            {
+                auto &render = obj.GetComponent<RenderComponent>();
+                render.scale = render.scale & JsonParser::ToVector3f(entityData["renderScale"]);
+            }
+            if (entityData.contains("scripts"))
+            {
+                AddScripts(gameWorld, obj, entityData["scripts"]);
+            }
+        }
+    }
+}
+
+void SceneManager::AddRigidbody(GameObject &gameObject, const json &rigidData)
+{
+    if (!gameObject.HasComponent<RigidbodyComponent>() || !gameObject.HasComponent<TransformComponent>())
+    {
+        return;
+    }
+    auto &rb = gameObject.GetComponent<RigidbodyComponent>();
+    rb.mass = rigidData.value("mass", rb.mass);
+    rb.drag = rigidData.value("drag", rb.drag);
+    rb.angularDrag = rigidData.value("angularDrag", rb.angularDrag);
+    rb.elasticity = rigidData.value("elasticity", rb.elasticity);
+
+    if (rigidData.contains("velocity"))
+        rb.velocity = JsonParser::ToVector3f(rigidData["velocity"]);
+    if (rigidData.contains("angularVelocity"))
+        rb.angularVelocity = JsonParser::ToVector3f(rigidData["angularVelocity"]);
+}
+
+void SceneManager::AddScripts(GameWorld &gameWorld, GameObject &gameObject, const json &scripts)
+{
+
+    if (!gameObject.HasComponent<ScriptComponent>())
+        gameObject.AddComponent<ScriptComponent>();
+    auto &sc = gameObject.GetComponent<ScriptComponent>();
+    auto &factory = gameWorld.GetScriptingFactory();
+
+    for (auto &scriptData : scripts)
+    {
+        auto it = scriptData.begin();
+        if (it != scriptData.end())
+        {
+            const std::string scriptName = it.key();
+            const json &scriptData = it.value();
+
+            auto script = factory.Create(scriptName);
+            if (script)
+            {
+                script->world = &gameWorld;
+                script->owner = &gameObject;
+                script->Initialize(scriptData);
+                script->OnCreate();
+                sc.scripts.push_back(std::move(script));
             }
         }
     }

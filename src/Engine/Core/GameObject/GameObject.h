@@ -4,20 +4,24 @@
 #include <memory>
 #include <typeindex>
 #include <stdexcept>
+#include <string>
 
 #include "raylib.h"
 #include "Engine/Math/Math.h"
 
+class GameWorld;
 struct AABB;
 class GameObject
 {
 public:
-    GameObject();
+    GameObject(unsigned int id, std::string name = "", std::string tag = "Untagged");
     ~GameObject();
+
     GameObject(const GameObject &) = delete;
     GameObject &operator=(const GameObject &) = delete;
 
-    void Destroy();
+    void OnDestroy();
+    void SetIsWaitingDestroy(bool isWaitingDestroy);
     bool IsWaitingDestroy() const;
 
     template <typename T, typename... Args>
@@ -30,7 +34,19 @@ public:
     unsigned int GetID() const;
     AABB GetWorldAABB(Vector3f (*outCorners)[8] = nullptr) const;
 
+    void SetName(const std::string &name);
+    void SetTag(const std::string &tag);
+    std::string GetName() const;
+    std::string GetTag() const;
+    GameWorld *GetOwnerWorld() const;
+    void SetOwnerWorld(GameWorld *world);
+
 private:
+    GameWorld *owner_world = nullptr;
+
+    std::string m_name;
+    std::string m_tag;
+
     std::vector<std::unique_ptr<IComponent>> m_components;
     // 组件索引
     std::vector<std::type_index> m_componentTypeIndex;
@@ -39,6 +55,7 @@ private:
     static unsigned int s_nextID;
 
     bool m_isWaitingDestroy = false;
+    bool m_isDestroyed = false;
 };
 
 template <typename T, typename... TArgs>
@@ -46,7 +63,9 @@ T &GameObject::AddComponent(TArgs &&...args)
 {
     if (HasComponent<T>())
     {
-        throw std::runtime_error("Component already exists.");
+        // throw std::runtime_error("Component already exists.");
+        std::cout << "[GameObject " << this->m_id << "] Component already exists." << std::endl;
+        return GetComponent<T>();
     }
 
     auto newComponent = std::make_unique<T>(std::forward<TArgs>(args)...);
