@@ -281,7 +281,6 @@ void Renderer::RenderSinglePass(const Mesh &mesh, const Model &model, const int 
         Material tempRaylibMaterial = model.materials[matIdex];
 
         pass.shader->Begin();
-        rlDrawRenderBatchActive();
 
         switch (pass.blendMode)
         {
@@ -350,7 +349,5 @@ void Renderer::RenderSinglePass(const Mesh &mesh, const Model &model, const int 
         rlEnableDepthMask();
         rlDisableBackfaceCulling();
         rlSetCullFace(RL_CULL_FACE_BACK);
-
-        rlDrawRenderBatchActive();
     }
 }
