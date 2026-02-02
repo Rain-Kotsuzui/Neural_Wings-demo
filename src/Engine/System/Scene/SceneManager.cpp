@@ -4,6 +4,7 @@
 #include "Engine/Core/GameObject/GameObjectFactory.h"
 #include "Engine/System/Physics/Physics.h"
 #include "Engine/Utils/JsonParser.h"
+#include "rlgl.h"
 #include <fstream>
 #include <iostream>
 #include <nlohmann/json.hpp>
@@ -78,14 +79,103 @@ bool SceneManager::LoadScene(const std::string &scenePath, GameWorld &gameWorld,
             {
                 AddRigidbody(obj, entityData["physics"]);
             }
-            if (entityData.contains("renderScale") && obj.HasComponent<RenderComponent>())
+            if (entityData.contains("render") && obj.HasComponent<RenderComponent>())
             {
-                auto &render = obj.GetComponent<RenderComponent>();
-                render.scale = render.scale & JsonParser::ToVector3f(entityData["renderScale"]);
+                AddShaders(obj, entityData["render"], gameWorld);
             }
             if (entityData.contains("scripts"))
             {
                 AddScripts(gameWorld, obj, entityData["scripts"]);
+            }
+        }
+    }
+}
+
+void SceneManager::AddShaders(GameObject &gameObject, const json &renderData, GameWorld &gameWorld)
+{
+    auto &rd = gameObject.GetComponent<RenderComponent>();
+    auto &rm = gameWorld.GetResourceManager();
+
+    if (renderData.contains("renderScale"))
+        rd.scale = rd.scale & JsonParser::ToVector3f(renderData["renderScale"]);
+
+    rd.isVisible = renderData.value("isVisible", true);
+    rd.showWires = renderData.value("showWires", false);
+    rd.showAxes = renderData.value("showAxes", false);
+    rd.showAngVol = renderData.value("showAngVol", false);
+    rd.showVol = renderData.value("showVol", false);
+    rd.showCenter = renderData.value("showCenter", false);
+
+    if (renderData.contains("defaultMaterial"))
+    {
+        auto &matData = renderData["defaultMaterial"];
+
+        if (matData.contains("fs"))
+            rd.defaultMaterial.shader = rm.GetShader(matData.value("vs", "assets/shaders/default.vs"), matData["fs"]);
+        if (matData.contains("color"))
+            rd.defaultMaterial.baseColor = JsonParser::ToVector4f(matData["color"]);
+    }
+
+    if (renderData.contains("meshPasses"))
+    {
+        auto &matData = renderData["meshPasses"];
+        for (const auto &entry : matData)
+        {
+            int meshIndex = entry.value("meshIndex", 0);
+            std::vector<RenderMaterial> &passes = rd.meshPasses[meshIndex];
+
+            for (const auto &pData : entry["passes"])
+            {
+                RenderMaterial mat;
+
+                mat.depthWrite = pData.value("depthWrite", true);
+                mat.depthTest = pData.value("depthTest", true);
+
+                if (pData.contains("fs"))
+                {
+                    mat.shader = rm.GetShader(pData.value("vs", "assets/shaders/default.vs"), pData["fs"]);
+                }
+                if (pData.contains("color"))
+                    mat.baseColor = JsonParser::ToVector4f(pData["color"]);
+                if (pData.contains("blendMode"))
+                {
+                    std::string blendMode = pData["blendMode"];
+                    if (blendMode == "ADDITIVE")
+                        mat.blendMode = BlendMode::BLEND_ADDITIVE;
+                    else if (blendMode == "ALPHA")
+                        mat.blendMode = BlendMode::BLEND_ALPHA;
+                    else if (blendMode == "NONE")
+                        mat.blendMode = -1;
+                    else
+                        std::cerr << "[GameObjectFactory]: Unknown blend mode: " << blendMode << std::endl;
+                }
+
+                if (pData.contains("uniforms"))
+                {
+                    auto &uniformsData = pData["uniforms"];
+                    for (auto &[uName, uValue] : uniformsData.items())
+                    {
+                        if (uValue.is_number())
+                            mat.customFloats[uName] = uValue;
+                        else if (uValue.is_array() && uValue.size() == 3)
+                            mat.customVector3[uName] = JsonParser::ToVector3f(uValue);
+                        else if (uValue.is_array() && uValue.size() == 4)
+                            mat.customVector4[uName] = JsonParser::ToVector4f(uValue);
+                        else
+                            std::cerr << "[GameObjectFactory]: Unknown uniform type: " << uName << std::endl;
+                    }
+                }
+
+                if (pData.contains("cullFace"))
+                {
+                    if (pData["cullFace"] == "FRONT")
+                        mat.cullFace = RL_CULL_FACE_FRONT;
+                    else if (pData["cullFace"] == "BACK")
+                        mat.cullFace = RL_CULL_FACE_BACK;
+                    else
+                        mat.cullFace = -1;
+                }
+                passes.push_back(mat);
             }
         }
     }

@@ -1,8 +1,12 @@
 #include "Renderer.h"
 #include "Engine/Core/GameWorld.h"
-#include "CameraManager.h"
+#include "Camera/CameraManager.h"
 #include "Engine/Core/Components/Components.h"
 #include "Engine/Utils/JsonParser.h"
+#include "raylib.h"
+#include "raymath.h"
+#include "rlgl.h"
+
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
@@ -74,11 +78,11 @@ void Renderer::ClearRenderViews()
     m_renderViews.clear();
 }
 
-void Renderer::RenderScene(const GameWorld &world, CameraManager &cameraManager)
+void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
 {
     for (const auto &view : m_renderViews)
     {
-        Camera3D *camera = cameraManager.GetCamera(view.cameraName);
+        mCamera *camera = cameraManager.GetCamera(view.cameraName);
         if (camera)
         {
             BeginScissorMode(view.viewport.x, view.viewport.y, view.viewport.width, view.viewport.height);
@@ -87,9 +91,9 @@ void Renderer::RenderScene(const GameWorld &world, CameraManager &cameraManager)
             {
                 ClearBackground(view.backgroundColor);
             }
-
-            BeginMode3D(*camera);
-            DrawWorldObjects(world);
+            Camera3D rawCamera = camera->GetRawCamera();
+            BeginMode3D(rawCamera);
+            DrawWorldObjects(gameWorld, rawCamera, *camera, view.viewport.width / view.viewport.height);
             EndMode3D();
 
             // TODO：（debug）为视口绘制边框
@@ -152,48 +156,172 @@ void DrawVector(Vector3f position, Vector3f direction, float axisLength, float t
     DrawCylinderEx(position, end, thickness, thickness, sides, BLUE);
     DrawCylinderEx(end, tip, coneRadius, 0.0f, sides, BLACK);
 }
-void Renderer::DrawWorldObjects(const GameWorld &world)
+void Renderer::DrawWorldObjects(GameWorld &world, Camera3D &rawCamera, mCamera &camera, float aspect)
 {
+    Matrix4f matView = GetCameraMatrix(rawCamera);
+    Matrix4f matProj;
+    if (rawCamera.projection == CAMERA_PERSPECTIVE)
+    {
+        matProj = MatrixPerspective(rawCamera.fovy * M_PI / 180.0f, aspect, camera.getNearPlane(), camera.getFarPlane());
+    }
+    else
+    {
+        float top = rawCamera.fovy * 0.5f;
+        float right = top * aspect;
+        matProj = MatrixOrtho(-right, right, -top, top, camera.getNearPlane(), camera.getFarPlane());
+    }
+    Matrix4f VP = matProj * matView;
+
     for (const auto &gameObject : world.GetGameObjects())
     {
         if (gameObject->HasComponent<TransformComponent>() && gameObject->HasComponent<RenderComponent>())
         {
-            const auto &transform = gameObject->GetComponent<TransformComponent>();
+            const auto &tf = gameObject->GetComponent<TransformComponent>();
             const auto &render = gameObject->GetComponent<RenderComponent>();
 
             float angle = 0.0f;
-            Quat4f rotation = transform.rotation;
+            Quat4f rotation = tf.rotation;
             Vector3f axis = rotation.getAxisAngle(&angle);
             angle *= 180.0f / M_PI;
 
-            // TODO:web渲染bug
+            bool useShader = (render.defaultMaterial.shader != nullptr && render.defaultMaterial.shader->IsValid());
+            if (useShader)
+            {
 
-            DrawModelEx(
-                render.model,
-                transform.position,
-                axis,
-                angle,
-                transform.scale & render.scale,
-                render.tint);
-            DrawModelWiresEx(
-                render.model,
-                transform.position,
-                axis,
-                angle,
-                transform.scale & render.scale,
-                BLACK);
+                Matrix4f S = Matrix4f(Matrix3f(tf.scale & render.scale));
+                Matrix4f R = Matrix4f(tf.rotation.toMatrix());
+                Matrix4f T = Matrix4f::translation(tf.position);
+                Matrix4f M = T * R * S;
 
-            // TODO: debug
-            DrawCoordinateAxes(transform.position, transform.rotation, 2.0f, 0.05f);
-            DrawSphereEx(transform.position, 0.1f, 8, 8, RED);
-            if (gameObject->HasComponent<RigidbodyComponent>())
+                Matrix4f MVP = VP * M;
+
+                // 同模型各个mesh的passes
+                for (int i = 0; i < render.model.meshCount; i++)
+                {
+                    Mesh &mesh = render.model.meshes[i];
+                    const std::vector<RenderMaterial> *passes = nullptr;
+                    auto it = render.meshPasses.find(i);
+                    if (it != render.meshPasses.end())
+                    {
+                        passes = &it->second;
+                    }
+                    if (passes != nullptr && !passes->empty())
+                    {
+                        // 单mesh多pass
+                        for (size_t p = 0; p < passes->size(); p++)
+                        {
+                            const RenderMaterial &pass = (*passes)[p];
+
+                            RenderSinglePass(mesh, render.model, i, pass, MVP, M, camera, world);
+                        }
+                    }
+                    else
+                    {
+                        RenderSinglePass(mesh, render.model, i, render.defaultMaterial, MVP, M, camera, world);
+                    }
+                }
+            }
+            else
+            {
+                Color tint = {render.defaultMaterial.baseColor.x(), render.defaultMaterial.baseColor.y(), render.defaultMaterial.baseColor.z(), render.defaultMaterial.baseColor.w()};
+                DrawModelEx(
+                    render.model,
+                    tf.position,
+                    axis,
+                    angle,
+                    tf.scale & render.scale,
+                    tint);
+            }
+            if (render.showWires)
+                DrawModelWiresEx(
+                    render.model,
+                    tf.position,
+                    axis,
+                    angle,
+                    tf.scale & render.scale,
+                    BLACK);
+
+            if (render.showAxes)
+                DrawCoordinateAxes(tf.position, tf.rotation, 2.0f, 0.05f);
+            if (render.showCenter)
+                DrawSphereEx(tf.position, 0.1f, 8, 8, RED);
+            if (render.showAngVol && gameObject->HasComponent<RigidbodyComponent>())
             {
                 const auto &rb = gameObject->GetComponent<RigidbodyComponent>();
-                DrawVector(transform.position, rb.angularVelocity, 1.0f, 0.05f);
+                DrawVector(tf.position, rb.angularVelocity, 1.0f, 0.05f);
+            }
+            if (render.showVol && gameObject->HasComponent<RigidbodyComponent>())
+            {
+                const auto &rb = gameObject->GetComponent<RigidbodyComponent>();
+                DrawVector(tf.position, rb.velocity, 1.0f, 0.05f);
             }
         }
     }
     // TODO: debug
     DrawGrid(20, 10.0f);
     DrawCoordinateAxes(Vector3f(0.0f), Quat4f::IDENTITY, 2.0f, 0.05f);
+}
+
+void Renderer::RenderSinglePass(const Mesh &mesh, const Model &model, const int &meshIdx, const RenderMaterial &pass, const Matrix4f &MVP, const Matrix4f &M, const mCamera &camera, GameWorld &gameWorld)
+{
+    rlEnableDepthTest();
+    rlEnableDepthMask();
+    rlDisableBackfaceCulling();
+    rlSetCullFace(RL_CULL_FACE_BACK);
+    BeginBlendMode(BLEND_ALPHA);
+
+    float gameTime = gameWorld.GetTimeManager().GetGameTime();
+    float realTime = gameWorld.GetTimeManager().GetRealTime();
+
+    if (pass.shader != nullptr && pass.shader->IsValid())
+    {
+        int matIdex = model.meshMaterial[meshIdx];
+        Material tempRaylibMaterial = model.materials[matIdex];
+
+        pass.shader->Begin();
+        if (pass.blendMode == -1)
+        {
+            rlSetBlendMode(BLEND_CUSTOM);
+            rlSetBlendFactors(RL_ONE, RL_ZERO, RL_FUNC_ADD);
+        }
+        else
+            BeginBlendMode(pass.blendMode);
+
+        pass.shader->SetMat4("u_mvp", MVP);
+        pass.shader->SetMat4("transform", M);
+        pass.shader->SetVec3("viewPos", camera.Position());
+        pass.shader->SetFloat("realTime", realTime);
+        pass.shader->SetFloat("gameTime", gameTime);
+        Vector4f color = pass.baseColor / 255.0f;
+        pass.shader->SetVec4("baseColor", color);
+
+        for (auto const &[name, value] : pass.customFloats)
+            pass.shader->SetFloat(name, value);
+        for (auto const &[name, value] : pass.customVector3)
+            pass.shader->SetVec3(name, value);
+        for (auto const &[name, value] : pass.customVector4)
+            pass.shader->SetVec4(name, value);
+
+        tempRaylibMaterial.shader = pass.shader->GetShader();
+
+        if (pass.cullFace >= 0)
+        {
+            rlEnableBackfaceCulling();
+            rlSetCullFace(pass.cullFace);
+        }
+        if (!pass.depthTest)
+            rlDisableDepthTest();
+        if (!pass.depthWrite)
+            rlDisableDepthMask();
+
+        DrawMesh(mesh, tempRaylibMaterial, M);
+
+        pass.shader->End();
+
+        EndBlendMode();
+        rlEnableDepthTest();
+        rlEnableDepthMask();
+        rlDisableBackfaceCulling();
+        rlSetCullFace(RL_CULL_FACE_BACK);
+    }
 }

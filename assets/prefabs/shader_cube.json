@@ -22,18 +22,20 @@
         },
         {
             "RenderComponent": {
+                "model": "primitive://cube",
                 "isVisible": true,
-                "showWires": false,
+                "showWires": true,
                 "showAxes": false,
                 "showAngVol": false,
                 "showVol": false,
                 "showCenter": false,
-                "model": "primitive://cube",
                 "defaultMaterial": {
+                    "name": "baseColor(若无vs.默认使用assets/shaders/default.vs)",
+                    "fs": "assets/shaders/default.fs",
                     "color": [
-                        255,
-                        255,
-                        255,
+                        50,
+                        100,
+                        50,
                         255
                     ]
                 },
@@ -47,13 +49,15 @@
                                 "fs": "assets/shaders/default.fs",
                                 "color": [
                                     100,
-                                    50,
-                                    50,
+                                    100,
+                                    255,
                                     255
-                                ]
+                                ],
+                                "blendMode": "NONE",
+                                "depthWrite": true,
+                                "depthTest": true
                             },
                             {
-                                "name": "pass_0",
                                 "vs": "assets/shaders/base.vs",
                                 "fs": "assets/shaders/hologram.fs",
                                 "color": [
@@ -62,19 +66,9 @@
                                     255,
                                     255
                                 ],
-                                "blendMode": "BLEND_ADDITIVE"
-                            },
-                            {
-                                "name": "pass_1",
-                                "vs": "assets/shaders/base.vs",
-                                "fs": "assets/shaders/depth.fs",
-                                "color": [
-                                    255,
-                                    255,
-                                    255,
-                                    255
-                                ],
-                                "blendMode": "BLEND_ADDITIVE"
+                                "blendMode": "ALPHA",
+                                "depthWrite": false,
+                                "depthTest": true
                             }
                         ]
                     }
@@ -103,17 +97,6 @@
                     0
                 ],
                 "colliderType": "BOX"
-            }
-        },
-        {
-            "ScriptComponent": {
-                "RotatorScript": {
-                    "angluarVelocity": [
-                        0,
-                        1.0,
-                        0
-                    ]
-                }
             }
         }
     ]
