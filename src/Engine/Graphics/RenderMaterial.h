@@ -26,6 +26,7 @@ struct RenderMaterial
     int cullFace = -1; // 0 for front,1 for back
 
     std::unordered_map<std::string, float> customFloats;
+    std::unordered_map<std::string, Vector2f> customVector2;
     std::unordered_map<std::string, Vector3f> customVector3;
     std::unordered_map<std::string, Vector4f> customVector4;
 };
