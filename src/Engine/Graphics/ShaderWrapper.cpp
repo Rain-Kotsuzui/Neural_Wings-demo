@@ -34,6 +34,7 @@ int ShaderWrapper::GetLocation(const std::string &name)
     return loc;
 }
 
+// TODO:使用模板实现自定义参数上传
 void ShaderWrapper::SetAll(const Matrix4f &MVP, const Matrix4f &M, const Vector3f &viewPos, float realTime, float gameTime, const Vector4f &baseColor,
 
                            const std::unordered_map<std::string, float> &customFloats,

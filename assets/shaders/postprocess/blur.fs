@@ -12,20 +12,21 @@ uniform sampler2D screenTexture;
 uniform vec2 screenResolution;
 
 // 自定义参数
+uniform sampler2D u_screen;
 uniform vec2 u_direction;
 uniform float u_radius;
 
-const float offset[3] = float[](0.0, 1.3846153846, 3.2307692308);
-const float weight[3] = float[](0.2270270270, 0.3162162162, 0.0702702703);
-
+const float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+// TODO:BUGGGGGGGGGGGGGGGGGGGGGGG!!
 void main() {
     vec2 tex_offset = 1.0 / screenResolution;
     vec3 result = texture(screenTexture, fragTexCoord).rgb * weight[0];
 
-    for(int i = 1; i < 3; i++) {
-        vec2 sampleOffset = u_direction * tex_offset * offset[i] * u_radius;
-        result += texture(screenTexture, fragTexCoord + sampleOffset).rgb * weight[i];
-        result += texture(screenTexture, fragTexCoord - sampleOffset).rgb * weight[i];
+    for(int i = 1; i < 5; i++) {
+        vec2 offset = u_direction * tex_offset * u_radius * float(i);
+
+        result += texture(u_screen, fragTexCoord + offset).rgb * weight[i];
+        result += texture(u_screen, fragTexCoord - offset).rgb * weight[i];
     }
     finalColor = vec4(result, 1.0);
 }

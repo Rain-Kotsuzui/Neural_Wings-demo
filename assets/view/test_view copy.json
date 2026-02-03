@@ -1,0 +1,114 @@
+{
+    "views": [
+        {
+            "name": "main_orbital",
+            "viewport": [
+                0,
+                0,
+                1,
+                1
+            ],
+            "clearBackground": true
+        },
+        {
+            "name": "rear_view",
+            "viewport": [
+                0.8,
+                0.8,
+                1,
+                1
+            ],
+            "clearBackground": true,
+            "backgroundColor": [
+                0,
+                0,
+                0,
+                180
+            ]
+        }
+    ],
+    "postProcess": {
+        "name": "泛光效果",
+        "rtPool": [
+            "inScreen",
+            "RTbrights",
+            "RTblur1",
+            "RTblur2",
+            "outScreen"
+        ],
+        "hint": "postProcessGraph务必按照拓扑序！",
+        "postProcessGraph": [
+            {
+                "name": "BrightPass",
+                "fs": "assets/shaders/postprocess/bright.fs",
+                "inputs": [
+                    [
+                        "u_screen",
+                        "inScreen"
+                    ]
+                ],
+                "uniforms": {
+                    "u_threshold": 0.8
+                },
+                "output": "RTbrights"
+            },
+            {
+                "name": "BlurPass1",
+                "fs": "assets/shaders/postprocess/blur.fs",
+                "inputs": [
+                    [
+                        "u_screen",
+                        "RTbrights"
+                    ]
+                ],
+                "output": "RTblur1",
+                "uniforms": {
+                    "u_radius": 5,
+                    "u_direction": [
+                        1.0,
+                        0.0
+                    ]
+                },
+                "textures": {
+                    "test_1": "assets/textures/test_1.png"
+                }
+            },
+            {
+                "name": "BlurPass2",
+                "fs": "assets/shaders/postprocess/blur.fs",
+                "inputs": [
+                    [
+                        "u_screen",
+                        "RTblur1"
+                    ]
+                ],
+                "output": "RTblur2",
+                "uniforms": {
+                    "u_radius": 5,
+                    "u_direction": [
+                        0.0,
+                        1.0
+                    ]
+                }
+            },
+            {
+                "name": "CombinePass",
+                "fs": "assets/shaders/postprocess/combine.fs",
+                "inputs": [
+                    [
+                        "u_baseTex",
+                        "inScreen"
+                    ],
+                    [
+                        "u_brightTex",
+                        "RTblur2"
+                    ]
+                ],
+                "uniforms": {
+                    "u_bloomIntensity": 1.2
+                },
+                "output": "outScreen"
+            }
+        ]
+    }
+}

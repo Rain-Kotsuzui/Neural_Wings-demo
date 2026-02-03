@@ -14,24 +14,46 @@ using json = nlohmann::json;
 
 #define M_PI 3.14159265358979323846
 
-Renderer::Renderer()
+void Renderer::AddPostProcessPass(const PostProcessPass &pass)
 {
+    if (pass.outputTarget.empty())
+    {
+        std::cerr << "[Renderer]: Post process pass missing output target: " << pass.name << std::endl;
+        return;
+    }
+    m_postProcessPasses.push_back(pass);
+    std::cout << "[Renderer]: Post process pass added: " << pass.name << " output target -> " << pass.outputTarget << std::endl;
 }
-
-void Renderer::Init(int width, int height)
+void Renderer::SetUpRTPool(const std::vector<std::string> &names, int width, int height)
 {
-    if (m_screenTarget.id > 0)
-        UnloadRenderTexture(m_screenTarget);
-    if (m_pingPongTarget.id > 0)
-        UnloadRenderTexture(m_pingPongTarget);
+    UnloadRTPool();
+    for (const auto &name : names)
+    {
+        RenderTexture2D rt = LoadRenderTexture(width, height);
+        if (rt.id > 0)
+        {
+            m_RTPool[name] = rt;
+            SetTextureFilter(m_RTPool[name].texture, TEXTURE_FILTER_BILINEAR);
+        }
+        else
+        {
+            std::cerr << "[Renderer]: Failed to create render texture: " << name << std::endl;
+        }
+    }
+    std::cout << "[Renderer]: Render texture pool set up with " << names.size() << " render targets" << std::endl;
+}
+void Renderer::UnloadRTPool()
+{
+    int count = 0;
 
-    m_screenTarget = LoadRenderTexture(width, height);
-    m_pingPongTarget = LoadRenderTexture(width, height);
-
-    SetTextureFilter(m_screenTarget.texture, TEXTURE_FILTER_BILINEAR);
-    SetTextureFilter(m_pingPongTarget.texture, TEXTURE_FILTER_BILINEAR);
-
-    std::cout << "[Renderer]: Framebuffers initialized at " << width << "x" << height << std::endl;
+    for (auto &pair : m_RTPool)
+    {
+        UnloadRenderTexture(pair.second);
+        count++;
+    }
+    m_RTPool.clear();
+    m_postProcessPasses.clear();
+    std::cout << "[Renderer]: Unloaded " << count << " render targets" << std::endl;
 }
 
 RenderView Renderer::ParseViews(const json &viewData)
@@ -58,6 +80,77 @@ RenderView Renderer::ParseViews(const json &viewData)
     return view;
 }
 
+void Renderer::ParsePostProcessPasses(const json &data, GameWorld &gameWorld)
+{
+    if (!data.contains("rtPool"))
+    {
+        std::cerr << "[Renderer]: Post process config file missing 'rtPool' field" << std::endl;
+        return;
+    }
+    if (!data.contains("postProcessGraph"))
+    {
+        std::cerr << "[Renderer]: Post process config file missing 'postProcessGraph' field" << std::endl;
+        return;
+    }
+    const std::vector<std::string> &rtNames = data["rtPool"].get<std::vector<std::string>>();
+    this->SetUpRTPool(rtNames, GetScreenWidth(), GetScreenHeight());
+    this->m_postProcessPasses.clear();
+    auto &rm = gameWorld.GetResourceManager();
+
+    for (const auto &passData : data["postProcessGraph"])
+    {
+        PostProcessPass pass;
+        pass.name = passData["name"];
+
+        // 解析输入输出
+        pass.outputTarget = passData["output"];
+        if (passData.contains("inputs"))
+            for (const auto &inputItem : passData["inputs"])
+            {
+                if (inputItem.size() == 2)
+                    pass.inputs.push_back({inputItem[0], inputItem[1]});
+                else
+                    std::cerr << "[Renderer]: Post process pass: " << pass.name << " input item size not equal to 2" << std::endl;
+            }
+        // 解析shader
+        PostRenderMaterial &mat = pass.material;
+        mat.shader = rm.GetShader(
+            passData.value("vs", "assets/shaders/postprocess/default.vs"),
+            passData.value("fs", "assets/shaders/postprocess/default.fs"));
+        if (passData.contains("baseColor"))
+            mat.baseColor = JsonParser::ToVector4f(passData["baseColor"]);
+        if (passData.contains("uniforms"))
+        {
+            auto &uniformsData = passData["uniforms"];
+            for (auto &[uName, uValue] : uniformsData.items())
+            {
+                if (uValue.is_number())
+                    mat.customFloats[uName] = uValue;
+                else if (uValue.is_array() && uValue.size() == 2)
+                    mat.customVector2[uName] = JsonParser::ToVector2f(uValue);
+                else if (uValue.is_array() && uValue.size() == 3)
+                    mat.customVector3[uName] = JsonParser::ToVector3f(uValue);
+                else if (uValue.is_array() && uValue.size() == 4)
+                    mat.customVector4[uName] = JsonParser::ToVector4f(uValue);
+                else
+                    std::cerr << "[Renderer]:ParsePostProcessPasses Unknown uniform type: " << uName << std::endl;
+            }
+        }
+        // 解析外部纹理
+        if (passData.contains("textures"))
+        {
+            auto &texData = passData["textures"];
+            for (auto &[texName, texPath] : texData.items())
+            {
+                Texture2D tex = rm.GetTexture2D(texPath);
+                if (tex.id > 0)
+                    mat.customTextures[texName] = tex;
+            }
+        }
+        this->AddPostProcessPass(pass);
+    }
+}
+
 bool Renderer::LoadViewConfig(const std::string &configPath, GameWorld &gameWorld)
 {
     std::ifstream configFile(configPath);
@@ -74,77 +167,16 @@ bool Renderer::LoadViewConfig(const std::string &configPath, GameWorld &gameWorl
             this->ClearRenderViews();
             for (const auto &viewData : data["views"])
             {
-
                 // TODO: 添加各view后处理效果
                 RenderView view = ParseViews(viewData);
                 this->AddRenderView(view);
             }
         }
-        if (data.contains("fullScreenPostProcessChain"))
+        if (data.contains("postProcess"))
         {
-            this->m_fullScreenPostProcessShaders.clear();
-            auto &rm = gameWorld.GetResourceManager();
-            std::vector<PostRenderMaterial> &pass = this->m_fullScreenPostProcessShaders;
-            for (const auto &shaderData : data["fullScreenPostProcessChain"])
-            {
-                PostRenderMaterial mat;
-                mat.shader = rm.GetShader(
-                    shaderData.value("vs", "assets/shaders/postprocess/default.vs"),
-                    shaderData.value("fs", "assets/shaders/postprocess/default.fs"));
-
-                if (shaderData.contains("baseColor"))
-                    mat.baseColor = JsonParser::ToVector4f(shaderData["baseColor"]);
-                if (shaderData.contains("blendMode"))
-                {
-                    std::string blendMode = shaderData["blendMode"];
-                    if (blendMode == "ADDITIVE")
-                        mat.blendMode = BlendMode::BLEND_ADDITIVE;
-                    else if (blendMode == "ALPHA")
-                        mat.blendMode = BlendMode::BLEND_ALPHA;
-                    else if (blendMode == "NONE")
-                        mat.blendMode = BLEND_OPIQUE;
-                    else if (blendMode == "MULTIPLY")
-                        mat.blendMode = BLEND_MULTIPLIED;
-                    else if (blendMode == "SCREEN")
-                        mat.blendMode = BLEND_SCREEN;
-                    else if (blendMode == "SUBTRACT")
-                        mat.blendMode = BLEND_SUBTRACT;
-                    else
-                        std::cerr << "[Renderer]: Unknown blend mode: " << blendMode << std::endl;
-                }
-                if (shaderData.contains("uniforms"))
-                {
-                    auto &uniformsData = shaderData["uniforms"];
-                    for (auto &[uName, uValue] : uniformsData.items())
-                    {
-                        if (uValue.is_number())
-                            mat.customFloats[uName] = uValue;
-                        else if (uValue.is_array() && uValue.size() == 2)
-                            mat.customVector2[uName] = JsonParser::ToVector2f(uValue);
-                        else if (uValue.is_array() && uValue.size() == 3)
-                            mat.customVector3[uName] = JsonParser::ToVector3f(uValue);
-                        else if (uValue.is_array() && uValue.size() == 4)
-                            mat.customVector4[uName] = JsonParser::ToVector4f(uValue);
-                        else
-                            std::cerr << "[Renderer]: Unknown uniform type: " << uName << std::endl;
-                    }
-                }
-                if (shaderData.contains("textures"))
-                {
-                    auto &texData = shaderData["textures"];
-                    for (auto &[texName, texPath] : texData.items())
-                    {
-                        Texture2D tex = rm.GetTexture2D(texPath);
-                        if (tex.id > 0)
-                        {
-                            mat.customTextures[texName] = tex;
-                        }
-                    }
-                }
-
-                pass.push_back(mat);
-            }
+            ParsePostProcessPasses(data["postProcess"], gameWorld);
         }
+
         return true;
     }
     catch (std::exception &e)
@@ -166,11 +198,9 @@ void Renderer::ClearRenderViews()
 }
 
 #include <utility>
-void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
-{
-    BeginTextureMode(m_screenTarget);
-    ClearBackground(BLACK);
 
+void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
+{
     for (const auto &view : m_renderViews)
     {
         mCamera *camera = cameraManager.GetCamera(view.cameraName);
@@ -189,29 +219,51 @@ void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
 
             // TODO：（debug）为视口绘制边框
             DrawRectangleLinesEx(view.viewport, 2, GRAY);
-
             EndScissorMode();
         }
     }
-    EndTextureMode();
-    // 全屏后处理
-    RenderTexture2D *currentSrc = &m_screenTarget;
-    RenderTexture2D *currentDst = &m_pingPongTarget;
-    for (size_t i = 0; i < m_fullScreenPostProcessShaders.size(); ++i)
-    {
-        auto &mat = m_fullScreenPostProcessShaders[i];
+}
 
-        BeginTextureMode(*currentDst);
+void Renderer::PostProcess(RenderTexture2D &itScene, GameWorld &gameWorld)
+{
+    for (auto &pass : m_postProcessPasses)
+    {
+        auto &itOut = m_RTPool.find(pass.outputTarget);
+        if (itOut == m_RTPool.end())
+            continue;
+
+        BeginTextureMode(itOut->second);
         ClearBackground(BLANK);
 
+        auto &mat = pass.material;
         mat.shader->Begin();
+
+        // 上传输入纹理
+        int texUnit = 0;
+        for (const auto &[shaderVarName, rtName] : pass.inputs)
+        {
+            if (m_RTPool.count(rtName))
+            {
+                mat.shader->SetTexture(shaderVarName, m_RTPool[rtName].texture, texUnit);
+                texUnit++;
+            }
+        }
+        // 外部纹理
+        for (auto const &[name, text] : mat.customTextures)
+        {
+            mat.shader->SetTexture(name, text, texUnit);
+            texUnit++;
+        }
+        // 上传参数
         mat.shader->SetFloat("gameTime", gameWorld.GetTimeManager().GetGameTime());
         mat.shader->SetFloat("realTime", gameWorld.GetTimeManager().GetRealTime());
         mat.shader->SetFloat("deltaRealTime", gameWorld.GetTimeManager().GetDeltaTime());
         mat.shader->SetFloat("deltaGameTime", gameWorld.GetTimeManager().GetFixedDeltaTime());
-        mat.shader->SetTexture("screenTexture", currentSrc->texture, 0);
-        Vector2f screenRes((float)currentSrc->texture.width, (float)currentSrc->texture.height);
+
+        Vector2f screenRes(m_RTPool[pass.name].texture.width, m_RTPool[pass.name].texture.height);
         mat.shader->SetVec2("screenResolution", screenRes);
+
+        mat.shader->SetVec4("baseColor", mat.baseColor);
 
         for (auto const &[name, value] : mat.customFloats)
             mat.shader->SetFloat(name, value);
@@ -222,24 +274,53 @@ void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
         for (auto const &[name, value] : mat.customVector4)
             mat.shader->SetVec4(name, value);
 
-        int texUnit = 1; // 从1开始，0留给screenTexture
-        for (auto const &[name, texture] : mat.customTextures)
-        {
-            mat.shader->SetTexture(name, texture, texUnit);
-            texUnit++;
-        }
-
-        Rectangle sourceRec = {0, 0, (float)currentSrc->texture.width, (float)-currentSrc->texture.height};
-        DrawTextureRec(currentSrc->texture, sourceRec, {0, 0}, WHITE);
+        // 绘制
+        DrawTextureRec(itScene.texture,
+                       {0, 0, (float)itScene.texture.width, (float)itScene.texture.height},
+                       {0, 0}, WHITE);
         mat.shader->End();
         EndTextureMode();
+    }
+}
 
-        std::swap(currentSrc, currentDst);
+void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
+{
+    // RT图出入口
+    auto &itScene = m_RTPool.find("inScreen");
+    auto &itFinal = m_RTPool.find("outScreen");
+    if (itScene == m_RTPool.end())
+    {
+        std::cerr << "[Renderer]: No inScreen render target found!!!" << std::endl;
+        return;
+    }
+    if (itFinal == m_RTPool.end())
+    {
+        std::cerr << "[Renderer]: No outScreen render target found!!!" << std::endl;
+        return;
     }
 
-    Rectangle sourceRec = {0, 0, (float)currentSrc->texture.width, (float)-currentSrc->texture.height};
-    DrawTexturePro(currentSrc->texture, sourceRec,
-                   {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()}, {0, 0}, 0, WHITE);
+    BeginTextureMode(itScene->second);
+    ClearBackground(BLACK);
+
+    RawRenderScene(gameWorld, cameraManager);
+    EndTextureMode();
+
+    PostProcess(itScene->second, gameWorld);
+    BeginTextureMode(itScene->second);
+    ClearBackground(BLACK);
+
+    RawRenderScene(gameWorld, cameraManager);
+    EndTextureMode();
+
+    PostProcess(itScene->second, gameWorld);
+
+    // 最终输出
+    ClearBackground(BLACK);
+
+    Rectangle src = {0, 0, (float)itFinal->second.texture.width, (float)itFinal->second.texture.height};
+    DrawTexturePro(itFinal->second.texture, src,
+                   {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()},
+                   {0, 0}, 0, WHITE);
 }
 
 #include <iostream>
