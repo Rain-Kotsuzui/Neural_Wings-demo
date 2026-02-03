@@ -114,7 +114,6 @@ void ShaderWrapper::SetMat4(const std::string &name, const Matrix4f &value)
 #include "rlgl.h"
 void ShaderWrapper::SetTexture(const std::string &name, Texture2D texture, int unit)
 {
-    // TODO：贴图需重新实现
     int loc = GetLocation(name);
     if (loc >= 0)
     {

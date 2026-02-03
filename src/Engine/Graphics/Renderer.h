@@ -30,6 +30,7 @@ private:
 
     RenderView ParseViews(const json &data);
     void ParsePostProcessPasses(const json &data, GameWorld &gameWorld);
+    void DrawTextureQuad(RenderTexture2D &texture, float width, float height, bool flipY);
 
     void AddPostProcessPass(const PostProcessPass &pass);
     void SetUpRTPool(const std::vector<std::string> &names, int width, int height);

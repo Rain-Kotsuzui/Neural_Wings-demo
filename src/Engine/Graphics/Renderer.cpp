@@ -224,6 +224,35 @@ void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager
     }
 }
 
+void Renderer::DrawTextureQuad(RenderTexture2D &texture, float width, float height, bool flipY)
+{
+    rlBegin(RL_QUADS);
+    rlColor4ub(255, 255, 255, 255);
+    if (flipY)
+    {
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex2f(0.0f, 0.0f);
+        rlTexCoord2f(1.0f, 1.0f);
+        rlVertex2f(width, 0.0f);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex2f(width, height);
+        rlTexCoord2f(0.0f, 0.0f);
+        rlVertex2f(0.0f, height);
+    }
+    else
+    {
+        rlTexCoord2f(0.0f, 0.0f);
+        rlVertex2f(0.0f, 0.0f);
+        rlTexCoord2f(1.0f, 0.0f);
+        rlVertex2f(width, 0.0f);
+        rlTexCoord2f(1.0f, 1.0f);
+        rlVertex2f(width, height);
+        rlTexCoord2f(0.0f, 1.0f);
+        rlVertex2f(0.0f, height);
+    }
+    rlEnd();
+}
+
 void Renderer::PostProcess(RenderTexture2D &itScene, GameWorld &gameWorld)
 {
     for (auto &pass : m_postProcessPasses)
@@ -240,17 +269,22 @@ void Renderer::PostProcess(RenderTexture2D &itScene, GameWorld &gameWorld)
 
         // 上传输入纹理
         int texUnit = 0;
+        unsigned int firstInputId = 0;
         for (const auto &[shaderVarName, rtName] : pass.inputs)
         {
             if (m_RTPool.count(rtName))
             {
                 mat.shader->SetTexture(shaderVarName, m_RTPool[rtName].texture, texUnit);
+                if (texUnit == 0)
+                    firstInputId = m_RTPool[rtName].texture.id;
                 texUnit++;
             }
         }
         // 外部纹理
         for (auto const &[name, text] : mat.customTextures)
         {
+            if (texUnit == 0)
+                firstInputId = text.id;
             mat.shader->SetTexture(name, text, texUnit);
             texUnit++;
         }
@@ -260,7 +294,7 @@ void Renderer::PostProcess(RenderTexture2D &itScene, GameWorld &gameWorld)
         mat.shader->SetFloat("deltaRealTime", gameWorld.GetTimeManager().GetDeltaTime());
         mat.shader->SetFloat("deltaGameTime", gameWorld.GetTimeManager().GetFixedDeltaTime());
 
-        Vector2f screenRes(m_RTPool[pass.name].texture.width, m_RTPool[pass.name].texture.height);
+        Vector2f screenRes((float)itOut->second.texture.width, (float)itOut->second.texture.height);
         mat.shader->SetVec2("screenResolution", screenRes);
 
         mat.shader->SetVec4("baseColor", mat.baseColor);
@@ -274,10 +308,9 @@ void Renderer::PostProcess(RenderTexture2D &itScene, GameWorld &gameWorld)
         for (auto const &[name, value] : mat.customVector4)
             mat.shader->SetVec4(name, value);
 
-        // 绘制
-        DrawTextureRec(itScene.texture,
-                       {0, 0, (float)itScene.texture.width, (float)itScene.texture.height},
-                       {0, 0}, WHITE);
+        rlSetTexture(firstInputId);
+        DrawTextureQuad(itScene, screenRes.x(), screenRes.y(), true);
+        rlSetTexture(0);
         mat.shader->End();
         EndTextureMode();
     }
@@ -301,14 +334,6 @@ void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
 
     BeginTextureMode(itScene->second);
     ClearBackground(BLACK);
-
-    RawRenderScene(gameWorld, cameraManager);
-    EndTextureMode();
-
-    PostProcess(itScene->second, gameWorld);
-    BeginTextureMode(itScene->second);
-    ClearBackground(BLACK);
-
     RawRenderScene(gameWorld, cameraManager);
     EndTextureMode();
 
@@ -317,7 +342,7 @@ void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
     // 最终输出
     ClearBackground(BLACK);
 
-    Rectangle src = {0, 0, (float)itFinal->second.texture.width, (float)itFinal->second.texture.height};
+    Rectangle src = {0, 0, (float)itFinal->second.texture.width, (float)-itFinal->second.texture.height};
     DrawTexturePro(itFinal->second.texture, src,
                    {0, 0, (float)GetScreenWidth(), (float)GetScreenHeight()},
                    {0, 0}, 0, WHITE);
