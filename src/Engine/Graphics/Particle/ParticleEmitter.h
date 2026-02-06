@@ -26,6 +26,7 @@ public:
     void LoadFromConfig(const json &config, const ParticleFactory &factory, ResourceManager &rm);
     void ResetInsertionIndex();
     void Update(float deltaTime, const TransformComponent &parentTf, GPUParticleBuffer &particleBuffer);
+    void Burst(const TransformComponent &ownerTf, GPUParticleBuffer &particleBuffer);
     void AddInitializer(std::shared_ptr<IParticleInitializer> initializer);
 
     // void PrepareForces(const TransformComponent &parentTf);
@@ -58,7 +59,6 @@ private:
     size_t m_insertionIndex = 0; // 循环缓冲区写指针
     size_t m_maxParticles = 1000;
 
-    // std::shared_ptr<GPUParticleBuffer> m_gpuBuffer;
     std::shared_ptr<ShaderWrapper> m_updateShader;
     std::vector<std::shared_ptr<IParticleInitializer>> m_initializers;
     std::vector<GPUParticle> m_spawnBuffer; // 临时缓冲，传给GPU前组装数据

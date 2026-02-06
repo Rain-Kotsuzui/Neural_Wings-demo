@@ -2,9 +2,9 @@
 #include "raylib.h"
 #include "Game/Screen/MyScreenState.h"
 #include "Game/Systems/Physics/SolarStage.h"
-#include "Game/Systems/Particles/Initializers/RadialVelocity.h"
 #include "Game/Systems/Particles/Initializers/RandomLife.h"
 #include "Game/Systems/Particles/Initializers/SphereDir.h"
+#include "Game/Systems/Particles/Initializers/CollisionInit.h"
 #include "Game/Scripts/Scripts.h"
 
 #include "raymath.h"
@@ -18,12 +18,14 @@ GameplayScreen::GameplayScreen()
     const std::string &sceneConfigPath = "assets/scenes/test_scene.json";
     const std::string &inputConfigPath = "assets/config/input_config.json";
     const std::string &renderViewConfigPath = "assets/view/test_view.json";
+    const std::string &effectLibPath = "assets/Library/particle_effects.json";
     m_world = std::make_unique<GameWorld>([this](ScriptingFactory &scriptingFactory, PhysicsStageFactory &physicsStageFactory, ParticleFactory &particleFactory)
                                           { this->ConfigCallback(scriptingFactory, physicsStageFactory, particleFactory); },
                                           cameraConfigPath,
                                           sceneConfigPath,
                                           inputConfigPath,
-                                          renderViewConfigPath);
+                                          renderViewConfigPath,
+                                          effectLibPath);
 }
 GameplayScreen::~GameplayScreen()
 {
@@ -45,10 +47,12 @@ void GameplayScreen::ConfigCallback(ScriptingFactory &scriptingFactory, PhysicsS
     // 注册粒子初始化器
     particleFactory.Register("SphereDir", []()
                              { return std::make_unique<SphereDir>(); });
-    particleFactory.Register("RadialVelocity", []()
-                             { return std::make_unique<RadialVelocity>(); });
+    // particleFactory.Register("RadialVelocity", []()
+    //                          { return std::make_unique<RadialVelocity>(); });
     particleFactory.Register("RandomLife", []()
                              { return std::make_unique<RandomLife>(); });
+    particleFactory.Register("CollisionInit", []()
+                             { return std::make_unique<CollisionInit>(); });
 }
 
 // 当进入游戏场景时调用
@@ -57,8 +61,12 @@ void GameplayScreen::OnEnter()
     DisableCursor();
 
     // 监听事件
-    m_world->GetEventManager().Subscribe<CollisionEvent>([](const CollisionEvent &e)
-                                                         { std::cout << "CollisionEvent: " << e.m_object1->GetName() << " and " << e.m_object2->GetName() << std::endl; });
+    m_world->GetEventManager().Subscribe<CollisionEvent>([this](const CollisionEvent &e)
+                                                         { std::cout << "CollisionEvent, impluse: " <<e.impulse << std::endl;
+                                                            e.hitpoint.print();
+                                                            if(std::fabsf(e.impulse)<0.1f) return;
+                                                            auto &particleSys = m_world->GetParticleSystem();
+                                                            particleSys.Spawn("Collision", e.hitpoint,"relVel",e.relativeVelocity,"normal",e.normal,"impulse",e.impulse); });
 
     // ParticleSystem::Spawn("Sparks", event.hitpoint);
     // std::cout<<"ParticleSystem::Spawn at"<< e.hitpoint<<std::endl; });

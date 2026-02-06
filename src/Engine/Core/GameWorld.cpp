@@ -8,7 +8,8 @@ GameWorld::GameWorld(std::function<void(ScriptingFactory &, PhysicsStageFactory 
                      const std::string &cameraConfigPath,
                      const std::string &sceneConfigPath,
                      const std::string &inputConfigPath,
-                     const std::string &renderView)
+                     const std::string &renderView,
+                     const std::string &effectLibPath)
 {
     m_timeManager = std::make_unique<TimeManager>();
 
@@ -23,12 +24,13 @@ GameWorld::GameWorld(std::function<void(ScriptingFactory &, PhysicsStageFactory 
     m_eventManager = std::make_unique<EventManager>();
     m_renderer = std::make_unique<Renderer>();
     m_particleFactory = std::make_unique<ParticleFactory>();
-    m_particleSystem = std::make_unique<ParticleSystem>();
+    m_particleSystem = std::make_unique<ParticleSystem>(this);
 
     configCallback(*m_scriptingFactory, *m_physicsStageFactory, *m_particleFactory);
 
     m_cameraManager->LoadConfig(cameraConfigPath);
     m_sceneManager->LoadScene(sceneConfigPath, *this);
+    m_particleSystem->LoadEffectLibrary(effectLibPath);
 
     m_renderer->Init(renderView, *this);
 

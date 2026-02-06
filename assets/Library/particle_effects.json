@@ -1,0 +1,54 @@
+{
+    "Collision": {
+        "isBurst": true,
+        "maxParticles": 500,
+        "emissionRate": 0,
+        "maxLife": 2.0,
+        "updateShader": "assets/shaders/particles/compute/default.vs",
+        "initializers": [
+            {
+                "name": "CollisionInit",
+                "params": {
+                    "maxLife": 0.5,
+                    "minSpeed": 0,
+                    "maxSpeed": 5,
+                    "tau": 400,
+                    "normal": [
+                        0,
+                        0,
+                        1
+                    ],
+                    "relVel": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "impulse": 0,
+                    "countFactor": 10,
+                    "direction": [
+                        0,
+                        0,
+                        1
+                    ],
+                    "spawnPos": [
+                        0,
+                        0,
+                        0
+                    ]
+                }
+            }
+        ],
+        "renderMaterial": {
+            "vs": "assets/shaders/particles/render/billboard.vs",
+            "fs": "assets/shaders/particles/render/soft.fs",
+            "blendMode": "NONE",
+            "hint": "粒子没有深度写入功能，仅深度测试",
+            "textures": {
+                "tex": "assets/textures/test_4.png"
+            },
+            "uniforms": {
+                "u_softness": 1.0
+            }
+        }
+    }
+}

@@ -4,8 +4,9 @@
 #include "Engine/Core/Components/TransformComponent.h"
 #include "rlgl.h"
 
-ParticleSystem::ParticleSystem()
+ParticleSystem::ParticleSystem(GameWorld *world)
 {
+    owner_world = world;
     m_TFBManager = std::make_unique<TFBManager>();
 }
 ParticleSystem::~ParticleSystem()
@@ -31,6 +32,76 @@ GPUParticleBuffer *ParticleSystem::GetOrCreateBuffer(std::shared_ptr<ParticleEmi
         emitter->ResetInsertionIndex();
     }
     return it->second.get();
+}
+#include <nlohmann/json.hpp>
+#include <fstream>
+#include "Engine/Utils/JsonParser.h"
+using json = nlohmann::json;
+void ParticleSystem::LoadEffectLibrary(const std::string &path)
+{
+    std::ifstream file(path);
+    if (!file.is_open())
+    {
+        std::cerr << "[ParicleSystem]: Failed to open effect library file: " << path << std::endl;
+        return;
+    }
+    json effectLib = json::parse(file);
+    for (auto &[name, params] : effectLib.items())
+        m_effectLibray[name] = params;
+}
+void ParticleSystem::InternalSpawn(const std::string &effectName, const ParticleParams &params)
+{
+    auto it = m_effectLibray.find(effectName);
+    if (it == m_effectLibray.end())
+    {
+        std::cerr << "[ParicleSystem]: Failed to find effect: " << effectName << std::endl;
+        return;
+    }
+    json config = it->second;
+    for (auto &initConfig : config["initializers"])
+    {
+        for (auto &[key, value] : initConfig["params"].items())
+            if (value.is_number())
+                initConfig["params"][key] = params.Get<float>(key, value);
+            else if (value.is_array())
+            {
+                switch (value.size())
+                {
+                case 2:
+                    initConfig["params"][key] = JsonParser::Vector2fToJson(params.Get<Vector2f>(key, Vector2f(value[0], value[1])));
+                    break;
+                case 3:
+                    initConfig["params"][key] = JsonParser::Vector3fToJson(params.Get<Vector3f>(key, Vector3f(value[0], value[1], value[2])));
+                    break;
+                case 4:
+                    initConfig["params"][key] = JsonParser::Vector4fToJson(params.Get<Vector4f>(key, Vector4f(value[0], value[1], value[2], value[3])));
+                    break;
+                default:
+                    std::cerr << "[ParicleSystem]: Invalid array size in effect library: " << std::endl;
+                    break;
+                }
+            }
+    }
+
+    auto emitter = std::make_shared<ParticleEmitter>(config, owner_world->GetParticleFactory(), owner_world->GetResourceManager());
+    emitter->simSpace = SimulationSpace::WORLD;
+
+    Vector3f pos = params.Get<Vector3f>("spawnPos", Vector3f(0, 0, 0));
+    Quat4f rot = Quat4f::dirToQuat(params.Get<Vector3f>("direction", Vector3f(0, 0, 1)));
+    Vector3f scale = Vector3f::ONE;
+    auto tf = TransformComponent(pos, rot, scale);
+
+    if (config.value("isBurst", false))
+    {
+        GPUParticleBuffer *buffer = GetOrCreateBuffer(emitter);
+        emitter->Burst(tf, *buffer);
+        emitter->SetEmissionRate(0.0f);
+    }
+    else
+    {
+        emitter->SetEmissionRate(config.value("emissionRate", 0.0f));
+    }
+    this->RegisterOrphan(emitter, tf);
 }
 
 void ParticleSystem::Update(GameWorld &gameWorld, float dt)

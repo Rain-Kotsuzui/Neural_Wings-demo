@@ -19,7 +19,8 @@ public:
               const std::string &cameraConfigPath = "assets/config/cameras_config.json",
               const std::string &sceneConfigPath = "assets/scenes/test_scene.json",
               const std::string &inputConfigPath = "assets/config/input_config.json",
-              const std::string &renderView = "assets/view/test_view.json");
+              const std::string &renderView = "assets/view/test_view.json",
+              const std::string &effectLibPath = "assets/Library/particle_effects.json");
     ~GameWorld();
     void OnDestroy();
 

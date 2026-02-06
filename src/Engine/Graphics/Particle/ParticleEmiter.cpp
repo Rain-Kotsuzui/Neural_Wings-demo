@@ -81,11 +81,20 @@ void ParticleEmitter::Update(float deltaTime, const TransformComponent &ownerTf,
     }
 }
 
+void ParticleEmitter::Burst(const TransformComponent &ownerTf, GPUParticleBuffer &particleBuffer)
+{
+    size_t count = 0;
+    for (auto &init : m_initializers)
+        count += init->BurstCount();
+    if (count > 0)
+        Spawn(count, ownerTf, particleBuffer);
+}
+
 void ParticleEmitter::Spawn(int spawnCounts, const TransformComponent &ownerTf, GPUParticleBuffer &particleBuffer)
 {
 
-    if (spawnCounts > 128)
-        spawnCounts = 128; // 防止卡顿
+    if (spawnCounts > 1024)
+        spawnCounts = 1024; // 防止卡顿
     m_spawnBuffer.assign(spawnCounts, GPUParticle());
 
     // 初始化
