@@ -4,7 +4,7 @@
 #include "Game/Systems/Physics/SolarStage.h"
 #include "Game/Systems/Particles/Initializers/RadialVelocity.h"
 #include "Game/Systems/Particles/Initializers/RandomLife.h"
-#include "Game/Systems/Particles/Initializers/SpherePosition.h"
+#include "Game/Systems/Particles/Initializers/SphereDir.h"
 #include "Game/Scripts/Scripts.h"
 
 #include "raymath.h"
@@ -43,8 +43,8 @@ void GameplayScreen::ConfigCallback(ScriptingFactory &scriptingFactory, PhysicsS
     scriptingFactory.Register("CollisionListener", []()
                               { return std::make_unique<CollisionListener>(); });
     // 注册粒子初始化器
-    particleFactory.Register("SpherePosition", []()
-                             { return std::make_unique<SpherePosition>(); });
+    particleFactory.Register("SphereDir", []()
+                             { return std::make_unique<SphereDir>(); });
     particleFactory.Register("RadialVelocity", []()
                              { return std::make_unique<RadialVelocity>(); });
     particleFactory.Register("RandomLife", []()

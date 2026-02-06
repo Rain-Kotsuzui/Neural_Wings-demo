@@ -304,9 +304,7 @@ Vector3f Vector3f::RandomSphere(float radius)
 
     return radius * Vector3f(x, y, z);
 }
-Vector3f Vector3f::RandomCycle(const Vector3f &normal, float radius)
-{
-}
+
 Vector3f Vector3f::RandomCycle(const Vector3f &normal, float radius)
 {
     float theta = static_cast<float>(rand()) / RAND_MAX * 2.0f * M_PI;

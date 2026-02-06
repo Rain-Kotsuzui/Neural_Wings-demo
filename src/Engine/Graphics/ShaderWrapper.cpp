@@ -29,6 +29,7 @@ ShaderWrapper::ShaderWrapper(const std::string &vsPath, const std::string &fsPat
 
 #include "rlgl.h"
 #include <vector>
+#include <string>
 ShaderWrapper::ShaderWrapper(const std::string &vsPath, const std::vector<std::string> &varyings)
 {
     m_shader.id = 0;
@@ -41,7 +42,8 @@ ShaderWrapper::ShaderWrapper(const std::string &vsPath, const std::vector<std::s
     unsigned int vShaderId = rlCompileShader(vsCode.c_str(), RL_VERTEX_SHADER);
     if (vShaderId == 0)
         return;
-
+    m_shader.locs = (int *)RL_MALLOC(RL_MAX_SHADER_LOCATIONS * sizeof(int));
+    std::memset(m_shader.locs, -1, RL_MAX_SHADER_LOCATIONS * sizeof(int));
     // raylib源码修改：插入varyings
     // rlLoadShaderProgram();
     unsigned int programId = glCreateProgram();
@@ -183,9 +185,9 @@ void ShaderWrapper::SetTexture(const std::string &name, Texture2D texture, int u
     int loc = GetLocation(name);
     if (loc >= 0)
     {
-        SetShaderValue(m_shader, loc, &unit, SHADER_UNIFORM_INT);
         rlActiveTextureSlot(unit);
         rlEnableTexture(texture.id);
+        SetShaderValue(m_shader, loc, &unit, SHADER_UNIFORM_INT);
     }
 }
 

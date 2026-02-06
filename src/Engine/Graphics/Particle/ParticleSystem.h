@@ -14,12 +14,12 @@ public:
     ~ParticleSystem();
 
     void Update(GameWorld &gameWorld, float dt);
-    void Render(GameWorld &gameWorld, mCamera &camera);
+    void Render(const Texture2D &sceneDepth, float realTime, float gameTime, const Matrix4f &VP, GameWorld &gameWorld, mCamera &camera);
     // 若gameobject销毁，保留world发射器，并记录其最后位置
     void RegisterOrphan(std::shared_ptr<ParticleEmitter> emitter, const TransformComponent &lastTransform);
 
 private:
-    std::unordered_map<std::shared_ptr<ParticleEmitter>, std::unique_ptr<GPUParticleBuffer>> m_emitterBuffers; /// gameobject消失后残留的粒子发射器
+    std::unordered_map<std::shared_ptr<ParticleEmitter>, std::unique_ptr<GPUParticleBuffer>> m_emitterBuffers;
     struct OrphanEmitter
     {
         std::shared_ptr<ParticleEmitter> emitter;

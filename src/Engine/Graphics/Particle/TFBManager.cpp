@@ -14,6 +14,8 @@ void TFBManager::Simulate(ShaderWrapper &shader, GPUParticleBuffer &buffer, int 
     if (count <= 0)
         return;
 
+    rlDrawRenderBatchActive();
+
     shader.Begin();
 
     // TODO:仿照RenderMaterial加入用户自定义uniform功能
@@ -35,6 +37,7 @@ void TFBManager::Simulate(ShaderWrapper &shader, GPUParticleBuffer &buffer, int 
     glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, 0);
     glBindVertexArray(0);
     glDisable(GL_RASTERIZER_DISCARD);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     shader.End();
 

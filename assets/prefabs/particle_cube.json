@@ -55,51 +55,43 @@
                 "emitters": [
                     {
                         "name": "Core_Thrust",
-                        "maxParticles": 10000,
-                        "emissionRate": 2000.0,
+                        "maxParticles": 1000,
+                        "emissionRate": 200.0,
                         "maxLife": 1.5,
                         "space": "WORLD",
-                        "updateShader": "assets/shaders/particles/sim_thrust.vs",
+                        "updateShader": "assets/shaders/particles/compute/test_update.vs",
                         "initializers": [
                             {
-                                "name": "SpherePosition",
+                                "name": "SphereDir",
                                 "params": {
-                                    "radius": 0.2,
                                     "offset": [
                                         0.0,
-                                        0.0,
-                                        -2.5
-                                    ]
-                                }
-                            },
-                            {
-                                "name": "RadialVelocity",
-                                "params": {
-                                    "direction": [
-                                        0.0,
-                                        0.0,
-                                        -1.0
+                                        5.0,
+                                        0.0
                                     ],
-                                    "angle": 5.0,
-                                    "speedMin": 20.0,
-                                    "speedMax": 50.0
+                                    "minSpeed": 0.5,
+                                    "maxSpeed": 5,
+                                    "size": [
+                                        1.0,
+                                        1.0
+                                    ]
                                 }
                             },
                             {
                                 "name": "RandomLife",
                                 "params": {
-                                    "min": 0.5,
-                                    "max": 1.2
+                                    "minLife": 0.5,
+                                    "maxLife": 1.2
                                 }
                             }
                         ],
                         "renderMaterial": {
-                            "vs": "assets/shaders/particles/render_billboard.vs",
-                            "fs": "assets/shaders/particles/render_soft.fs",
-                            "blendMode": "ADDITIVE",
-                            "depthWrite": false,
+                            "vs": "assets/shaders/particles/render/billboard.vs",
+                            "fs": "assets/shaders/particles/render/soft.fs",
+                            "blendMode": "NONE",
+                            "hint": "粒子没有深度写入功能，仅深度测试",
                             "textures": {
-                                "u_sprite": "assets/textures/particles/glow_dot.png"
+                                "u_diffuseMap": "assets/textures/test_4.png"
                             },
                             "uniforms": {
                                 "u_softness": 1.0

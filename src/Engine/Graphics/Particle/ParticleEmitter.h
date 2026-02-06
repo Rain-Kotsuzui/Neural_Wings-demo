@@ -5,6 +5,8 @@
 #include "Engine/Graphics/ShaderWrapper.h"
 #include "Engine/Core/Components/TransformComponent.h"
 #include "Engine/System/Resource/ResourceManager.h"
+#include "Engine/Graphics/Camera/mCamera.h"
+#include "Engine/Graphics/RenderMaterial.h"
 #include <nlohmann/json.hpp>
 #include <memory>
 #include <vector>
@@ -25,7 +27,8 @@ public:
     void ResetInsertionIndex();
     void Update(float deltaTime, const TransformComponent &parentTf, GPUParticleBuffer &particleBuffer);
     void AddInitializer(std::shared_ptr<IParticleInitializer> initializer);
-    void PrepareForces(const TransformComponent &parentTf);
+
+    // void PrepareForces(const TransformComponent &parentTf);
 
     bool IsFinished() const;
     size_t GetMaxParticles() const;
@@ -35,6 +38,12 @@ public:
 
     std::shared_ptr<ShaderWrapper> GetUpdateShader() const;
     void SetMaxLife(float life);
+
+    void Render(GPUParticleBuffer &gpuBuffer, const Texture2D &sceneDepth, const Matrix4f &modelMat,
+                const Vector3f &viewPos, float realTime, float gameTime,
+                const Matrix4f &VP, const mCamera &camera);
+
+    Matrix4f GetRenderMatrix(const TransformComponent &parentTf) const;
 
 private:
     float m_maxLife = 5.0f;       // 粒子最大生命周期
@@ -47,8 +56,11 @@ private:
     size_t m_insertionIndex = 0; // 循环缓冲区写指针
     size_t m_maxParticles = 1000;
 
-    std::shared_ptr<GPUParticleBuffer> m_gpuBuffer;
+    // std::shared_ptr<GPUParticleBuffer> m_gpuBuffer;
     std::shared_ptr<ShaderWrapper> m_updateShader;
     std::vector<std::shared_ptr<IParticleInitializer>> m_initializers;
     std::vector<GPUParticle> m_spawnBuffer; // 临时缓冲，传给GPU前组装数据
+
+    // TODO:升级为图结构
+    RenderMaterial m_renderMaterial;
 };

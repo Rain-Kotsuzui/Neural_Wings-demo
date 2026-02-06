@@ -22,6 +22,8 @@ public:
 
     size_t GetMaxParticles() const { return m_maxParticles; }
 
+    void BindForRender();
+
 private:
     void SetupBuffers();
 
@@ -29,4 +31,8 @@ private:
     unsigned int m_vbos[2]; // Buffer A,B
     unsigned int m_vaos[2]; //  VAO A,B
     int m_readIdx = 0;      // 0 -> A, 1 -> B
+
+    unsigned int m_renderVAOS[2];
+    unsigned int m_quadVBO;
+    void SetupRenderVBO();
 };

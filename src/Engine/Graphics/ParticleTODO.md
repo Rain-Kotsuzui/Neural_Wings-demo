@@ -114,16 +114,16 @@ src/
 
 #### Milestone 4: 粒子发射器与 CPU 注入 (逻辑)
 *   [✔ ] **实现 `ParticleEmitter`**：
-    *   [ ] 区分局部坐标与世界坐标（粒子可以只在局部坐标中产生，如固定在物体上的粒子等，也可以在世界坐标中产生，如轨迹等）。
+    *   [ ✔] 区分局部坐标与世界坐标（粒子可以只在局部坐标中产生，如固定在物体上的粒子等，也可以在世界坐标中产生，如轨迹等）。
     *   [ ✔] 管理粒子的索引池（哪些位置是死的，可以覆盖）。
     *   [ ✔] 实现“放射状”、“球体”、“圆锥”等初速度生成算法。
     *   [✔ ] 实现 `glBufferSubData` 的批量注入逻辑。
 
 #### Milestone 5: 高性能实例化渲染器 (渲染)
-*   [ ] **实现 `InstancedParticleRenderer`**：
-    *   [ ] 编写支持实例化属性（Instance Attribute）的渲染 Shader。
-    *   [ ] **软粒子逻辑**：在 FS 中实现基于 `inScreen_depth` 的深度裁切和渐变。
-    *   [ ] 整合 `rlgl` 的 `DrawMeshInstanced` 或原生 `glDrawArraysInstanced`。
+*   [ ✔] **实现 `InstancedParticleRenderer`**：
+    *   [ ✔] 编写支持实例化属性（Instance Attribute）的渲染 Shader。
+    *   [✔ ] **软粒子逻辑**：在 FS 中实现基于 `inScreen_depth` 的深度裁切和渐变。
+    *   [ ✔] 整合 `rlgl` 的 `DrawMeshInstanced` 或原生 `glDrawArraysInstanced`。
 
 #### Milestone 6: 数据驱动与工厂模式 (集成)
 *   [ ] **扩展 `ParticleModuleFactory`**：

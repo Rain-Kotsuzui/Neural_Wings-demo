@@ -23,6 +23,7 @@ GameWorld::GameWorld(std::function<void(ScriptingFactory &, PhysicsStageFactory 
     m_eventManager = std::make_unique<EventManager>();
     m_renderer = std::make_unique<Renderer>();
     m_particleFactory = std::make_unique<ParticleFactory>();
+    m_particleSystem = std::make_unique<ParticleSystem>();
 
     configCallback(*m_scriptingFactory, *m_physicsStageFactory, *m_particleFactory);
 
@@ -63,12 +64,12 @@ GameObject &GameWorld::CreateGameObject()
 // 返回true表示游戏继续，返回false表示游戏结束
 bool GameWorld::FixedUpdate(float fixedDeltaTime)
 {
-    // TODO: 更新世界中的所有 GameObject
     m_timeManager->TickGame(fixedDeltaTime);
     m_physicsSystem->Update(*this, fixedDeltaTime);
     m_scriptingSystem->FixedUpdate(*this, fixedDeltaTime);
-    this->DestroyWaitingObjects();
+    // m_particleSystem->Update(*this, fixedDeltaTime);
 
+    this->DestroyWaitingObjects();
     return true;
 }
 

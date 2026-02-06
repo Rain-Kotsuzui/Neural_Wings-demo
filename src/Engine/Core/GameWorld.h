@@ -45,6 +45,7 @@ public:
     TimeManager &GetTimeManager() { return *m_timeManager; };
 
     ParticleFactory &GetParticleFactory() { return *m_particleFactory; };
+    ParticleSystem &GetParticleSystem() { return *m_particleSystem; };
 
     template <typename... Components>
     std::vector<GameObject *> GetEntitiesWith()
@@ -52,7 +53,7 @@ public:
         std::vector<GameObject *> results;
         for (auto &obj : m_gameObjects)
         {
-            if ((obj->HasComponents<Components>() && ...))
+            if ((obj->HasComponent<Components>() && ...))
             {
                 if (!obj->IsWaitingDestroy())
                     results.push_back(obj.get());
@@ -85,4 +86,5 @@ private:
     std::unique_ptr<EventManager> m_eventManager;
 
     std::unique_ptr<ParticleFactory> m_particleFactory;
+    std::unique_ptr<ParticleSystem> m_particleSystem;
 };

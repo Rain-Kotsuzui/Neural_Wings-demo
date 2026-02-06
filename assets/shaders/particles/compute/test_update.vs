@@ -2,7 +2,6 @@
 
 // 标准输入
 in vec3 pPosition;
-in float spaceFlag;
 in vec3 pVelocity;
 in vec3 pAcceleration;
 
@@ -14,7 +13,6 @@ in uint pRandomID;
 
 // 标准输出
 out vec3 outPosition;
-out float outSpaceFlag;
 out vec3 outVelocity;
 out vec3 outAcceleration;
 
@@ -35,7 +33,6 @@ void main() {
     float remaingLife = pLife.y - dt;
 
     outPosition = newPosition;
-    outSpaceFlag = spaceFlag;
     outVelocity = newVelocity;
     outAcceleration = pAcceleration;
     outColor = pColor;

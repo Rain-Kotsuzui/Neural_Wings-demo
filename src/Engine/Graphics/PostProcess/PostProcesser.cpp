@@ -51,6 +51,11 @@ RenderTexture2D PostProcesser::LoadRT(int width, int height)
     return target;
 }
 
+void PostProcesser::DefaultSetup()
+{
+    std::vector<std::string> names = {"inScreen", "outScreen"};
+    SetUpRTPool(names, GetScreenWidth(), GetScreenHeight());
+}
 void PostProcesser::SetUpRTPool(const std::vector<std::string> &names, int width, int height)
 {
     UnloadRTPool();
@@ -156,6 +161,7 @@ void PostProcesser::ParsePostProcessPasses(const json &data, GameWorld &gameWorl
         this->AddPostProcessPass(pass);
     }
 }
+
 #include "rlgl.h"
 void PostProcesser::DrawTextureQuad(float width, float height, bool flipY)
 {
