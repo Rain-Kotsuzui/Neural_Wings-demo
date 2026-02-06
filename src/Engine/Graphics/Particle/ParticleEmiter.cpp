@@ -7,8 +7,6 @@ using json = nlohmann::json;
 ParticleEmitter::ParticleEmitter(const json &config, const ParticleFactory &factory, ResourceManager &rm)
 {
     LoadFromConfig(config, factory, rm);
-
-    // m_gpuBuffer = std::make_unique<GPUParticleBuffer>(m_maxParticles);
 }
 void ParticleEmitter::ResetInsertionIndex()
 {
@@ -42,10 +40,9 @@ void ParticleEmitter::LoadFromConfig(const json &config, const ParticleFactory &
                 "outVelocity",
                 "outAcceleration",
                 "outColor",
-                "outSize",
-                "outRotation",
-                "outLife",
-                "outRandomID"};
+                "outSizeRotation",
+                "outLifeRand",
+            };
         m_updateShader = rm.GetTFBShader(vsPath, varyings);
     }
     else
@@ -158,6 +155,11 @@ void ParticleEmitter::SetMaxLife(float maxLife)
 std::shared_ptr<ShaderWrapper> ParticleEmitter::GetUpdateShader() const
 {
     return m_updateShader;
+}
+
+RenderMaterial &ParticleEmitter::GetRenderMaterial()
+{
+    return m_renderMaterial;
 }
 
 #include "rlgl.h"

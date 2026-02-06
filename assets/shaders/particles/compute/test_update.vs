@@ -12,32 +12,28 @@ in vec2 pLife; // (totalLife,remainingLife )
 in uint pRandomID;
 
 // 标准输出
-out vec3 outPosition;
-out vec3 outVelocity;
-out vec3 outAcceleration;
+out vec4 outPosition; // (x,y,z,padding)
+out vec4 outVelocity; // (x,y,z,padding)
+out vec4 outAcceleration; // (x,y,z,padding)
 
 out vec4 outColor;
-out vec2 outSize;
-out float outRotation;
-out vec2 outLife; // (totalLife,remainingLife )
-out uint outRandomID;
+out vec4 outSizeRotation; // (s1,s2,rotation,padding)
+out vec4 outLifeRand; // (totalLife,remainingLife,randomID,padding )
 
 // 自定义输入
 uniform float u_deltaTime;
 
 void main() {
     float dt = u_deltaTime;
-    // ....
-    vec3 newVelocity = pVelocity + (pAcceleration + vec3(0.0, -9.8, 0.0)) * dt;
+    vec3 newVelocity = pVelocity + (pAcceleration) * dt;
     vec3 newPosition = pPosition + newVelocity * dt;
-    float remaingLife = pLife.y - dt;
+    float remaingLife = pLife.y;
 
-    outPosition = newPosition;
-    outVelocity = newVelocity;
-    outAcceleration = pAcceleration;
+    outPosition = vec4(newPosition, 0);
+    outVelocity = vec4(newVelocity, 0);
+    outAcceleration = vec4(pAcceleration, 0);
+
     outColor = pColor;
-    outSize = pSize;
-    outRotation = pRotation + 0.1 * dt; // 测试旋转
-    outLife = vec2(pLife.x, remaingLife);
-    outRandomID = pRandomID;
+    outSizeRotation = vec4(pSize, pRotation, 0);
+    outLifeRand = vec4(pLife.x, remaingLife, pRandomID, 0);
 }

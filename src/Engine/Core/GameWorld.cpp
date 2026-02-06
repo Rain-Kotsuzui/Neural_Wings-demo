@@ -67,7 +67,6 @@ bool GameWorld::FixedUpdate(float fixedDeltaTime)
     m_timeManager->TickGame(fixedDeltaTime);
     m_physicsSystem->Update(*this, fixedDeltaTime);
     m_scriptingSystem->FixedUpdate(*this, fixedDeltaTime);
-    // m_particleSystem->Update(*this, fixedDeltaTime);
 
     this->DestroyWaitingObjects();
     return true;
@@ -77,6 +76,7 @@ bool GameWorld::Update(float DeltaTime)
 {
     m_timeManager->Tick();
     m_scriptingSystem->Update(*this, DeltaTime);
+    m_particleSystem->Update(*this, DeltaTime);
     return true;
 }
 

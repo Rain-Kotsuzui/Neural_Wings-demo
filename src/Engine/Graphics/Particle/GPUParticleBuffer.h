@@ -1,11 +1,12 @@
 #pragma once
 #include "GPUParticle.h"
+#include "Engine/Graphics/ShaderWrapper.h"
 #include <vector>
 
 class GPUParticleBuffer
 {
 public:
-    GPUParticleBuffer(size_t maxParticles);
+    GPUParticleBuffer(size_t maxParticles, const ShaderWrapper &shader);
     ~GPUParticleBuffer();
     GPUParticleBuffer(const GPUParticleBuffer &) = delete;
     // 交换读写缓冲
@@ -32,7 +33,7 @@ private:
     unsigned int m_vaos[2]; //  VAO A,B
     int m_readIdx = 0;      // 0 -> A, 1 -> B
 
-    unsigned int m_renderVAOS[2];
-    unsigned int m_quadVBO;
-    void SetupRenderVBO();
+    unsigned int m_renderVAOS[2] = {0};
+    unsigned int m_quadVBO = 0;
+    void SetupRenderVBO(const Shader &renderShader);
 };

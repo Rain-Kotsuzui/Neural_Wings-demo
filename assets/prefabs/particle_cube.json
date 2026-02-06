@@ -55,9 +55,9 @@
                 "emitters": [
                     {
                         "name": "Core_Thrust",
-                        "maxParticles": 1000,
-                        "emissionRate": 200.0,
-                        "maxLife": 1.5,
+                        "maxParticles": 1090,
+                        "emissionRate": 1.0,
+                        "maxLife": 15,
                         "space": "WORLD",
                         "updateShader": "assets/shaders/particles/compute/test_update.vs",
                         "initializers": [
@@ -69,19 +69,19 @@
                                         5.0,
                                         0.0
                                     ],
-                                    "minSpeed": 0.5,
-                                    "maxSpeed": 5,
+                                    "minSpeed": 1.0,
+                                    "maxSpeed": 1.0,
                                     "size": [
-                                        1.0,
-                                        1.0
+                                        0.1,
+                                        0.1
                                     ]
                                 }
                             },
                             {
                                 "name": "RandomLife",
                                 "params": {
-                                    "minLife": 0.5,
-                                    "maxLife": 1.2
+                                    "minLife": 1.5,
+                                    "maxLife": 1.5
                                 }
                             }
                         ],
@@ -91,7 +91,7 @@
                             "blendMode": "NONE",
                             "hint": "粒子没有深度写入功能，仅深度测试",
                             "textures": {
-                                "u_diffuseMap": "assets/textures/test_4.png"
+                                "tex": "assets/textures/test_4.png"
                             },
                             "uniforms": {
                                 "u_softness": 1.0

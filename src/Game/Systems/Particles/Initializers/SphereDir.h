@@ -29,7 +29,7 @@ public:
             p.position = offset; // 随体系下坐标
             p.randomID = rand() % 10000;
             p.color = Vector4f(1.0f, 0.0f, 0.0f, 1.0f);
-            p.size = Vector2f(1.0f, 1.0f);
+            p.size = size;
         }
     }
 };

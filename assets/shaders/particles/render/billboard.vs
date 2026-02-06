@@ -32,34 +32,27 @@ out vec4 fragColor;
 out float fragLifeRatio; // 归一化寿命
 
 void main() {
-    // float lifeRatio = clamp(pLife.y / pLife.x, 0.0, 1.0);
-    // if(pLife.y <= 0.00001) {
-    //     gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
-    //     return;
-    // }
-    // // 计算局部系还是世界系。
-    // vec3 centerWorld = (u_model * vec4(pPosition, 1.0)).xyz;
+    float lifeRatio = clamp(pLife.y / pLife.x, 0.0, 1.0);
+    if(pLife.y <= 0.00001) {
+        gl_Position = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+    // 计算局部系还是世界系。
+    vec3 centerWorld = (u_model * vec4(pPosition, 1.0)).xyz;
 
-    // vec3 billboardPos = centerWorld +
-    //     u_cameraRight * pSize.x * vertexPosition.x +
-    //     u_cameraUp * pSize.y * vertexPosition.y;
+    vec3 billboardPos = centerWorld +
+        u_cameraRight * pSize.x * vertexPosition.x +
+        u_cameraUp * pSize.y * vertexPosition.y;
 
-    // float c = cos(pRotation);
-    // float s = sin(pRotation);
-    // vec3 rotateOffset = u_cameraRight * (vertexPosition.x * c - vertexPosition.y * s) * pSize.x +
-    //     u_cameraUp * (vertexPosition.x * s + vertexPosition.y * c) * pSize.y;
-    // vec3 finalPos = billboardPos + rotateOffset;
+    float c = cos(pRotation);
+    float s = sin(pRotation);
+    vec3 rotateOffset = u_cameraRight * (vertexPosition.x * c - vertexPosition.y * s) * pSize.x +
+        u_cameraUp * (vertexPosition.x * s + vertexPosition.y * c) * pSize.y;
+    vec3 finalPos = billboardPos + rotateOffset;
 
-    // gl_Position = u_vp * vec4(finalPos, 1.0);
-    // fragTexCoord = vertexTexCoord;
-    // fragColor = pColor;
-    // fragLifeRatio = lifeRatio;
+    gl_Position = u_vp * vec4(finalPos, 1.0);
+    fragTexCoord = vec2(vertexTexCoord.x, -vertexTexCoord.y);
+    fragColor = pColor;
+    fragLifeRatio = lifeRatio;
 
-    vec2 pos[6] = vec2[](vec2(-0.2, -0.2), vec2(0.2, -0.2), vec2(-0.2, 0.2), vec2(-0.2, 0.2), vec2(0.2, -0.2), vec2(0.2, 0.2));
-
-    // 将 factor 加到坐标上，确保它被“用到”了
-    gl_Position = vec4(2 * pos[gl_VertexID % 6], 0.0, 1.0);
-
-    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
-    fragTexCoord = vertexTexCoord;
 }

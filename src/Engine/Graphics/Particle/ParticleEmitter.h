@@ -45,6 +45,8 @@ public:
 
     Matrix4f GetRenderMatrix(const TransformComponent &parentTf) const;
 
+    RenderMaterial &GetRenderMaterial();
+
 private:
     float m_maxLife = 5.0f;       // 粒子最大生命周期
     float m_lastDeltaTime = 0.0f; // 距离上一次发射粒子过去的时间

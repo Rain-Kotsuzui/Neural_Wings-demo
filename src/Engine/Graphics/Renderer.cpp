@@ -65,7 +65,10 @@ Renderer::Renderer()
     m_dummyDepth.height = GetScreenHeight();
     m_dummyDepth.mipmaps = 1;
     m_dummyDepth.format = 19;
-    rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_MIN_FILTER);
+    // rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_MIN_FILTER);
+
+    rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
+    rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST);
 }
 Renderer::~Renderer()
 {
@@ -118,7 +121,7 @@ void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager
 
     // Texture2D sceneDepth = m_RTPool["inScreen"].depth;
 
-    CopyDepthBuffer(itScene, m_dummyDepth);
+    // CopyDepthBuffer(itScene, m_dummyDepth);
     BeginTextureMode(itScene);
     {
         for (const auto &view : m_renderViewer->GetRenderViews())
@@ -131,7 +134,7 @@ void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager
                 Camera3D rawCamera = camera->GetRawCamera();
                 BeginMode3D(rawCamera);
 
-                DrawParticle(gameWorld, *camera, m_dummyDepth, view.viewport.width / view.viewport.height);
+                DrawParticle(gameWorld, *camera, m_RTPool["inScreen"].depth, view.viewport.width / view.viewport.height);
 
                 EndMode3D();
                 EndScissorMode();

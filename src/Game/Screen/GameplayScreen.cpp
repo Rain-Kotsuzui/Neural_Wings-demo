@@ -60,9 +60,7 @@ void GameplayScreen::OnEnter()
     m_world->GetEventManager().Subscribe<CollisionEvent>([](const CollisionEvent &e)
                                                          { std::cout << "CollisionEvent: " << e.m_object1->GetName() << " and " << e.m_object2->GetName() << std::endl; });
 
-    //     m_world->GetEventManager().Subscribe<CollisionEvent>([](const CollisionEvent &e)
-    //                                                          {
-    // // ParticleSystem::Spawn("Sparks", event.hitpoint);
+    // ParticleSystem::Spawn("Sparks", event.hitpoint);
     // std::cout<<"ParticleSystem::Spawn at"<< e.hitpoint<<std::endl; });
 }
 
