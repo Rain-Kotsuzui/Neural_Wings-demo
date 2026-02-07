@@ -40,7 +40,7 @@ public:
     std::shared_ptr<ShaderWrapper> GetUpdateShader() const;
     void SetMaxLife(float life);
 
-    void Render(GPUParticleBuffer &gpuBuffer, const Texture2D &sceneDepth, const Matrix4f &modelMat,
+    void Render(std::unordered_map<std::string, RenderTexture2D> &RTPool, GPUParticleBuffer &gpuBuffer, const Texture2D &sceneDepth, const Matrix4f &modelMat,
                 const Vector3f &viewPos, float realTime, float gameTime,
                 const Matrix4f &VP, const mCamera &camera);
 
@@ -63,6 +63,5 @@ private:
     std::vector<std::shared_ptr<IParticleInitializer>> m_initializers;
     std::vector<GPUParticle> m_spawnBuffer; // 临时缓冲，传给GPU前组装数据
 
-    // TODO:升级为图结构
-    RenderMaterial m_renderMaterial;
+      RenderMaterial m_renderMaterial;
 };

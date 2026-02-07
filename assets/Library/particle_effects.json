@@ -52,7 +52,9 @@
             },
             "uniforms": {
                 "u_softness": 1.0
-            }
+            },
+            "outputRT": "Sparks",
+            "depthTest": true
         }
     }
 }

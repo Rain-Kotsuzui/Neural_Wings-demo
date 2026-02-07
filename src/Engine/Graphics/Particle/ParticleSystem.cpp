@@ -160,13 +160,15 @@ void ParticleSystem::RegisterOrphan(std::shared_ptr<ParticleEmitter> emitter, co
 #else
 #include "external/glad.h"
 #endif
-
-void ParticleSystem::Render(const Texture2D &sceneDepth, float realTime, float gameTime, const Matrix4f &VP, GameWorld &gameWorld, mCamera &camera)
+#include "string"
+void ParticleSystem::Render(std::unordered_map<std::string, RenderTexture2D> &RTPool, float realTime, float gameTime, const Matrix4f &VP, GameWorld &gameWorld, mCamera &camera)
 {
     rlDrawRenderBatchActive();
     rlEnableDepthTest();
     rlDisableDepthMask();
     rlDisableBackfaceCulling();
+
+    auto &sceneDepth = RTPool["inScreen"].depth;
 
     auto entities = gameWorld.GetEntitiesWith<ParticleEmitterComponent, TransformComponent>();
     for (auto *entity : entities)
@@ -181,11 +183,12 @@ void ParticleSystem::Render(const Texture2D &sceneDepth, float realTime, float g
             if (!buffer)
                 continue;
             Matrix4f renderModelMat = emitter->GetRenderMatrix(ownerTf);
-            emitter->Render(*buffer, sceneDepth, renderModelMat, camera.Position(),
+
+            emitter->Render(RTPool, *buffer, sceneDepth, renderModelMat, camera.Position(),
                             realTime, gameTime, VP, camera);
         }
     }
-    // 更新遗留粒子
+    // 遗留粒子
     for (auto &orphan : m_orphans)
     {
         GPUParticleBuffer *buffer = GetOrCreateBuffer(orphan.emitter);
@@ -193,7 +196,8 @@ void ParticleSystem::Render(const Texture2D &sceneDepth, float realTime, float g
             continue;
 
         Matrix4f renderModelMat = orphan.emitter->GetRenderMatrix(orphan.lastTransform);
-        orphan.emitter->Render(*buffer, sceneDepth, renderModelMat, camera.Position(),
+
+        orphan.emitter->Render(RTPool, *buffer, sceneDepth, renderModelMat, camera.Position(),
                                realTime, gameTime, VP, camera);
     }
     glDepthMask(GL_TRUE);
