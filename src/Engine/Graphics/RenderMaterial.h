@@ -17,6 +17,8 @@ using json = nlohmann::json;
 
 struct RenderMaterial
 {
+    std::string outputRT = "inScreen"; // 可以输出到RT供给postprocess使用
+
     std::shared_ptr<ShaderWrapper> shader;
 
     Vector4f baseColor = Vector4f(255.0, 255.0, 255.0, 255.0);
@@ -40,7 +42,10 @@ struct RenderMaterial
 
         depthWrite = config.value("depthWrite", true);
         depthTest = config.value("depthTest", true);
-
+        if (config.contains("outputRT"))
+        {
+            outputRT = config["outputRT"];
+        }
         if (config.contains("textures"))
         {
             auto &texData = config["textures"];

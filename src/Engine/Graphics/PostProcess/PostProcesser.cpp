@@ -88,6 +88,7 @@ void PostProcesser::UnloadRTPool()
     }
     m_RTPool.clear();
     m_postProcessPasses.clear();
+    m_fboDepthTracking.clear();
     std::cout << "[PostProcesser]: Unloaded " << count << " render targets" << std::endl;
 }
 
@@ -105,6 +106,18 @@ void PostProcesser::ParsePostProcessPasses(const json &data, GameWorld &gameWorl
     }
     const std::vector<std::string> &rtNames = data["rtPool"].get<std::vector<std::string>>();
     this->SetUpRTPool(rtNames, GetScreenWidth(), GetScreenHeight());
+    if (data.contains("depthLinks"))
+    {
+        for (const auto &linkEntry : data["depthLinks"])
+        {
+            std::string src = linkEntry["source"];
+            for (const std::string &dst : linkEntry["targets"])
+            {
+                LinkDepthBuffer(src, dst);
+            }
+        }
+    }
+
     this->m_postProcessPasses.clear();
     auto &rm = gameWorld.GetResourceManager();
 
@@ -259,4 +272,45 @@ void PostProcesser::PostProcess(GameWorld &gameWorld)
         EndTextureMode();
     }
     rlSetTexture(0);
+}
+
+void PostProcesser::LinkDepthBuffer(const std::string &sourceName, const std::string &targetName)
+{
+    auto itSrc = m_RTPool.find(sourceName);
+    auto itDst = m_RTPool.find(targetName);
+    if (itSrc == m_RTPool.end() || itDst == m_RTPool.end())
+        return;
+
+    RenderTexture2D &src = itSrc->second;
+    RenderTexture2D &dst = itDst->second;
+    if (m_fboDepthTracking.count(dst.id) && m_fboDepthTracking[dst.id] == src.depth.id)
+    {
+        return;
+    }
+    rlEnableFramebuffer(dst.id);
+    rlFramebufferAttach(dst.id, src.depth.id, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_TEXTURE2D, 0);
+
+    if (rlFramebufferComplete(dst.id))
+    {
+        m_fboDepthTracking[dst.id] = src.depth.id;
+    }
+    rlDisableFramebuffer();
+}
+void PostProcesser::UnlinkDepthBuffer(const std::string &targetName)
+{
+    auto itDst = m_RTPool.find(targetName);
+    if (itDst == m_RTPool.end())
+        return;
+    RenderTexture2D &dst = itDst->second;
+    if (m_fboDepthTracking.count(dst.id) && m_fboDepthTracking[dst.id] != dst.depth.id)
+    {
+
+        rlEnableFramebuffer(dst.id);
+        rlFramebufferAttach(dst.id, dst.depth.id, RL_ATTACHMENT_DEPTH, RL_ATTACHMENT_TEXTURE2D, 0);
+        if (rlFramebufferComplete(dst.id))
+        {
+            m_fboDepthTracking[dst.id] = dst.depth.id;
+        }
+        rlDisableFramebuffer();
+    }
 }

@@ -180,97 +180,103 @@ RenderMaterial &ParticleEmitter::GetRenderMaterial()
 #else
 #include "external/glad.h"
 #endif
+#include <string>
 
-void ParticleEmitter::Render(GPUParticleBuffer &gpuBuffer, const Texture2D &sceneDepth, const Matrix4f &modelMat,
+void ParticleEmitter::Render(std::unordered_map<std::string, RenderTexture2D> &RTPool, GPUParticleBuffer &gpuBuffer, const Texture2D &sceneDepth, const Matrix4f &modelMat,
                              const Vector3f &viewPos, float realTime, float gameTime,
                              const Matrix4f &VP, const mCamera &camera)
 {
     if (!m_renderMaterial.shader || !m_renderMaterial.shader->IsValid())
         return;
 
-    rlDrawRenderBatchActive();
-    rlEnableVertexArray(0);
-    rlSetTexture(0);
-    m_renderMaterial.shader->Begin();
-
-    Vector3f right = camera.Right();
-    Vector3f up = camera.Up();
-
-    int texUnit = 0;
-    for (const auto &[name, texture] : m_renderMaterial.customTextures)
+    std::string outputRT = m_renderMaterial.outputRT;
+    BeginTextureMode(RTPool[outputRT]);
     {
-        if (texture.id > 0)
+        rlClearColor(0, 0, 0, 0);
+        rlDrawRenderBatchActive();
+        rlEnableVertexArray(0);
+        rlSetTexture(0);
+        m_renderMaterial.shader->Begin();
+
+        Vector3f right = camera.Right();
+        Vector3f up = camera.Up();
+
+        int texUnit = 0;
+        for (const auto &[name, texture] : m_renderMaterial.customTextures)
         {
-            m_renderMaterial.shader->SetTexture(name, texture, texUnit);
+            if (texture.id > 0)
+            {
+                m_renderMaterial.shader->SetTexture(name, texture, texUnit);
+                texUnit++;
+            }
+        }
+        if (sceneDepth.id > 0)
+        {
+            m_renderMaterial.shader->SetTexture("u_sceneDepth", sceneDepth, texUnit);
             texUnit++;
         }
+
+        m_renderMaterial.shader->SetVec2("u_resolution", Vector2f(GetScreenWidth(), GetScreenHeight()));
+        m_renderMaterial.shader->SetFloat("u_near", camera.getNearPlane());
+        m_renderMaterial.shader->SetFloat("u_far", camera.getFarPlane());
+
+        m_renderMaterial.shader->SetVec3("u_cameraRight", right);
+        m_renderMaterial.shader->SetVec3("u_cameraUp", up);
+        m_renderMaterial.shader->SetMat4("u_vp", VP);
+        m_renderMaterial.shader->SetMat4("u_model", modelMat);
+        m_renderMaterial.shader->SetAll(Matrix4f::identity(), Matrix4f::identity(), viewPos, realTime, gameTime,
+                                        m_renderMaterial.baseColor,
+                                        m_renderMaterial.customFloats,
+                                        m_renderMaterial.customVector2,
+                                        m_renderMaterial.customVector3,
+                                        m_renderMaterial.customVector4);
+
+        rlDisableBackfaceCulling();
+        rlEnableDepthTest();
+        rlDisableDepthMask();
+
+        switch (m_renderMaterial.blendMode)
+        {
+        case BLEND_OPIQUE:
+            rlDisableColorBlend();
+            break;
+        case BLEND_MULTIPLIED:
+            rlSetBlendMode(BLEND_CUSTOM);
+            rlSetBlendFactors(RL_DST_COLOR, RL_ZERO, RL_FUNC_ADD);
+            break;
+        case BLEND_SCREEN:
+            rlSetBlendMode(BLEND_CUSTOM);
+            rlSetBlendFactors(RL_ONE, RL_ONE_MINUS_SRC_COLOR, RL_FUNC_ADD);
+            break;
+        case BLEND_SUBTRACT:
+            rlSetBlendMode(BLEND_CUSTOM);
+            rlSetBlendFactors(RL_ONE, RL_ONE, RL_FUNC_REVERSE_SUBTRACT);
+            break;
+        default:
+            BeginBlendMode(m_renderMaterial.blendMode);
+            break;
+        }
+
+        gpuBuffer.BindForRender();
+
+        glDisable(GL_RASTERIZER_DISCARD);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)m_maxParticles);
+
+        glBindVertexArray(0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        glActiveTexture(GL_TEXTURE0);
+        rlEnableVertexArray(0);
+        rlSetTexture(0);
+        rlDisableTexture();
+        rlEnableDepthMask();
+        EndBlendMode();
+
+        m_renderMaterial.shader->End();
+        rlEnableColorBlend();
     }
-    if (sceneDepth.id > 0)
-    {
-        m_renderMaterial.shader->SetTexture("u_sceneDepth", sceneDepth, texUnit);
-        texUnit++;
-    }
-
-    m_renderMaterial.shader->SetVec2("u_resolution", Vector2f(GetScreenWidth(), GetScreenHeight()));
-    m_renderMaterial.shader->SetFloat("u_near", camera.getNearPlane());
-    m_renderMaterial.shader->SetFloat("u_far", camera.getFarPlane());
-
-    m_renderMaterial.shader->SetVec3("u_cameraRight", right);
-    m_renderMaterial.shader->SetVec3("u_cameraUp", up);
-    m_renderMaterial.shader->SetMat4("u_vp", VP);
-    m_renderMaterial.shader->SetMat4("u_model", modelMat);
-    m_renderMaterial.shader->SetAll(Matrix4f::identity(), Matrix4f::identity(), viewPos, realTime, gameTime,
-                                    m_renderMaterial.baseColor,
-                                    m_renderMaterial.customFloats,
-                                    m_renderMaterial.customVector2,
-                                    m_renderMaterial.customVector3,
-                                    m_renderMaterial.customVector4);
-
-    rlDisableBackfaceCulling();
-    rlEnableDepthTest();
-    rlDisableDepthMask();
-
-    switch (m_renderMaterial.blendMode)
-    {
-    case BLEND_OPIQUE:
-        rlDisableColorBlend();
-        break;
-    case BLEND_MULTIPLIED:
-        rlSetBlendMode(BLEND_CUSTOM);
-        rlSetBlendFactors(RL_DST_COLOR, RL_ZERO, RL_FUNC_ADD);
-        break;
-    case BLEND_SCREEN:
-        rlSetBlendMode(BLEND_CUSTOM);
-        rlSetBlendFactors(RL_ONE, RL_ONE_MINUS_SRC_COLOR, RL_FUNC_ADD);
-        break;
-    case BLEND_SUBTRACT:
-        rlSetBlendMode(BLEND_CUSTOM);
-        rlSetBlendFactors(RL_ONE, RL_ONE, RL_FUNC_REVERSE_SUBTRACT);
-        break;
-    default:
-        BeginBlendMode(m_renderMaterial.blendMode);
-        break;
-    }
-
-    gpuBuffer.BindForRender();
-
-    glDisable(GL_RASTERIZER_DISCARD);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 6, (GLsizei)m_maxParticles);
-
-    glBindVertexArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glActiveTexture(GL_TEXTURE0);
-    rlEnableVertexArray(0);
-    rlSetTexture(0);
-    rlDisableTexture();
-    rlEnableDepthMask();
-    EndBlendMode();
-
-    m_renderMaterial.shader->End();
-    rlEnableColorBlend();
-
+    EndTextureMode();
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR)
     {

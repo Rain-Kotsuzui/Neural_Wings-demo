@@ -15,8 +15,6 @@ void main() {
     float depth = texture(u_sceneDepth, fragTexCoord).r;
 
     vec4 texColor = texture(tex, fragTexCoord);
-    // 最后的输出强制受这些变量影响（即便效果看不出来）
-
     finalColor = texColor;
 
 }

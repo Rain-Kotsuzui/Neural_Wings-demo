@@ -58,34 +58,32 @@ bool Renderer::LoadViewConfig(const std::string &configPath, GameWorld &gameWorl
 #endif
 Renderer::Renderer()
 {
-    if (m_dummyDepth.id > 0)
-        rlUnloadTexture(m_dummyDepth.id);
-    m_dummyDepth.id = rlLoadTextureDepth(GetScreenWidth(), GetScreenHeight(), false);
-    m_dummyDepth.width = GetScreenWidth();
-    m_dummyDepth.height = GetScreenHeight();
-    m_dummyDepth.mipmaps = 1;
-    m_dummyDepth.format = 19;
-    // rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_MIN_FILTER);
-
-    rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
-    rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST);
+    // if (m_dummyDepth.id > 0)
+    //     rlUnloadTexture(m_dummyDepth.id);
+    // m_dummyDepth.id = rlLoadTextureDepth(GetScreenWidth(), GetScreenHeight(), false);
+    // m_dummyDepth.width = GetScreenWidth();
+    // m_dummyDepth.height = GetScreenHeight();
+    // m_dummyDepth.mipmaps = 1;
+    // m_dummyDepth.format = 19;
+    // rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MAG_FILTER, RL_TEXTURE_FILTER_NEAREST);
+    // rlTextureParameters(m_dummyDepth.id, RL_TEXTURE_MIN_FILTER, RL_TEXTURE_FILTER_NEAREST);
 }
 Renderer::~Renderer()
 {
-    rlUnloadTexture(m_dummyDepth.id);
+    // rlUnloadTexture(m_dummyDepth.id);
 }
-void Renderer::CopyDepthBuffer(RenderTexture2D sourceRT, Texture2D targetDepth)
-{
-    if (targetDepth.id == 0)
-        return;
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, sourceRT.id);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, targetDepth.id);
-    glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, targetDepth.width, targetDepth.height, 0);
+// void Renderer::CopyDepthBuffer(RenderTexture2D sourceRT, Texture2D targetDepth)
+// {
+//     if (targetDepth.id == 0)
+//         return;
+//     glBindFramebuffer(GL_READ_FRAMEBUFFER, sourceRT.id);
+//     glActiveTexture(GL_TEXTURE0);
+//     glBindTexture(GL_TEXTURE_2D, targetDepth.id);
+//     glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, 0, 0, targetDepth.width, targetDepth.height, 0);
 
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
-}
+//     glBindTexture(GL_TEXTURE_2D, 0);
+//     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+// }
 void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
 {
     rlEnableDepthMask();
@@ -94,7 +92,7 @@ void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager
     auto &itScene = m_RTPool["inScreen"];
     BeginTextureMode(itScene);
     {
-        ClearBackground(BLUE); // TODO(改为BLACK)擦除深度
+        ClearBackground(BLUE);
         for (const auto &view : m_renderViewer->GetRenderViews())
         {
             mCamera *camera = cameraManager.GetCamera(view.cameraName);
@@ -118,36 +116,39 @@ void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager
         }
     }
     EndTextureMode();
-
-    // Texture2D sceneDepth = m_RTPool["inScreen"].depth;
-
-    // CopyDepthBuffer(itScene, m_dummyDepth);
-    BeginTextureMode(itScene);
+}
+void Renderer::RawRenderParticle(GameWorld &gameWorld, CameraManager &cameraManager)
+{
+    rlDisableDepthMask();
+    // 粒子的BeginTextureMode在每个emitter，每个emitter有自己的输出RT，最后到后处理中处理
+    for (const auto &view : m_renderViewer->GetRenderViews())
     {
-        for (const auto &view : m_renderViewer->GetRenderViews())
+        mCamera *camera = cameraManager.GetCamera(view.cameraName);
+        if (camera)
         {
-            mCamera *camera = cameraManager.GetCamera(view.cameraName);
-            if (camera)
-            {
-                BeginScissorMode((int)view.viewport.x, (int)view.viewport.y, (int)view.viewport.width, (int)view.viewport.height);
+            BeginScissorMode((int)view.viewport.x, (int)view.viewport.y, (int)view.viewport.width, (int)view.viewport.height);
 
-                Camera3D rawCamera = camera->GetRawCamera();
-                BeginMode3D(rawCamera);
+            Camera3D rawCamera = camera->GetRawCamera();
+            BeginMode3D(rawCamera);
 
-                DrawParticle(gameWorld, *camera, m_RTPool["inScreen"].depth, view.viewport.width / view.viewport.height);
+            DrawParticle(gameWorld, *camera, view.viewport.width / view.viewport.height);
 
-                EndMode3D();
-                EndScissorMode();
-            }
+            EndMode3D();
+            EndScissorMode();
         }
     }
-    EndTextureMode();
 }
 
 void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
 {
     // RT图出入口
     auto &m_RTPool = m_postProcesser->GetRTPool();
+    for (auto &[name, rt] : m_RTPool)
+    {
+        BeginTextureMode(rt);
+        ClearBackground(BLACK);
+        EndTextureMode();
+    }
     bool isPosetProcess = true;
     if (m_RTPool.empty())
     {
@@ -168,9 +169,8 @@ void Renderer::RenderScene(GameWorld &gameWorld, CameraManager &cameraManager)
         return;
     }
 
-    BeginTextureMode(itScene->second);
     RawRenderScene(gameWorld, cameraManager);
-    EndTextureMode();
+    RawRenderParticle(gameWorld, cameraManager);
 
     m_postProcesser->PostProcess(gameWorld);
 
@@ -371,8 +371,10 @@ void Renderer::RenderSinglePass(const Mesh &mesh, const Model &model, const int 
     rlSetCullFace(RL_CULL_FACE_BACK);
 }
 
-void Renderer::DrawParticle(GameWorld &gameWorld, mCamera &camera, const Texture2D &sceneDepth, float aspect)
+void Renderer::DrawParticle(GameWorld &gameWorld, mCamera &camera, float aspect)
 {
+    auto &m_RTPool = m_postProcesser->GetRTPool();
+
     auto &particleSys = gameWorld.GetParticleSystem();
     float gameTime = gameWorld.GetTimeManager().GetGameTime();
     float realTime = gameWorld.GetTimeManager().GetRealTime();
@@ -390,7 +392,7 @@ void Renderer::DrawParticle(GameWorld &gameWorld, mCamera &camera, const Texture
         matProj = MatrixOrtho(-right, right, -top, top, camera.getNearPlane(), camera.getFarPlane());
     }
     Matrix4f VP = matProj * matView;
-    particleSys.Render(sceneDepth, realTime, gameTime, VP, gameWorld, camera);
+    particleSys.Render(m_RTPool, realTime, gameTime, VP, gameWorld, camera);
 }
 // Debug
 #include <iostream>
