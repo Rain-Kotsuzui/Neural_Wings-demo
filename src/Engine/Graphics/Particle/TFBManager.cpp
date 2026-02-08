@@ -9,7 +9,7 @@
 #include "external/glad.h"
 #endif
 
-void TFBManager::Simulate(ShaderWrapper &shader, GPUParticleBuffer &buffer, int count, float dt)
+void TFBManager::Simulate(Texture2D &dataTex, int maxParticles, ShaderWrapper &shader, GPUParticleBuffer &buffer, int count, float dt)
 {
     if (count <= 0)
         return;
@@ -19,7 +19,10 @@ void TFBManager::Simulate(ShaderWrapper &shader, GPUParticleBuffer &buffer, int 
     shader.Begin();
 
     // TODO:仿照RenderMaterial加入用户自定义uniform功能
-    shader.SetFloat("u_deltaTime", dt);
+    int texUnit = 0;
+    shader.SetTexture("dataTex", dataTex, texUnit++);
+    shader.SetInt("maxParticles", maxParticles);
+    shader.SetFloat("deltaTime", dt);
 
     // 关闭光栅化，仅vs
     glEnable(GL_RASTERIZER_DISCARD);

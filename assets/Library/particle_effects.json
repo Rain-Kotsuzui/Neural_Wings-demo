@@ -59,5 +59,81 @@
                 "depthTest": true
             }
         ]
+    },
+    "SPH": {
+        "isBurst": true,
+        "maxParticles": 5,
+        "emissionRate": 0,
+        "maxLife": 10000.0,
+        "updateShader": "assets/shaders/particles/compute/sph.vs",
+        "initializers": [
+            {
+                "name": "SPHInit",
+                "params": {
+                    "size": [
+                        0.5,
+                        0.5
+                    ],
+                    "maxLife": 10000.0,
+                    "velocity1": [
+                        -0.2,
+                        0,
+                        0.3
+                    ],
+                    "velocity2": [
+                        0,
+                        0.3,
+                        0
+                    ],
+                    "velocity3": [
+                        0,
+                        0,
+                        0
+                    ],
+                    "direction": [
+                        0,
+                        0,
+                        1
+                    ],
+                    "offset1": [
+                        1,
+                        0,
+                        0
+                    ],
+                    "offset2": [
+                        2,
+                        0,
+                        0
+                    ],
+                    "offset3": [
+                        4,
+                        0,
+                        0
+                    ],
+                    "spawnPos": [
+                        0,
+                        0,
+                        0
+                    ]
+                }
+            }
+        ],
+        "passes": [
+            {
+                "name": "深度写入RT",
+                "vs": "assets/shaders/particles/render/billboard.vs",
+                "fs": "assets/shaders/particles/render/soft.fs",
+                "blendMode": "NONE",
+                "hint": "粒子没有深度写入功能，仅深度测试",
+                "textures": {
+                    "tex": "assets/textures/test_4.png"
+                },
+                "uniforms": {
+                    "u_softness": 1.0
+                },
+                "outputRT": "inScreen",
+                "depthTest": true
+            }
+        ]
     }
 }
