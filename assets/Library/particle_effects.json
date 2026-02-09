@@ -62,7 +62,7 @@
     },
     "SPH": {
         "isBurst": true,
-        "maxParticles": 5,
+        "maxParticles": 20000,
         "emissionRate": 0,
         "maxLife": 10000.0,
         "updateShader": "assets/shaders/particles/compute/sph.vs",
@@ -71,44 +71,24 @@
                 "name": "SPHInit",
                 "params": {
                     "size": [
-                        0.5,
-                        0.5
+                        0.1,
+                        0.1
                     ],
-                    "maxLife": 10000.0,
-                    "velocity1": [
-                        -0.2,
-                        0,
-                        0.3
+                    "maxLife": 15000.0,
+                    "spacing": [
+                        0.25,
+                        0.25,
+                        0.20
                     ],
-                    "velocity2": [
-                        0,
-                        0.3,
-                        0
-                    ],
-                    "velocity3": [
-                        0,
-                        0,
-                        0
+                    "counts": [
+                        10,
+                        150,
+                        10
                     ],
                     "direction": [
                         0,
                         0,
                         1
-                    ],
-                    "offset1": [
-                        1,
-                        0,
-                        0
-                    ],
-                    "offset2": [
-                        2,
-                        0,
-                        0
-                    ],
-                    "offset3": [
-                        4,
-                        0,
-                        0
                     ],
                     "spawnPos": [
                         0,
@@ -126,7 +106,7 @@
                 "blendMode": "NONE",
                 "hint": "粒子没有深度写入功能，仅深度测试",
                 "textures": {
-                    "tex": "assets/textures/test_4.png"
+                    "tex": "assets/textures/sph.png"
                 },
                 "uniforms": {
                     "u_softness": 1.0

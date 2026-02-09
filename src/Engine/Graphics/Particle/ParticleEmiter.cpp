@@ -103,8 +103,9 @@ void ParticleEmitter::Burst(const TransformComponent &ownerTf, GPUParticleBuffer
 void ParticleEmitter::Spawn(int spawnCounts, const TransformComponent &ownerTf, GPUParticleBuffer &particleBuffer)
 {
 
-    if (spawnCounts > 1024)
-        spawnCounts = 1024; // 防止卡顿
+    // TODO
+    // if (spawnCounts > 8192)
+    //     spawnCounts = 8192; // 防止卡顿
     m_spawnBuffer.assign(spawnCounts, GPUParticle());
 
     // 初始化

@@ -15,8 +15,8 @@ uniform int maxParticles;
 vec4 GetPos(int id) {
     return texelFetch(dataTex, ivec2(0, id), 0);
 }
-vec4 GetVel(int id) {
-    return texelFetch(dataTex, ivec2(1, id), 0);
+vec3 GetVel(int id) {
+    return texelFetch(dataTex, ivec2(1, id), 0).xyz;
 }
 vec4 GetAcc(int id) {
     return texelFetch(dataTex, ivec2(2, id), 0);
@@ -40,17 +40,18 @@ void main() {
     // 务必让fragTexCoord参与结果运算，否则内存访问会出错
     // float depth = texture(sceneDepth, fragTexCoord).r;
     float t = 1.0;
-    for(int i = 0; i < maxParticles; i++) {
-        if(uint(i) == vID)
-            continue;
-        if(vRemainingLife <= 0)
-            continue;
-        float a = distance(vPosition, GetPos(i).xyz);
+    // for(int i = 0; i < maxParticles; i++) {
+    //     if(uint(i) == vID)
+    //         continue;
+    //     if(vRemainingLife <= 0)
+    //         continue;
+    //     float a = distance(vPosition, GetPos(i).xyz);
 
-        t = min(a, t);
-    }
-    t = clamp(t, 0.1, 1);
+    //     t = min(a, t);
+    // }
+    t = length(GetVel(int(vID)));
+    t = clamp(t / 10, 0, 1);
     vec4 texColor = texture(tex, fragTexCoord);
-    finalColor = texColor * t + vec4(1, 0, 0, 1) * (1 - t);
+    finalColor = texColor * (1 - t) + vec4(1, 0, 0, 1) * (t);
 
 }

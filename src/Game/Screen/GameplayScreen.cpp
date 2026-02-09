@@ -74,7 +74,7 @@ void GameplayScreen::OnEnter()
     //                                                             "normal",e.normal,
     //                                                             "impulse",e.impulse,
     //                                                             "maxSpeed",e.relativeVelocity.Length()/4); });
-    m_world->GetParticleSystem().Spawn("SPH", Vector3f(0.0f));
+    m_world->GetParticleSystem().Spawn("SPH", Vector3f(0.0f, 3.0f, 0.0f));
 }
 
 // 当离开游戏场景时调用
@@ -82,7 +82,6 @@ void GameplayScreen::OnExit()
 {
     EnableCursor();
 }
-// TODO:主循环
 
 // 在固定时间步更新（未来的物理和网络逻辑将在这里）
 void GameplayScreen::FixedUpdate(float fixedDeltaTime)

@@ -128,7 +128,7 @@ void ParticleSystem::Update(GameWorld &gameWorld, float dt)
             if (emitter->GetUpdateShader())
             {
                 // emitter->PrepareForces(ownerTf); 计算力的在随体系与世界系的变换
-                m_TFBManager->Simulate(emitter->GetDataTexture(), (int)emitter->GetMaxParticles(), *(emitter->GetUpdateShader()), *buffer, (int)emitter->GetMaxParticles(), dt);
+                m_TFBManager->Simulate(gameWorld, emitter->GetDataTexture(), (int)emitter->GetMaxParticles(), *(emitter->GetUpdateShader()), *buffer, (int)emitter->GetMaxParticles(), dt);
             }
         }
     }
@@ -144,7 +144,7 @@ void ParticleSystem::Update(GameWorld &gameWorld, float dt)
 
             it->emitter->EnsureDataTextureSize(it->emitter->GetMaxParticles());
             buffer->SyncPrticleDataToTexture(it->emitter->GetDataTextureID());
-            m_TFBManager->Simulate(it->emitter->GetDataTexture(), (int)it->emitter->GetMaxParticles(), *(it->emitter->GetUpdateShader()), *buffer, (int)it->emitter->GetMaxParticles(), dt);
+            m_TFBManager->Simulate(gameWorld, it->emitter->GetDataTexture(), (int)it->emitter->GetMaxParticles(), *(it->emitter->GetUpdateShader()), *buffer, (int)it->emitter->GetMaxParticles(), dt);
         }
         if (it->emitter->IsFinished())
         {
