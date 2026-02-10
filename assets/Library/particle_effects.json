@@ -62,7 +62,7 @@
     },
     "SPH": {
         "isBurst": true,
-        "maxParticles": 20000,
+        "maxParticles": 3,
         "emissionRate": 0,
         "maxLife": 10000.0,
         "updateShader": "assets/shaders/particles/compute/sph.vs",
@@ -71,8 +71,8 @@
                 "name": "SPHInit",
                 "params": {
                     "size": [
-                        0.1,
-                        0.1
+                        0.3,
+                        0.3
                     ],
                     "maxLife": 15000.0,
                     "spacing": [
@@ -81,9 +81,9 @@
                         0.20
                     ],
                     "counts": [
-                        10,
-                        150,
-                        10
+                        1,
+                        3,
+                        1
                     ],
                     "direction": [
                         0,
@@ -102,17 +102,28 @@
             {
                 "name": "深度写入RT",
                 "vs": "assets/shaders/particles/render/billboard.vs",
-                "fs": "assets/shaders/particles/render/soft.fs",
+                "fs": "assets/shaders/particles/render/fluid_depth.fs",
                 "blendMode": "NONE",
-                "hint": "粒子没有深度写入功能，仅深度测试",
                 "textures": {
                     "tex": "assets/textures/sph.png"
                 },
-                "uniforms": {
-                    "u_softness": 1.0
+                "uniforms": {},
+                "outputRT": "raw_Fluid_Depth",
+                "depthTest": true,
+                "depthWrite": true
+            },
+            {
+                "name": "厚度写入RT",
+                "vs": "assets/shaders/particles/render/billboard.vs",
+                "fs": "assets/shaders/particles/render/fluid_thickness.fs",
+                "blendMode": "NONE",
+                "textures": {
+                    "tex": "assets/textures/sph.png"
                 },
-                "outputRT": "inScreen",
-                "depthTest": true
+                "uniforms": {},
+                "outputRT": "raw_Fluid_Thickness",
+                "depthTest": true,
+                "depthWrite": false
             }
         ]
     }

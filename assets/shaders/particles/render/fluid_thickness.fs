@@ -3,10 +3,14 @@
 in vec2 fragTexCoord;
 in vec4 fragColor;
 in float fragLifeRatio;
-
+in vec3 vViewPos;
 in vec3 vPosition;
 flat in uint vID;
 in float vRemainingLife;
+in vec3 vDir;
+in float vRadius;
+in float vNear;
+in float vFar;
 
 out vec4 finalColor;
 
@@ -40,25 +44,23 @@ void main() {
     // 务必让fragTexCoord参与结果运算，否则内存访问会出错
     // float depth = texture(sceneDepth, fragTexCoord).r;
 
-    float t = 1.0;
-    // 反转y轴
-    vec2 centeredCoord = fragTexCoord * 2 - 1;
-    float dist = length(centeredCoord);
-    if(dist > 1.0) {
+    vec2 normalCoords = fragTexCoord * 2.0 - 1;
+    float r2 = dot(normalCoords, normalCoords);
+    if(r2 > 1.0)
         discard;
-    }
-    // for(int i = 0; i < maxParticles; i++) {
-    //     if(uint(i) == vID)
-    //         continue;
-    //     if(vRemainingLife <= 0)
-    //         continue;
-    //     float a = distance(vPosition, GetPos(i).xyz);
-
-    //     t = min(a, t);
-    // }
-    t = length(GetVel(int(vID)));
-    t = clamp(t / 10, 0, 1);
-    vec4 texColor = texture(tex, fragTexCoord);
-    finalColor = texColor * (1 - t) + vec4(1, 0, 0, 1) * (t);
-
+    float z = sqrt(1.0 - r2);
+    float thickness = 2.0 * vRadius * z;
+    vec3 view = vPosition - vViewPos;
+    float depth = length(view);
+    depth = depth - z * vRadius;
+    float far = vFar;
+    float near = vNear;
+    float nonLinearDepth = ((far + near) / (far - near)) + ((2.0 * far * near) / (far - near) / -depth);
+    gl_FragDepth = nonLinearDepth * 0.5 + 0.5;
+    // float t = 1.0;
+    // t = length(GetVel(int(vID)));
+    // t = clamp(t / 10, 0, 1);
+    // vec4 texColor = texture(tex, fragTexCoord);
+    // finalColor = texColor * (1 - t) + vec4(1, 0, 0, 1) * (t);
+    finalColor = vec4(vec3(thickness), 1.0);
 }

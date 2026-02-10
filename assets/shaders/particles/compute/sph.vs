@@ -38,8 +38,8 @@ const float PI = 3.1415926535;
 const vec3 GRAVITY = vec3(0, -9.8, 0);
 
 // 边界
-vec3 BOX_MIN = vec3(-2.0, -5.0, 0.0);
-vec3 BOX_MAX = vec3(5.0, 200.0, 8.0);
+vec3 BOX_MIN = vec3(0.0, -5.0, 0.0);
+vec3 BOX_MAX = vec3(5.0, 200.0, 5.0);
 
 vec3 GetPos(int id) {
     return texelFetch(dataTex, ivec2(0, id), 0).xyz;
@@ -80,6 +80,7 @@ void main() {
 
     // stage 1:密度计算
     float rho = 0.0;
+    int count = 0;
     for(int i = 0; i < maxParticles; i++) {
         // 去除死粒子
         if(GetLife(i).y <= 0)
@@ -88,13 +89,17 @@ void main() {
         vec3 diff = pPosition - otherPos;
         float r2 = dot(diff, diff);
         if(r2 < H2) {
+            count++;
               // Poly6 Kernel
             float h2_r2 = H2 - r2;
             rho += MASS * (315.0 / (64.0 * PI * pow(H, 9.0))) * h2_r2 * h2_r2 * h2_r2;
 
         }
     }
+    float size = clamp((float(count) - 10) / 100.0, -0.1, 0.1);
+    float pS = clamp(pSize.x + pSize.x * size, 0.1, 0.5);
 
+    vec2 newSize = vec2(2);
     float pressure = (rho - Rho0) * GAS_CONST;
     vec3 fPress = vec3(0.0);
     vec3 fVisc = vec3(0.0);
@@ -162,6 +167,6 @@ void main() {
     outVelocity = vec4(newVelocity, 0);
     outAcceleration = vec4(pAcceleration, 0);
     outColor = pColor;
-    outSizeRotation = vec4(pSize, pRotation, 0);
+    outSizeRotation = vec4(newSize, pRotation, 0);
     outLifeRand = vec4(pLife.x, pLife.y - dt, uintBitsToFloat(pRandomID), uintBitsToFloat(pID));
 }

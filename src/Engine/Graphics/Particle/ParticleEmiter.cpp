@@ -76,7 +76,6 @@ void ParticleEmitter::LoadFromConfig(const json &config, const ParticleFactory &
             m_passes.push_back(mat);
         }
     }
-    // m_renderMaterial.LoadFromConfig(config["renderMaterial"], rm);
 }
 void ParticleEmitter::Update(float deltaTime, const TransformComponent &ownerTf, GPUParticleBuffer &particleBuffer)
 {
@@ -195,7 +194,7 @@ std::vector<RenderMaterial> &ParticleEmitter::GetRenderPasses()
 
 void ParticleEmitter::RenderSignlePass(size_t passIndex, const RenderMaterial &pass, std::unordered_map<std::string, RenderTexture2D> &RTPool, GPUParticleBuffer &gpuBuffer, const Texture2D &sceneDepth, const Matrix4f &modelMat,
                                        const Vector3f &viewPos, float realTime, float gameTime,
-                                       const Matrix4f &VP, const mCamera &camera)
+                                       const Matrix4f &VP, const Matrix4f &matProj, const mCamera &camera)
 {
     if (!pass.shader || !pass.shader->IsValid())
         return;
@@ -207,7 +206,8 @@ void ParticleEmitter::RenderSignlePass(size_t passIndex, const RenderMaterial &p
 
     BeginTextureMode(itRT->second);
     {
-        rlClearColor(0, 0, 0, 0);
+        // glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        // glClear(GL_COLOR_BUFFER_BIT);
         rlDrawRenderBatchActive();
         rlEnableVertexArray(0);
         rlSetTexture(0);
@@ -215,6 +215,7 @@ void ParticleEmitter::RenderSignlePass(size_t passIndex, const RenderMaterial &p
 
         Vector3f right = camera.Right();
         Vector3f up = camera.Up();
+        Vector3f dir = camera.Direction();
 
         int texUnit = 0;
 
@@ -239,9 +240,11 @@ void ParticleEmitter::RenderSignlePass(size_t passIndex, const RenderMaterial &p
         pass.shader->SetFloat("near", camera.getNearPlane());
         pass.shader->SetFloat("far", camera.getFarPlane());
 
+        pass.shader->SetVec3("cameraDir", dir);
         pass.shader->SetVec3("cameraRight", right);
         pass.shader->SetVec3("cameraUp", up);
         pass.shader->SetMat4("vp", VP);
+        pass.shader->SetMat4("proj", matProj);
         pass.shader->SetMat4("model", modelMat);
         pass.shader->SetAll(Matrix4f::identity(), Matrix4f::identity(), viewPos, realTime, gameTime,
                             pass.baseColor,
@@ -251,9 +254,18 @@ void ParticleEmitter::RenderSignlePass(size_t passIndex, const RenderMaterial &p
                             pass.customVector4);
 
         rlDisableBackfaceCulling();
-        rlEnableDepthTest();
-        rlDisableDepthMask();
+        // rlEnableDepthTest();
+        // rlDisableDepthMask();
+        if (pass.depthWrite)
+            rlEnableDepthMask();
+        else
+            rlDisableDepthMask();
+        if (pass.depthTest)
+            rlEnableDepthTest();
+        else
+            rlDisableDepthTest();
 
+        rlEnableColorBlend();
         switch (pass.blendMode)
         {
         case BLEND_OPIQUE:
@@ -296,19 +308,19 @@ void ParticleEmitter::RenderSignlePass(size_t passIndex, const RenderMaterial &p
         rlEnableColorBlend();
     }
     EndTextureMode();
-    GLenum err;
-    while ((err = glGetError()) != GL_NO_ERROR)
-    {
-        std::cerr << "OpenGL error: " << err << std::endl;
-    }
+    // GLenum err;
+    // while ((err = glGetError()) != GL_NO_ERROR)
+    // {
+    //     std::cerr << "OpenGL error: " << err << std::endl;
+    // }
 }
 void ParticleEmitter::Render(std::unordered_map<std::string, RenderTexture2D> &RTPool, GPUParticleBuffer &gpuBuffer, const Texture2D &sceneDepth, const Matrix4f &modelMat,
                              const Vector3f &viewPos, float realTime, float gameTime,
-                             const Matrix4f &VP, const mCamera &camera)
+                             const Matrix4f &VP, const Matrix4f &matProj, const mCamera &camera)
 {
     for (size_t i = 0; i < m_passes.size(); ++i)
     {
-        RenderSignlePass(i, m_passes[i], RTPool, gpuBuffer, sceneDepth, modelMat, viewPos, realTime, gameTime, VP, camera);
+        RenderSignlePass(i, m_passes[i], RTPool, gpuBuffer, sceneDepth, modelMat, viewPos, realTime, gameTime, VP, matProj, camera);
     }
 }
 

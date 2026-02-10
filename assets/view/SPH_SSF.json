@@ -1,0 +1,81 @@
+{
+    "postProcess": {
+        "name": "SPH_SSF",
+        "rtPool": [
+            "inScreen",
+            "outScreen",
+            "raw_Fluid_Depth",
+            "FluidThickness",
+            "FluidBlur_1",
+            "FluidBlur_2"
+        ],
+        "depthLinks": [
+            {
+                "source": "inScreen",
+                "targets": [
+                    "raw_Fluid_Depth"
+                ]
+            }
+        ],
+        "hint": "拓扑序",
+        "postProcessGraph": [
+            {
+                "name": "DepthBlur",
+                "vs": "assets/shaders/postprocess/default.vs",
+                "fs": "assets/shaders/postprocess/bilateral_blur.fs",
+                "inputs": [
+                    [
+                        "u_fluidDepth",
+                        "raw_Fluid_Depth"
+                    ]
+                ],
+                "output": "FluidBlur_1",
+                "uniforms": {
+                    "u_dir": [
+                        1,
+                        0
+                    ]
+                }
+            },
+            {
+                "name": "New DepthBlur",
+                "vs": "assets/shaders/postprocess/default.vs",
+                "fs": "assets/shaders/postprocess/bilateral_blur.fs",
+                "inputs": [
+                    [
+                        "u_fluidDepth",
+                        "FluidBlur_1"
+                    ]
+                ],
+                "output": "FluidBlur_2",
+                "uniforms": {
+                    "u_dir": [
+                        0,
+                        1
+                    ]
+                }
+            },
+            {
+                "name": "Shading",
+                "vs": "assets/shaders/postprocess/default.vs",
+                "fs": "assets/shaders/postprocess/ssf_shading.fs",
+                "inputs": [
+                    [
+                        "u_sceneTex",
+                        "inScreen"
+                    ],
+                    [
+                        "u_fluidDepth",
+                        "FluidBlur_2"
+                    ],
+                    [
+                        "u_thicknessTex",
+                        "FluidThickness"
+                    ]
+                ],
+                "output": "outScreen",
+                "uniforms": {}
+            }
+        ]
+    }
+}

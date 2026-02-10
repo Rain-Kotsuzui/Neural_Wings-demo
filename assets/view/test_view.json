@@ -18,16 +18,43 @@
         }
     ],
     "postProcess": {
-        "name": "SPH",
+        "name": "SPH_SSF",
+        "hints": "rtPool使用accuracy_前缀表示使用浮点纹理",
         "rtPool": [
             "inScreen",
-            "outScreen"
+            "outScreen",
+            "accuracy_raw_Fluid_Depth",
+            "accuracy_FluidBlur_1",
+            "accuracy_FluidBlur_2",
+            "accuracy_raw_Fluid_Thickness"
         ],
-        "hint1": "支持深度共享",
         "depthLinks": [
             {
                 "source": "inScreen",
-                "targets": []
+                "targets": [
+                    "raw_Fluid_Depth",
+                    "raw_Fluid_Thickness"
+                ]
+            }
+        ],
+        "hint": "拓扑序",
+        "postProcessGraph": [
+            {
+                "name": "debug",
+                "vs": "assets/shaders/postprocess/default.vs",
+                "fs": "assets/shaders/postprocess/debug.fs",
+                "inputs": [
+                    [
+                        "u_screen",
+                        "inScreen"
+                    ],
+                    [
+                        "u_debug",
+                        "raw_Fluid_Depth"
+                    ]
+                ],
+                "output": "outScreen",
+                "uniforms": {}
             }
         ]
     }
