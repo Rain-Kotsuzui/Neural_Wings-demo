@@ -121,7 +121,10 @@ const std::vector<std::unique_ptr<GameObject>> &GameWorld::GetGameObjects() cons
 {
     return m_gameObjects;
 }
-
+const std::vector<GameObject *> &GameWorld::GetActivateGameObjects() const
+{
+    return m_activateGameObjects;
+}
 void GameWorld::DestroyWaitingObjects()
 {
     bool anyObjectDestroyed = false;
@@ -131,6 +134,8 @@ void GameWorld::DestroyWaitingObjects()
         {
             // 先释放脚本等组件，防止析构时先析构其他组件导致脚本崩溃
             obj->OnDestroy();
+            if (obj->IsActive())
+                NotifyActivateStateChanged(obj.get(), false);
             anyObjectDestroyed = true;
         }
     }
@@ -152,6 +157,22 @@ void GameWorld::Render()
     m_renderer->RenderScene(*this, *m_cameraManager);
 }
 
+void GameWorld::NotifyActivateStateChanged(GameObject *obj, bool activate)
+{
+    if (activate)
+    {
+        m_activateGameObjects.push_back(obj);
+    }
+    else
+    {
+        auto it = std::find(m_activateGameObjects.begin(), m_activateGameObjects.end(), obj);
+        if (it != m_activateGameObjects.end())
+        {
+            *it = m_activateGameObjects.back();
+            m_activateGameObjects.pop_back();
+        }
+    }
+}
 GameObject *GameWorld::FindEntityByName(const std::string &name) const
 {
     for (auto &obj : m_gameObjects)
@@ -160,4 +181,25 @@ GameObject *GameWorld::FindEntityByName(const std::string &name) const
             return obj.get();
     }
     return nullptr;
+}
+GameObjectPool &GameWorld::GetOrCreatePool(const std::string &name, const std::string &prefabPath, size_t preloadCount)
+{
+    if (m_pools.find(name) == m_pools.end())
+    {
+        auto pool = std::make_unique<GameObjectPool>(prefabPath, *this);
+        if (preloadCount > 0)
+            pool->Preload(preloadCount);
+        m_pools[name] = std::move(pool);
+        std::cout << "[GameWorld]: Created pool: " << name << " using prefab: " << prefabPath << std::endl;
+    }
+    return *m_pools[name];
+}
+GameObjectPool &GameWorld::GetPool(const std::string &name) const
+{
+    auto it = m_pools.find(name);
+    if (it != m_pools.end())
+    {
+        return *it->second;
+    }
+    throw std::runtime_error("[GameWorld]:Pool not found: " + name);
 }

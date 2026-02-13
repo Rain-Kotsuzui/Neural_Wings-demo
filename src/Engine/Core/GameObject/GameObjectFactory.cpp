@@ -20,7 +20,7 @@ GameObject &GameObjectFactory::CreateFromPrefab(const std::string &name, const s
     gameObject.SetName(name);
 
     gameObject.SetTag(tag);
-
+    gameObject.SetOwnerWorld(&world);
     if (data.contains("components"))
     {
         // 严格顺序，确保transform在rigid前面

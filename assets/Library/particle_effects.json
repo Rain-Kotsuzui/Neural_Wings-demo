@@ -63,7 +63,7 @@
     },
     "SPH": {
         "isBurst": true,
-        "maxParticles": 20000,
+        "maxParticles": 14000,
         "emissionRate": 0,
         "maxLife": 10000.0,
         "updateShader": "assets/shaders/particles/compute/sph.vs",
@@ -82,9 +82,9 @@
                         0.2
                     ],
                     "counts": [
-                        20,
+                        10,
                         150,
-                        20
+                        10
                     ],
                     "direction": [
                         0,

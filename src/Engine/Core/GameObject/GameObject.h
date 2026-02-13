@@ -31,6 +31,9 @@ public:
     template <typename T>
     bool HasComponent() const;
 
+    template <typename T>
+    T *GetScript() const;
+
     unsigned int GetID() const;
     AABB GetWorldAABB(Vector3f (*outCorners)[8] = nullptr) const;
 
@@ -40,6 +43,9 @@ public:
     std::string GetTag() const;
     GameWorld *GetOwnerWorld() const;
     void SetOwnerWorld(GameWorld *world);
+
+    void SetActive(bool active);
+    bool IsActive() const;
 
 private:
     GameWorld *owner_world = nullptr;
@@ -56,6 +62,8 @@ private:
 
     bool m_isWaitingDestroy = false;
     bool m_isDestroyed = false;
+
+    bool m_isActive = false;
 };
 
 template <typename T, typename... TArgs>
@@ -103,4 +111,13 @@ bool GameObject::HasComponent() const
         }
     }
     return false;
+}
+
+template <typename T>
+T *GameObject::GetScript() const
+{
+    if (!HasComponent<ScriptComponent>())
+        return nullptr;
+
+    return GetComponent<ScriptComponent>().GetScript<T>();
 }
