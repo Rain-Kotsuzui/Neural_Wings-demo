@@ -137,6 +137,9 @@
                 },
                 {
                     "WeaponScript": {}
+                },
+                {
+                    "RayScript": {}
                 }
             ]
         }
