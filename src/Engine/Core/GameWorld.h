@@ -9,6 +9,7 @@
 #include <memory>
 #include <functional>
 #include <string>
+#include <queue>
 
 class ScriptingFactory;
 class ScriptingSystem;
@@ -65,6 +66,8 @@ public:
         }
         return results;
     }
+
+    void SyncActiveEntities();
     void NotifyActivateStateChanged(GameObject *obj, bool activate);
 
     GameObject *FindEntityByName(const std::string &name) const;
@@ -100,5 +103,12 @@ private:
     std::unique_ptr<ParticleFactory> m_particleFactory;
     std::unique_ptr<ParticleSystem> m_particleSystem;
 
+    struct ActiveChange
+    {
+        GameObject *obj;
+        bool newState;
+    };
+    std::queue<ActiveChange> m_activeChanges;
+    bool m_isIterating = false; // 防止递归
     std::unordered_map<std::string, std::unique_ptr<GameObjectPool>> m_pools;
 };

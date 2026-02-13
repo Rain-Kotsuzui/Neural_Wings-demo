@@ -91,7 +91,7 @@ void SceneManager::ParseEntity(const json &entityData, GameWorld &gameWorld, Gam
     }
     if (entityData.contains("rotation"))
     {
-        tf.SetLocalRotation(tf.GetLocalRotation() * Quat4f(JsonParser::ToVector3f(entityData["rotation"])));
+        tf.SetLocalRotation(tf.GetLocalRotation() * Quat4f(DEG2RAD * (JsonParser::ToVector3f(entityData["rotation"]))));
     }
     if (entityData.contains("scale"))
     {

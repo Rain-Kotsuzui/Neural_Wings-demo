@@ -69,8 +69,11 @@ bool GameWorld::FixedUpdate(float fixedDeltaTime)
     m_timeManager->TickGame(fixedDeltaTime);
 
     m_scriptingSystem->FixedUpdate(*this, fixedDeltaTime);
+    this->SyncActiveEntities();
     this->UpdateTransforms();
+
     m_physicsSystem->Update(*this, fixedDeltaTime);
+    this->SyncActiveEntities();
     this->UpdateTransforms();
 
     this->DestroyWaitingObjects();
@@ -80,7 +83,10 @@ bool GameWorld::FixedUpdate(float fixedDeltaTime)
 bool GameWorld::Update(float DeltaTime)
 {
     m_timeManager->Tick();
+
     m_scriptingSystem->Update(*this, DeltaTime);
+    this->SyncActiveEntities();
+
     m_particleSystem->Update(*this, DeltaTime);
     this->UpdateTransforms();
     return true;
@@ -157,22 +163,43 @@ void GameWorld::Render()
     m_renderer->RenderScene(*this, *m_cameraManager);
 }
 
-void GameWorld::NotifyActivateStateChanged(GameObject *obj, bool activate)
+void GameWorld::NotifyActivateStateChanged(GameObject *obj, bool active)
 {
-    if (activate)
+    m_activeChanges.push({obj, active});
+    // if (activate)
+    // {
+    //     m_activateGameObjects.push_back(obj);
+    // }
+    // else
+    // {
+    //     auto it = std::find(m_activateGameObjects.begin(), m_activateGameObjects.end(), obj);
+    //     if (it != m_activateGameObjects.end())
+    //     {
+    //         *it = m_activateGameObjects.back();
+    //         m_activateGameObjects.pop_back();
+    //     }
+    // }
+}
+void GameWorld::SyncActiveEntities()
+{
+    while (!m_activeChanges.empty())
     {
-        m_activateGameObjects.push_back(obj);
-    }
-    else
-    {
-        auto it = std::find(m_activateGameObjects.begin(), m_activateGameObjects.end(), obj);
-        if (it != m_activateGameObjects.end())
+        auto change = m_activeChanges.front();
+        m_activeChanges.pop();
+        auto it = std::find(m_activateGameObjects.begin(), m_activateGameObjects.end(), change.obj);
+        bool currentlyInList = (it != m_activateGameObjects.end());
+        if (change.newState && !currentlyInList)
+        {
+            m_activateGameObjects.push_back(change.obj);
+        }
+        else if (!change.newState && currentlyInList)
         {
             *it = m_activateGameObjects.back();
             m_activateGameObjects.pop_back();
         }
     }
 }
+
 GameObject *GameWorld::FindEntityByName(const std::string &name) const
 {
     for (auto &obj : m_gameObjects)

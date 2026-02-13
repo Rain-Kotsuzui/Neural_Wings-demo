@@ -9,9 +9,9 @@
                     0
                 ],
                 "scale": [
-                    0.5,
-                    0.5,
-                    0.5
+                    0.8,
+                    0.8,
+                    0.8
                 ],
                 "rotation": [
                     0,
@@ -62,7 +62,7 @@
         },
         {
             "RigidBodyComponent": {
-                "mass": 1.0,
+                "mass": 20.0,
                 "elasticity": 0.9,
                 "isCollidable": true,
                 "colliderType": "BOX"

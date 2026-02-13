@@ -95,6 +95,11 @@
                 0,
                 0
             ],
+            "rotation": [
+                0,
+                -90,
+                0
+            ],
             "physics": {
                 "mass": 100,
                 "elasticity": 0.9

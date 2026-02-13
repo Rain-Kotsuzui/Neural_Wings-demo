@@ -9,11 +9,6 @@ void BulletScript::OnFixedUpdate(float fixedDeltaTime)
 }
 void BulletScript::OnWake()
 {
-    owner->AddComponent<RigidbodyComponent>();
-    auto &tf = owner->GetComponent<TransformComponent>();
-
-    auto &rb = owner->GetComponent<RigidbodyComponent>();
-    rb.velocity = tf.GetForward() * 10.0f;
 
     timer = 0.0f;
 }
@@ -31,10 +26,13 @@ void WeaponScript::OnUpdate(float deltaTime)
             Vector3f spawnPos = tf.GetWorldPosition() + tf.GetForward() * (static_cast<float>(rand()) * 1 / RAND_MAX + 1);
             GameObject *bullet = owner->GetOwnerWorld()->GetPool("bullet").Spawn("bullet", spawnPos, tf.GetWorldRotation());
 
+            auto &rb = bullet->GetComponent<RigidbodyComponent>();
+            rb.velocity = tf.GetForward() * 10.0f;
+
             // world->GetParticleSystem().Spawn(...);
         }
     }
     else
 
-        m_fireTimer = 0.00f;
+        m_fireTimer = 0.049f;
 }

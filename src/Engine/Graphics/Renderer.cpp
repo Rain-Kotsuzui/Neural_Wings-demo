@@ -141,15 +141,15 @@ void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager
                 DrawWorldObjects(gameWorld, rawCamera, *camera, aspect);
 
                 // debug
-                // for (const auto &view1 : m_renderViewer->GetRenderViews())
-                // {
-                //     if (view1.cameraName != view.cameraName)
-                //     {
-                //         mCamera *camera = cameraManager.GetCamera(view1.cameraName);
-                //         if (camera->GetMountTarget() != nullptr)
-                //             DrawVector(camera->getPosition(), camera->getDirection(), 1.0f, 0.05f);
-                //     }
-                // }
+                for (const auto &view1 : m_renderViewer->GetRenderViews())
+                {
+                    if (view1.cameraName != view.cameraName)
+                    {
+                        mCamera *camera = cameraManager.GetCamera(view1.cameraName);
+                        if (camera->GetMountTarget() != nullptr)
+                            DrawVector(camera->getPosition(), camera->getDirection(), 1.0f, 0.05f);
+                    }
+                }
                 EndMode3D();
 
                 // （debug）为视口绘制边框
