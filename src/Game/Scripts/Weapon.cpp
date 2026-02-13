@@ -24,7 +24,9 @@ void WeaponScript::OnUpdate(float deltaTime)
             m_fireTimer -= 0.05f;
             auto &tf = owner->GetComponent<TransformComponent>();
             Vector3f spawnPos = tf.GetWorldPosition() + tf.GetForward() * (static_cast<float>(rand()) * 1 / RAND_MAX + 1);
-            GameObject *bullet = owner->GetOwnerWorld()->GetPool("bullet").Spawn("bullet", spawnPos, tf.GetWorldRotation());
+            // 修改名字以区分不同类型的子弹和owner
+            std::string name = "bullet_" + std::to_string(rand());
+            GameObject *bullet = owner->GetOwnerWorld()->GetPool("bullet").Spawn(name, spawnPos, tf.GetWorldRotation());
 
             auto &rb = bullet->GetComponent<RigidbodyComponent>();
             rb.velocity = tf.GetForward() * 10.0f;

@@ -50,6 +50,8 @@ void GameplayScreen::ConfigCallback(ScriptingFactory &scriptingFactory, PhysicsS
                               { return std::make_unique<WeaponScript>(); });
     scriptingFactory.Register("BulletScript", []()
                               { return std::make_unique<BulletScript>(); });
+    scriptingFactory.Register("RayScript", []()
+                              { return std::make_unique<RayScript>(); });
 
     // 注册粒子初始化器
     particleFactory.Register("SphereDir", []()
