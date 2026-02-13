@@ -20,7 +20,7 @@ GameObject &GameObjectFactory::CreateFromPrefab(const std::string &name, const s
     gameObject.SetName(name);
 
     gameObject.SetTag(tag);
-
+    gameObject.SetOwnerWorld(&world);
     if (data.contains("components"))
     {
         // 严格顺序，确保transform在rigid前面
@@ -105,7 +105,7 @@ void GameObjectFactory::ParseTransformComponent(GameObject &gameObject, const js
     if (prefab.contains("scale"))
         tf.SetLocalScale(JsonParser::ToVector3f(prefab["scale"]));
     if (prefab.contains("rotation"))
-        tf.SetLocalRotation(Quat4f(JsonParser::ToVector3f(prefab["rotation"])));
+        tf.SetLocalRotation(Quat4f(DEG2RAD * JsonParser::ToVector3f(prefab["rotation"])));
 }
 void GameObjectFactory::ParseRigidBodyComponent(GameObject &gameObject, const json &prefab)
 {

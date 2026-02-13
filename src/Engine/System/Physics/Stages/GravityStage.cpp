@@ -24,7 +24,7 @@ void GravityStage::Initialize(const json &config)
 }
 void GravityStage::Execute(GameWorld &world, float fixedDeltaTime)
 {
-    auto &gameObjects = world.GetGameObjects();
+    auto &gameObjects = world.GetActivateGameObjects();
     if (gameObjects.empty())
     {
         std::cout << "[Gravity Stage]:Empty Game World" << std::endl;

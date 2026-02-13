@@ -1,5 +1,6 @@
 #pragma once
 #include "Engine/Core/GameObject/GameObject.h"
+#include "Engine/Core/GameObject/GameObjectPool.h"
 #include "Engine/Core/Events/Events.h"
 #include "Engine/Graphics/Graphics.h"
 #include "Engine/System/System.h"
@@ -8,6 +9,7 @@
 #include <memory>
 #include <functional>
 #include <string>
+#include <queue>
 
 class ScriptingFactory;
 class ScriptingSystem;
@@ -31,6 +33,7 @@ public:
     void UpdateTransforms();
 
     const std::vector<std::unique_ptr<GameObject>> &GetGameObjects() const;
+    const std::vector<GameObject *> &GetActivateGameObjects() const;
 
     PhysicsStageFactory &GetPhysicsStageFactory() { return *m_physicsStageFactory; };
     PhysicsSystem &GetPhysicsSystem() { return *m_physicsSystem; };
@@ -54,17 +57,23 @@ public:
     std::vector<GameObject *> GetEntitiesWith()
     {
         std::vector<GameObject *> results;
-        for (auto &obj : m_gameObjects)
+        for (auto *obj : m_activateGameObjects)
         {
-            if ((obj->HasComponent<Components>() && ...))
+            if (!obj->IsWaitingDestroy() && (obj->HasComponent<Components>() && ...))
             {
-                if (!obj->IsWaitingDestroy())
-                    results.push_back(obj.get());
+                results.push_back(obj);
             }
         }
         return results;
     }
+
+    void SyncActiveEntities();
+    void NotifyActivateStateChanged(GameObject *obj, bool activate);
+
     GameObject *FindEntityByName(const std::string &name) const;
+
+    GameObjectPool &GetOrCreatePool(const std::string &name, const std::string &prefab, size_t preloadCount = 0);
+    GameObjectPool &GetPool(const std::string &name) const;
 
 private:
     void UpdateHierarchyLogic(GameObject *obj, const Matrix4f &parentWorldMatrix);
@@ -74,6 +83,7 @@ private:
 
     unsigned m_nextObjectID = 0;
     std::vector<std::unique_ptr<GameObject>> m_gameObjects;
+    std::vector<GameObject *> m_activateGameObjects;
 
     std::unique_ptr<Renderer> m_renderer;
     std::unique_ptr<CameraManager> m_cameraManager;
@@ -92,4 +102,13 @@ private:
 
     std::unique_ptr<ParticleFactory> m_particleFactory;
     std::unique_ptr<ParticleSystem> m_particleSystem;
+
+    struct ActiveChange
+    {
+        GameObject *obj;
+        bool newState;
+    };
+    std::queue<ActiveChange> m_activeChanges;
+    bool m_isIterating = false; // 防止递归
+    std::unordered_map<std::string, std::unique_ptr<GameObjectPool>> m_pools;
 };

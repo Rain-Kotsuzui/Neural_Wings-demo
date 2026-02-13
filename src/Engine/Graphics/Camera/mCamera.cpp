@@ -111,14 +111,14 @@ void mCamera::UpdateFromDirection(Vector3f pos, Vector3f dir, Vector3f u, const 
     {
         auto &tf = m_mountTarget->GetComponent<TransformComponent>();
         Matrix4f mountTarWorldMat = tf.GetWorldMatrix();
-        m_position = (mountTarWorldMat * Vector4f(m_localPositionOffset, 1)).xyz();
-
-        m_direction = dir.Normalized();
         Quat4f worldRot = tf.GetWorldRotation();
-        m_up = worldRot * (u);
-        m_target = m_position + m_direction * 10.0f;
+        m_position = (mountTarWorldMat * Vector4f(m_localPositionOffset, 1.0f)).xyz();
+        m_direction = (worldRot * m_localDirection).Normalized();
+        m_up = (worldRot * m_localUp).Normalized();
         m_right = (m_direction ^ m_up).Normalized();
         m_up = (m_right ^ m_direction).Normalized();
+
+        m_target = m_position + m_direction * 10.0f;
     }
     else
     {
@@ -128,6 +128,9 @@ void mCamera::UpdateFromDirection(Vector3f pos, Vector3f dir, Vector3f u, const 
         m_right = m_direction ^ m_up;
         m_target = m_position + 10.0 * m_direction;
     }
+    // m_right = (m_direction ^ m_up).Normalized();
+    // m_up = (m_right ^ m_direction).Normalized();
+    // m_target = m_position + m_direction * 10.0f;
     UpdatemCamera(mode);
 }
 void mCamera::UpdateFromTarget(Vector3f pos, Vector3f tar, Vector3f u, const CameraMode &mode)
@@ -188,25 +191,28 @@ void mCamera::MountTo(GameObject *target, Vector3f posOffset, Vector3f lookAtOff
 {
     m_mountTarget = target;
     m_localPositionOffset = posOffset;
-    m_localLookAtOffset = lookAtOffset;
+    m_localDirection = lookAtOffset;
 }
 void mCamera::Unmount()
 {
     m_mountTarget = nullptr;
 
     m_localPositionOffset = Vector3f::ZERO;
-    m_localLookAtOffset = Vector3f::FORWARD;
+    m_localDirection = Vector3f::FORWARD;
 }
 
 void mCamera::SetMountIntent(const std::string &name, Vector3f posOff, Vector3f lookAtOffset)
 {
     m_mountTargetName = name;
     m_localPositionOffset = posOff;
-    m_localLookAtOffset = lookAtOffset;
+    m_localDirection = lookAtOffset;
 }
 void mCamera::SetMountTarget(GameObject *target)
 {
     m_mountTarget = target;
+    auto &tf = m_mountTarget->GetComponent<TransformComponent>();
+    Matrix4f mountTarWorldMat = tf.GetWorldMatrix();
+    m_direction = (mountTarWorldMat * Vector4f(m_localDirection, 0)).xyz().Normalized();
 }
 const std::string &mCamera::GetMountTargetName() const
 {
@@ -228,18 +234,18 @@ Vector3f mCamera::getDirection() const
 
 Vector3f mCamera::getLocalLookAtOffset() const
 {
-    return m_localLookAtOffset;
+    return m_localDirection;
 }
 void mCamera::Rotate(float lookHorizontal, float lookVertical)
 {
     if (m_mountTarget != nullptr)
     {
-        m_localLookAtOffset.RotateByAxixAngle(m_up, lookHorizontal);
-        m_right.RotateByAxixAngle(m_up, lookHorizontal);
-        m_localLookAtOffset.RotateByAxixAngle(m_right, lookVertical);
-        m_up.RotateByAxixAngle(m_right, lookVertical);
-
-        m_direction = m_localLookAtOffset.Normalized();
+        m_localDirection.RotateByAxixAngle(m_localUp, lookHorizontal);
+        Vector3f localRight = (m_localDirection ^ m_localUp).Normalized();
+        m_localDirection.RotateByAxixAngle(localRight, lookVertical);
+        m_localUp.RotateByAxixAngle(localRight, lookVertical);
+        m_localDirection.Normalize();
+        m_localUp.Normalize();
     }
     else
     {

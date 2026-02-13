@@ -44,6 +44,11 @@ bool SceneManager::LoadScene(const std::string &scenePath, GameWorld &gameWorld)
     {
         ParsePhysics(sceneData["physics"], gameWorld);
     }
+    if (sceneData.contains("objectsPools"))
+    {
+        ParseGameObjectPools(sceneData["objectsPools"], gameWorld);
+    }
+
     if (sceneData.contains("entities"))
     {
         for (const auto &entityData : sceneData["entities"])
@@ -55,6 +60,18 @@ bool SceneManager::LoadScene(const std::string &scenePath, GameWorld &gameWorld)
     gameWorld.UpdateTransforms();
     return true;
 }
+
+void SceneManager::ParseGameObjectPools(const json &objectsPools, GameWorld &gameWorld)
+{
+    for (const auto &poolData : objectsPools)
+    {
+        std::string poolName = poolData["name"];
+        std::string prefab = poolData["prefab"];
+        int poolSize = poolData.value("count", 1);
+        gameWorld.GetOrCreatePool(poolName, prefab, poolSize);
+    }
+}
+
 void SceneManager::ParseEntity(const json &entityData, GameWorld &gameWorld, GameObject *parent)
 {
     std::string prefabPath = entityData["prefab"];
@@ -74,7 +91,7 @@ void SceneManager::ParseEntity(const json &entityData, GameWorld &gameWorld, Gam
     }
     if (entityData.contains("rotation"))
     {
-        tf.SetLocalRotation(tf.GetLocalRotation() * Quat4f(JsonParser::ToVector3f(entityData["rotation"])));
+        tf.SetLocalRotation(tf.GetLocalRotation() * Quat4f(DEG2RAD * (JsonParser::ToVector3f(entityData["rotation"]))));
     }
     if (entityData.contains("scale"))
     {
@@ -108,6 +125,7 @@ void SceneManager::ParseEntity(const json &entityData, GameWorld &gameWorld, Gam
     {
         tf.SetParent(parent);
     }
+
     if (entityData.contains("children"))
     {
         for (const auto &childData : entityData["children"])
@@ -115,6 +133,7 @@ void SceneManager::ParseEntity(const json &entityData, GameWorld &gameWorld, Gam
             ParseEntity(childData, gameWorld, &obj);
         }
     }
+    obj.SetActive(entityData.value("isActive", true));
 }
 void SceneManager::AddShaders(GameObject &gameObject, const json &renderData, GameWorld &gameWorld)
 {

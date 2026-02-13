@@ -41,10 +41,16 @@ void GameplayScreen::ConfigCallback(ScriptingFactory &scriptingFactory, PhysicsS
     physicsStageFactory.Register("CollisionStage", []()
                                  { return std::make_unique<CollisionStage>(); });
 
+    // 注册脚本
     scriptingFactory.Register("RotatorScript", []()
                               { return std::make_unique<RotatorScript>(); });
     scriptingFactory.Register("CollisionListener", []()
                               { return std::make_unique<CollisionListener>(); });
+    scriptingFactory.Register("WeaponScript", []()
+                              { return std::make_unique<WeaponScript>(); });
+    scriptingFactory.Register("BulletScript", []()
+                              { return std::make_unique<BulletScript>(); });
+
     // 注册粒子初始化器
     particleFactory.Register("SphereDir", []()
                              { return std::make_unique<SphereDir>(); });
@@ -93,6 +99,8 @@ void GameplayScreen::FixedUpdate(float fixedDeltaTime)
 
     // mainCam->UpdateFromDirection(mainPos, mainCam->direction, mainCam->up);
 
+    // auto &m_inputManager = m_world->GetInputManager();
+    // m_inputManager.Update();
     m_world->FixedUpdate(fixedDeltaTime);
 }
 
@@ -100,13 +108,17 @@ void GameplayScreen::Update(float deltaTime)
 {
     m_nextScreenState = SCREEN_STATE_NONE;
 
+    auto &m_inputManager = m_world->GetInputManager();
+    auto &m_cameraManager = m_world->GetCameraManager();
+    m_inputManager.Update();
+    if (m_inputManager.IsActionPressed("Fire"))
+    {
+        std::cout << "Fire" << std::endl;
+    }
     if (!m_world->Update(deltaTime))
         m_nextScreenState = MAIN_MENU;
 
     // TODO:操作部分通过脚本实现
-    auto &m_inputManager = m_world->GetInputManager();
-    auto &m_cameraManager = m_world->GetCameraManager();
-    m_inputManager.Update();
     if (m_inputManager.IsActionPressed("Exit"))
     {
         m_nextScreenState = MAIN_MENU;
@@ -166,6 +178,10 @@ void GameplayScreen::Draw()
     m_world->Render();
     // 在3D内容之上绘制一些2D的调试信息
     DrawText("Press ESC to return.", 10, GetScreenHeight() - 30, 20, DARKGRAY);
+    int total = m_world->GetGameObjects().size();
+    int active = m_world->GetActivateGameObjects().size();
+    DrawText(TextFormat("Total Entities: %d", total), 10, 50, 20, WHITE);
+    DrawText(TextFormat("Active Entities: %d", active), 10, 80, 20, GREEN);
 }
 
 // 向 ScreenManager 报告下一个状态

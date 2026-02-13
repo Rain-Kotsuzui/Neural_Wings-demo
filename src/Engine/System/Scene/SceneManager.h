@@ -12,11 +12,11 @@ public:
     SceneManager() = default;
     ~SceneManager() = default;
 
-    void ParsePhysics(const json &sceneData, GameWorld &gameWorld);
-
     bool LoadScene(const std::string &scenePath, GameWorld &gameWorld);
 
 private:
+    void ParsePhysics(const json &sceneData, GameWorld &gameWorld);
+    void ParseGameObjectPools(const json &sceneData, GameWorld &gameWorld);
     void ParseEntity(const json &data, GameWorld &world, GameObject *parent);
     void AddScripts(GameWorld &world, GameObject &gameObject, const json &scriptData);
     void AddParticle(GameWorld &gameWorld, GameObject &gameObject, const json &particleData);

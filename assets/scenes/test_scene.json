@@ -11,6 +11,14 @@
             }
         }
     },
+    "hints": "用来预生成大量物体（子弹等）",
+    "objectsPools": [
+        {
+            "name": "bullet",
+            "prefab": "assets/prefabs/bullet.json",
+            "count": 5
+        }
+    ],
     "entities": [
         {
             "name": "texture_sphere",
@@ -87,6 +95,11 @@
                 0,
                 0
             ],
+            "rotation": [
+                0,
+                -90,
+                0
+            ],
             "physics": {
                 "mass": 100,
                 "elasticity": 0.9
@@ -121,6 +134,9 @@
             "scripts": [
                 {
                     "CollisionListener": {}
+                },
+                {
+                    "WeaponScript": {}
                 }
             ]
         }

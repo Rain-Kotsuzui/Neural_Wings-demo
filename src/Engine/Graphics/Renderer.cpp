@@ -141,15 +141,15 @@ void Renderer::RawRenderScene(GameWorld &gameWorld, CameraManager &cameraManager
                 DrawWorldObjects(gameWorld, rawCamera, *camera, aspect);
 
                 // debug
-                // for (const auto &view1 : m_renderViewer->GetRenderViews())
-                // {
-                //     if (view1.cameraName != view.cameraName)
-                //     {
-                //         mCamera *camera = cameraManager.GetCamera(view1.cameraName);
-                //         if (camera->GetMountTarget() != nullptr)
-                //             DrawVector(camera->getPosition(), camera->getDirection(), 1.0f, 0.05f);
-                //     }
-                // }
+                for (const auto &view1 : m_renderViewer->GetRenderViews())
+                {
+                    if (view1.cameraName != view.cameraName)
+                    {
+                        mCamera *camera = cameraManager.GetCamera(view1.cameraName);
+                        if (camera->GetMountTarget() != nullptr)
+                            DrawVector(camera->getPosition(), camera->getDirection(), 1.0f, 0.05f);
+                    }
+                }
                 EndMode3D();
 
                 // （debug）为视口绘制边框
@@ -165,17 +165,32 @@ void Renderer::RawRenderParticle(GameWorld &gameWorld, CameraManager &cameraMana
 {
     // rlDisableDepthMask();
     // 粒子的BeginTextureMode在每个emitter，每个emitter有自己的输出RT，最后到后处理中处理
+
+    auto &m_RTPool = m_postProcesser->GetRTPool();
+    auto &itScene = m_RTPool["inScreen"];
     for (const auto &view : m_renderViewer->GetRenderViews())
     {
         mCamera *camera = cameraManager.GetCamera(view.cameraName);
         if (camera)
         {
-            BeginScissorMode((int)view.viewport.x, (int)view.viewport.y, (int)view.viewport.width, (int)view.viewport.height);
+            int x1 = (int)view.viewport.x;
+            int y1 = (int)view.viewport.y;
+            int x2 = (int)view.viewport.width;
+            int y2 = (int)view.viewport.height;
+
+            int vx = x1;
+            int vy = y1;
+            int vw = x2 - x1;
+            int vh = y2 - y1;
+
+            float aspect = (float)vw / (float)vh;
+            BeginScissorMode(vx, vy, vw, vh);
 
             Camera3D rawCamera = camera->GetRawCamera();
             BeginMode3D(rawCamera);
+            rlViewport(vx, itScene.texture.height - (vy + vh), vw, vh);
 
-            DrawParticle(gameWorld, *camera, view.viewport.width / view.viewport.height);
+            DrawParticle(gameWorld, *camera, aspect);
 
             EndMode3D();
             EndScissorMode();
@@ -245,7 +260,7 @@ void Renderer::DrawWorldObjects(GameWorld &world, Camera3D &rawCamera, mCamera &
     }
     Matrix4f VP = matProj * matView;
 
-    for (const auto &gameObject : world.GetGameObjects())
+    for (const auto *gameObject : world.GetActivateGameObjects())
     {
         if (gameObject->HasComponent<TransformComponent>() && gameObject->HasComponent<RenderComponent>())
         {

@@ -13,7 +13,7 @@ void SolarStage::Initialize(const json &config)
 }
 void SolarStage::Execute(GameWorld &world, float fixedDeltaTime)
 {
-    auto &gameObjects = world.GetGameObjects();
+    auto &gameObjects = world.GetActivateGameObjects();
     if (gameObjects.empty())
     {
         std::cout << "[SloarStage]:Empty Game World" << std::endl;

@@ -146,3 +146,16 @@ AABB GameObject::GetWorldAABB(Vector3f (*outCorners)[8]) const
     }
     return AABB{newMin, newMax};
 }
+
+void GameObject::SetActive(bool active)
+{
+    if (m_isActive == active)
+        return;
+    m_isActive = active;
+    if (owner_world)
+        owner_world->NotifyActivateStateChanged(this, active);
+}
+bool GameObject::IsActive() const
+{
+    return m_isActive;
+}

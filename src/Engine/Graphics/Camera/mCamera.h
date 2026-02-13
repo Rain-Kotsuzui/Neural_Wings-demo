@@ -57,7 +57,8 @@ private:
     std::string m_mountTargetName = "";
     GameObject *m_mountTarget = nullptr;
     Vector3f m_localPositionOffset = Vector3f::ZERO;
-    Vector3f m_localLookAtOffset = Vector3f(0, 0, 1);
+    Vector3f m_localDirection = Vector3f(0, 0, 1);
+    Vector3f m_localUp = Vector3f(0, 1, 0);
 
     float m_nearPlane = 0.1;
     float m_farPlane = 1000;
