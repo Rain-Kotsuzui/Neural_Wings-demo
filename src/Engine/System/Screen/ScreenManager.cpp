@@ -121,7 +121,7 @@ bool ScreenManager::UpdateFrame()
         return false;
     }
 
-    // m_resourceManager->UpdateMusic();
+    m_resourceManager->UpdateMusic();
 
     m_timeManager.Tick();
     m_accumulator += m_timeManager.GetDeltaTime();

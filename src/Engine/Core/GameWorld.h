@@ -53,6 +53,7 @@ public:
 
     ParticleFactory &GetParticleFactory() { return *m_particleFactory; };
     ParticleSystem &GetParticleSystem() { return *m_particleSystem; };
+    AudioManager &GetAudioManager() { return *m_audioManager; }
 
     template <typename... Components>
     std::vector<GameObject *> GetEntitiesWith()
@@ -112,4 +113,6 @@ private:
     };
     std::queue<ActiveChange> m_activeChanges;
     std::unordered_map<std::string, std::unique_ptr<GameObjectPool>> m_pools;
+
+    std::unique_ptr<AudioManager> m_audioManager;
 };

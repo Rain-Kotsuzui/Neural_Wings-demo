@@ -73,6 +73,11 @@ Sound ResourceManager::GetSound(const std::string &path)
     if (s.frameCount > 0)
     {
         m_sounds[path] = s;
+        std::cout << "[ResourceManager]: Sound loaded: " << path << std::endl;
+    }
+    else
+    {
+        std::cerr << "[ResourceManager]: Failed to load sound: " << path << std::endl;
     }
     return s;
 }
@@ -86,11 +91,23 @@ Music ResourceManager::GetMusic(const std::string &path)
     if (m.frameCount > 0)
     {
         m_musics[path] = m;
+        std::cout << "[ResourceManager]: Music stream loaded: " << path << std::endl;
+    }
+    else
+    {
+        std::cerr << "[ResourceManager]: Failed to load music: " << path << std::endl;
     }
     return m;
 }
 void ResourceManager::UpdateMusic()
 {
+    for (auto &pair : m_musics)
+    {
+        if (IsMusicStreamPlaying(pair.second))
+        {
+            UpdateMusicStream(pair.second);
+        }
+    }
 }
 std::shared_ptr<ShaderWrapper> ResourceManager::GetShader(const std::string &vsPath, const std::string &fsPath)
 {
@@ -189,6 +206,38 @@ Texture2D ResourceManager::GetTexture2D(const std::string &path, int *outFrameCo
         std::cerr << "[ResourceManager] Failed to load texture: " << path << std::endl;
     return textures;
 }
+void ResourceManager::GameWorldUnloadAll()
+{
+    for (auto &pair : m_models)
+    {
+        UnloadModel(pair.second);
+    }
+    m_models.clear();
+
+    for (auto &pair : m_textures)
+    {
+        UnloadTexture(pair.second);
+    }
+    m_textures.clear();
+
+    for (auto &pair : m_musics)
+    {
+
+        StopMusicStream(pair.second);
+        UnloadMusicStream(pair.second);
+    }
+    m_musics.clear();
+
+    for (auto &pair : m_sounds)
+    {
+        UnloadSound(pair.second);
+    }
+    m_sounds.clear();
+
+    m_shaders.clear();
+    std::cout << "[ResourceManager] Unloaded all resources" << std::endl;
+}
+
 void ResourceManager::UnloadAll()
 {
     for (auto &pair : m_models)
@@ -201,9 +250,16 @@ void ResourceManager::UnloadAll()
         UnloadTexture(pair.second);
     }
     m_textures.clear();
-
+    for (auto &pair : m_musics)
+    {
+        StopMusicStream(pair.second);
+        UnloadMusicStream(pair.second);
+    }
+    m_musics.clear();
     for (auto &pair : m_sounds)
+    {
         UnloadSound(pair.second);
+    }
     m_sounds.clear();
 
     m_shaders.clear();

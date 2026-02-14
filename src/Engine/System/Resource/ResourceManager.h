@@ -20,6 +20,8 @@ public:
     Music GetMusic(const std::string &path);
     void UpdateMusic();
 
+    void GameWorldUnloadAll();
+
     void UnloadAll();
 
 private:

@@ -6,3 +6,4 @@
 #include "Engine/Core/Components/RigidBodyComponent.h"
 #include "Engine/Core/Components/ScriptComponent.h"
 #include "Engine/Core/Components/ParticleEmitterComponent.h"
+#include "Engine/Core/Components/AudioComponent.h"

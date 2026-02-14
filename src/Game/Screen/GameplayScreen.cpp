@@ -54,7 +54,10 @@ void GameplayScreen::ConfigCallback(ScriptingFactory &scriptingFactory, PhysicsS
                               { return std::make_unique<BulletScript>(); });
     scriptingFactory.Register("RayScript", []()
                               { return std::make_unique<RayScript>(); });
+    scriptingFactory.Register("AudioScript", []()
+                              { return std::make_unique<AudioScript>(); });
 
+    // 注
     // 注册粒子初始化器
     particleFactory.Register("SphereDir", []()
                              { return std::make_unique<SphereDir>(); });

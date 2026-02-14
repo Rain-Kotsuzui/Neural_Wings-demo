@@ -25,6 +25,7 @@ GameWorld::GameWorld(std::function<void(ScriptingFactory &, PhysicsStageFactory 
     m_renderer = std::make_unique<Renderer>();
     m_particleFactory = std::make_unique<ParticleFactory>();
     m_particleSystem = std::make_unique<ParticleSystem>(this);
+    m_audioManager = std::make_unique<AudioManager>();
 
     configCallback(*m_scriptingFactory, *m_physicsStageFactory, *m_particleFactory);
 
@@ -53,6 +54,7 @@ void GameWorld::OnDestroy()
     }
     DestroyWaitingObjects();
     m_gameObjects.clear();
+    m_resourceManager->GameWorldUnloadAll();
 }
 
 GameObject &GameWorld::CreateGameObject()
@@ -89,6 +91,13 @@ bool GameWorld::Update(float DeltaTime)
 
     m_particleSystem->Update(*this, DeltaTime);
     this->UpdateTransforms();
+
+    mCamera *activeCam = m_cameraManager->GetMainCamera();
+    if (activeCam)
+    {
+        m_audioManager->Update(*this, *activeCam);
+    }
+
     return true;
 }
 

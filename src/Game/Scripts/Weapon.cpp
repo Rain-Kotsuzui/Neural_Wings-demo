@@ -31,10 +31,13 @@ void WeaponScript::OnUpdate(float deltaTime)
             auto &rb = bullet->GetComponent<RigidbodyComponent>();
             rb.velocity = tf.GetForward() * 10.0f;
 
+            // TODO:连续声音
+            auto &audio = owner->GetComponent<AudioComponent>();
+            audio.Play("Fire");
+
             // world->GetParticleSystem().Spawn(...);
         }
     }
     else
-
         m_fireTimer = 0.049f;
 }
