@@ -22,7 +22,7 @@ struct NetPacketHeader
 struct MsgClientHello
 {
     NetPacketHeader header{NetMessageType::ClientHello};
-    // Could later carry a token / version field.
+    NetUUID uuid{}; // persistent client identity
 };
 
 /// S→C : "Welcome, here is your ID"

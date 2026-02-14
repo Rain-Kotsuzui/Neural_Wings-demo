@@ -11,9 +11,10 @@ namespace PacketSerializer
 
     // ────────────────────── Writers ──────────────────────
 
-    inline std::vector<uint8_t> WriteClientHello()
+    inline std::vector<uint8_t> WriteClientHello(const NetUUID &uuid)
     {
         MsgClientHello msg;
+        msg.uuid = uuid;
         std::vector<uint8_t> buf(sizeof(msg));
         std::memcpy(buf.data(), &msg, sizeof(msg));
         return buf;

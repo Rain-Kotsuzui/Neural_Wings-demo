@@ -32,6 +32,10 @@ public:
     bool IsConnected() const;
     ClientID GetLocalClientID() const { return m_localClientID; }
 
+    // ── Identity ───────────────────────────────────────────────────
+    void SetUUID(const NetUUID &uuid) { m_uuid = uuid; }
+    const NetUUID &GetUUID() const { return m_uuid; }
+
     // ── Sending ────────────────────────────────────────────────────
     void SendPositionUpdate(NetObjectID objectID,
                             const NetTransformState &transform);
@@ -47,5 +51,6 @@ private:
 
     std::unique_ptr<INetworkTransport> m_transport;
     ClientID m_localClientID = INVALID_CLIENT_ID;
+    NetUUID m_uuid{};
     OnPositionBroadcastFn m_onPositionBroadcast;
 };

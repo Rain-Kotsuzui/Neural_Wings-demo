@@ -9,6 +9,7 @@
 #include "Engine/Network/Protocol/MessageTypes.h"
 #include "Engine/Network/Protocol/Messages.h"
 #include "Engine/Network/Protocol/PacketSerializer.h"
+#include "Engine/Network/Client/ClientIdentity.h"
 #include "Engine/Network/Client/NetworkClient.h"
 #include "Engine/Network/Sync/NetworkSyncComponent.h"
 #include "Engine/Network/Sync/NetworkSyncSystem.h"

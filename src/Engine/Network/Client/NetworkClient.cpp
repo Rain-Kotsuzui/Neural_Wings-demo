@@ -18,8 +18,8 @@ bool NetworkClient::Connect(const std::string &host, uint16_t port)
 {
     m_transport->SetOnConnect([this]()
                               {
-        std::cout << "[NetworkClient] Connected – sending Hello\n";
-        auto pkt = PacketSerializer::WriteClientHello();
+        std::cout << "[NetworkClient] Connected – sending Hello with UUID\n";
+        auto pkt = PacketSerializer::WriteClientHello(m_uuid);
         m_transport->Send(pkt, 0); });
 
     m_transport->SetOnDisconnect([this]()
