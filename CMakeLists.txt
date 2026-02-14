@@ -49,11 +49,6 @@ set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(raylib raygui nlohmann_json)
 
-# ── Server (standalone executable, Desktop only) ─────────────────
-if(NOT EMSCRIPTEN)
-    add_subdirectory(server)
-endif()
-
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c")
 
 if(EMSCRIPTEN)

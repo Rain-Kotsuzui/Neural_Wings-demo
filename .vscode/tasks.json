@@ -24,39 +24,6 @@
       "dependsOn": "Ensure Build Dir",
       "problemMatcher": "$gcc"
     },
-    // ── Server tasks ────────────────────────────────────────────
-    {
-      "label": "Server: Build Debug",
-      "type": "shell",
-      "command": "cmake",
-      "args": [
-        "--build",
-        "${workspaceFolder}/build",
-        "--config",
-        "Debug",
-        "--target",
-        "NeuralWings_Server"
-      ],
-      "group": "build",
-      "dependsOn": "Ensure Build Dir",
-      "problemMatcher": "$msCompile"
-    },
-    {
-      "label": "Server: Build Release",
-      "type": "shell",
-      "command": "cmake",
-      "args": [
-        "--build",
-        "${workspaceFolder}/build",
-        "--config",
-        "Release",
-        "--target",
-        "NeuralWings_Server"
-      ],
-      "group": "build",
-      "dependsOn": "Ensure Build Dir",
-      "problemMatcher": "$msCompile"
-    },
     {
       "label": "Build All (UI + Debug)",
       "dependsOrder": "sequence",
