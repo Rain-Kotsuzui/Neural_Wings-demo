@@ -148,6 +148,18 @@ void NetworkSyncSystem::ApplyRemoteBroadcast(GameWorld &world,
                 continue;
             if (snap.serverTick == last.serverTick)
             {
+                auto &tf = obj->GetComponent<TransformComponent>();
+
+                Vector3f pos = (Vector3f(remote.transform.posX,
+                                         remote.transform.posY,
+                                         remote.transform.posZ));
+                Quat4f rot = (Quat4f(remote.transform.rotW,
+                                     remote.transform.rotX,
+                                     remote.transform.rotY,
+                                     remote.transform.rotZ));
+                tf.SetWorldMatrix(Matrix4f::CreateTransform(pos, rot, Vector3f::ONE));
+                found = true;
+                break;
                 track.snapshots.back() = snap;
                 continue;
             }
