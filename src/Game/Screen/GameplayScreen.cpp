@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "Game/Screen/MyScreenState.h"
 #include "Game/Systems/Physics/SolarStage.h"
+#include "Game/Systems/Physics/NetworkVerifyStage.h"
 #include "Game/Systems/Particles/Initializers/RandomLife.h"
 #include "Game/Systems/Particles/Initializers/SphereDir.h"
 #include "Game/Systems/Particles/Initializers/CollisionInit.h"
@@ -41,6 +42,8 @@ void GameplayScreen::ConfigCallback(ScriptingFactory &scriptingFactory, PhysicsS
     // 注册后才可使用json配置
     physicsStageFactory.Register("SolarStage", []()
                                  { return std::make_unique<SolarStage>(); });
+    physicsStageFactory.Register("NetworkVerifyStage", []()
+                                 { return std::make_unique<NetworkVerifyStage>(); });
     physicsStageFactory.Register("CollisionStage", []()
                                  { return std::make_unique<CollisionStage>(); });
 
@@ -55,6 +58,8 @@ void GameplayScreen::ConfigCallback(ScriptingFactory &scriptingFactory, PhysicsS
                               { return std::make_unique<BulletScript>(); });
     scriptingFactory.Register("RayScript", []()
                               { return std::make_unique<RayScript>(); });
+    scriptingFactory.Register("LocalPlayerSyncScript", []()
+                              { return std::make_unique<LocalPlayerSyncScript>(); });
     scriptingFactory.Register("AudioScript", []()
                               { return std::make_unique<AudioScript>(); });
 
@@ -77,10 +82,11 @@ void GameplayScreen::OnEnter()
 {
     DisableCursor();
 
-    // ── 客户端身份：加载或生成 UUID ──
-    ClientIdentity identity;
-    identity.LoadOrGenerate();
-    TraceLog(LOG_INFO, "CLIENT: UUID = %s", identity.GetUUIDString().c_str());
+    // ── 注入 ScreenManager 的全局 NetworkClient ──
+    if (screenManager)
+    {
+        m_world->SetNetworkClient(screenManager->GetNetworkClient());
+    }
 
     // ── 网络：连接服务器（使用配置的IP和端口） ──
     std::string serverHost = DEFAULT_SERVER_HOST;
@@ -92,9 +98,8 @@ void GameplayScreen::OnEnter()
         serverPort = config.serverPort;
     }
     auto &netClient = m_world->GetNetworkClient();
-    netClient.SetUUID(identity.GetUUID());
     netClient.Connect(serverHost, serverPort);
-    m_world->GetNetworkSyncSystem().Init(m_world->GetNetworkClient());
+    m_world->GetNetworkSyncSystem().Init(netClient);
 
     // 监听事件
     m_world->GetEventManager().Subscribe<CollisionEvent>([this](const CollisionEvent &e)

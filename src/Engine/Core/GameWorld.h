@@ -13,6 +13,7 @@
 
 #include "Engine/Network/Client/NetworkClient.h"
 #include "Engine/Network/Sync/NetworkSyncSystem.h"
+#include <memory> // shared_ptr for NetworkClient
 
 class ScriptingFactory;
 class ScriptingSystem;
@@ -59,8 +60,11 @@ public:
     ParticleSystem &GetParticleSystem() { return *m_particleSystem; };
     AudioManager &GetAudioManager() { return *m_audioManager; }
 
-    NetworkClient &GetNetworkClient() { return *m_networkClient; };
-    NetworkSyncSystem &GetNetworkSyncSystem() { return *m_networkSyncSystem; };
+    NetworkClient &GetNetworkClient() { return *m_networkClient; }
+    NetworkSyncSystem &GetNetworkSyncSystem() { return *m_networkSyncSystem; }
+
+    /// Inject a shared NetworkClient owned by ScreenManager.
+    void SetNetworkClient(std::shared_ptr<NetworkClient> client) { m_networkClient = std::move(client); }
 
     template <typename... Components>
     std::vector<GameObject *> GetEntitiesWith()
@@ -113,7 +117,7 @@ private:
     std::unique_ptr<ParticleFactory> m_particleFactory;
     std::unique_ptr<ParticleSystem> m_particleSystem;
 
-    std::unique_ptr<NetworkClient> m_networkClient;
+    std::shared_ptr<NetworkClient> m_networkClient;
     std::unique_ptr<NetworkSyncSystem> m_networkSyncSystem;
 
     struct ActiveChange

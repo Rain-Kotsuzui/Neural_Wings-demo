@@ -31,6 +31,12 @@ ScreenManager::ScreenManager(const EngineConfig &config, const std::string audio
     m_activeConfig.screenHeight = GetScreenHeight();
     m_activeConfig.fullScreen = IsWindowFullscreen();
 
+    // ── Global Network Client ──────────────────────────────────────
+    m_networkClient = std::make_shared<NetworkClient>();
+    m_clientIdentity.LoadOrGenerate();
+    m_networkClient->SetUUID(m_clientIdentity.GetUUID());
+    TraceLog(LOG_INFO, "CLIENT: UUID = %s", m_clientIdentity.GetUUIDString().c_str());
+
     m_resourceManager = std::make_unique<ResourceManager>();
     m_audioManager = std::make_unique<AudioManager>(*m_resourceManager);
 
@@ -169,6 +175,11 @@ void ScreenManager::Shutdown()
     if (m_currentScreen)
     {
         m_currentScreen->OnExit();
+    }
+    // Disconnect the global network client before tearing down the window.
+    if (m_networkClient && m_networkClient->IsConnected())
+    {
+        m_networkClient->Disconnect();
     }
     if (m_uiLayer)
     {

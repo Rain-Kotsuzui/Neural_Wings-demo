@@ -28,7 +28,7 @@ GameWorld::GameWorld(std::function<void(ScriptingFactory &, PhysicsStageFactory 
     m_particleFactory = std::make_unique<ParticleFactory>();
     m_particleSystem = std::make_unique<ParticleSystem>(this);
 
-    m_networkClient = std::make_unique<NetworkClient>();
+    // NetworkClient is injected by ScreenManager via SetNetworkClient().
     m_networkSyncSystem = std::make_unique<NetworkSyncSystem>();
 
     configCallback(*m_scriptingFactory, *m_physicsStageFactory, *m_particleFactory);
@@ -102,6 +102,7 @@ bool GameWorld::Update(float DeltaTime)
     if (activeCam)
     {
         m_audioManager->Update(*this, *activeCam);
+    }
     // Network: poll incoming packets and sync transforms.
     if (m_networkClient)
     {
