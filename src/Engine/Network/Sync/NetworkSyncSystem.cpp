@@ -11,11 +11,11 @@
 
 namespace
 {
-double NowSeconds()
-{
-    using clock = std::chrono::steady_clock;
-    return std::chrono::duration<double>(clock::now().time_since_epoch()).count();
-}
+    double NowSeconds()
+    {
+        using clock = std::chrono::steady_clock;
+        return std::chrono::duration<double>(clock::now().time_since_epoch()).count();
+    }
 } // namespace
 
 // ── Init ───────────────────────────────────────────────────────────
@@ -148,18 +148,6 @@ void NetworkSyncSystem::ApplyRemoteBroadcast(GameWorld &world,
                 continue;
             if (snap.serverTick == last.serverTick)
             {
-                auto &tf = obj->GetComponent<TransformComponent>();
-
-                Vector3f pos = (Vector3f(remote.transform.posX,
-                                         remote.transform.posY,
-                                         remote.transform.posZ));
-                Quat4f rot = (Quat4f(remote.transform.rotW,
-                                     remote.transform.rotX,
-                                     remote.transform.rotY,
-                                     remote.transform.rotZ));
-                tf.SetWorldMatrix(Matrix4f::CreateTransform(pos, rot, Vector3f::ONE));
-                found = true;
-                break;
                 track.snapshots.back() = snap;
                 continue;
             }
@@ -250,8 +238,11 @@ void NetworkSyncSystem::ApplyRemoteInterpolation(GameWorld &world, NetworkClient
         }
 
         auto &tf = itObj->second->GetComponent<TransformComponent>();
-        tf.SetLocalPosition(outputPos);
-        tf.SetLocalRotation(outputRot);
+
+        tf.SetWorldMatrix(Matrix4f::CreateTransform(outputPos, outputRot, Vector3f::ONE));
+
+        // tf.SetLocalPosition(outputPos);
+        // tf.SetLocalRotation(outputRot);
 
         while (track.snapshots.size() > 2 &&
                track.snapshots[1].receiveTimeSec < (renderTimeSec - 0.25))
