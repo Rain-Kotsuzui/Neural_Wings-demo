@@ -14,7 +14,8 @@ class NetworkClient
 {
 public:
     using OnPositionBroadcastFn =
-        std::function<void(const std::vector<NetBroadcastEntry> &entries)>;
+        std::function<void(uint32_t serverTick,
+                           const std::vector<NetBroadcastEntry> &entries)>;
     using OnObjectDespawnFn =
         std::function<void(ClientID ownerClientID, NetObjectID objectID)>;
 

@@ -23,6 +23,16 @@
         {
             "RenderComponent": {
                 "model": "primitive://sphere",
+                "defaultMaterial": {
+                    "name": "baseColor(若无vs.默认使用assets/shaders/default.vs)",
+                    "fs": "assets/shaders/default.fs",
+                    "color": [
+                        255,
+                        255,
+                        255,
+                        255
+                    ]
+                },
                 "scale": [
                     0.45,
                     0.45,

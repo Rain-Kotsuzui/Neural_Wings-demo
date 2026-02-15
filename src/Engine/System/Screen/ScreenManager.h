@@ -4,6 +4,8 @@
 #include "Engine/Config/EngineConfig.h"
 #include "Engine/System/Time/TimeManager.h"
 #include "Engine/UI/UI.h"
+#include "Engine/Network/Client/NetworkClient.h"
+#include "Engine/Network/Client/ClientIdentity.h"
 
 #include <memory>
 
@@ -18,6 +20,10 @@ public:
     const EngineConfig &GetActiveConfig() const;
     UILayer *GetUILayer();
 
+    /// Global NetworkClient shared across all screens.
+    std::shared_ptr<NetworkClient> GetNetworkClient() { return m_networkClient; }
+    NetworkClient &GetNetworkClientRef() { return *m_networkClient; }
+
     bool UpdateFrame();
     void Shutdown();
 
@@ -28,6 +34,10 @@ private:
     std::unique_ptr<ScreenFactory> m_factory;
 
     std::unique_ptr<UILayer> m_uiLayer;
+
+    /// Persistent network client — lives as long as ScreenManager.
+    std::shared_ptr<NetworkClient> m_networkClient;
+    ClientIdentity m_clientIdentity;
 
     TimeManager m_timeManager;
     float m_accumulator;
