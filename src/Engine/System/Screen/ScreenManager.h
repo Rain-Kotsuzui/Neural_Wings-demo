@@ -1,16 +1,18 @@
 #pragma once
-#include "GameScreen.h"
+#include "IGameScreen.h"
 #include "ScreenFactory.h"
 #include "Engine/Config/EngineConfig.h"
 #include "Engine/System/Time/TimeManager.h"
+#include "Engine/System/Resource/ResourceManager.h"
+#include "Engine/System/Audio/AudioManager.h"
 #include "Engine/UI/UI.h"
-
+#include <string>
 #include <memory>
 
 class ScreenManager
 {
 public:
-    ScreenManager(const EngineConfig &config, std::unique_ptr<ScreenFactory> factory);
+    ScreenManager(const EngineConfig &config, const std::string audioPath, std::unique_ptr<ScreenFactory> factory);
     ~ScreenManager();
     // void Run();
 
@@ -21,10 +23,16 @@ public:
     bool UpdateFrame();
     void Shutdown();
 
+    ResourceManager &GetResourceManager();
+    AudioManager &GetAudioManager();
+
 private:
     void ChangeScreen(int newState);
 
-    std::unique_ptr<GameScreen> m_currentScreen;
+    std::unique_ptr<ResourceManager> m_resourceManager;
+    std::unique_ptr<AudioManager> m_audioManager;
+
+    std::unique_ptr<IGameScreen> m_currentScreen;
     std::unique_ptr<ScreenFactory> m_factory;
 
     std::unique_ptr<UILayer> m_uiLayer;
