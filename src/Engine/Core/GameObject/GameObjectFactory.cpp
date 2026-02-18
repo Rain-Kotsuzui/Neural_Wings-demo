@@ -52,10 +52,41 @@ void GameObjectFactory::ApplyComponent(GameWorld &gameWorld, GameObject &gameObj
         ParseParticleEmitterComponent(gameWorld, gameObject, prefab);
     else if (compName == "AudioComponent")
         ParseAudioComponent(gameWorld, gameObject, prefab);
+    else if (compName == "LightComponent")
+        ParseLightComponent(gameWorld, gameObject, prefab);
     else
         std::cerr << "Component " << compName << " not implemented" << std::endl;
 }
 
+void GameObjectFactory::ParseLightComponent(GameWorld &gameWorld, GameObject &gameObject, const json &prefab)
+{
+    auto &light = gameObject.AddComponent<LightComponent>();
+    std::string typeStr = prefab.value("type", "Directional");
+    if (typeStr == "POINT")
+    {
+        light.type = LightType::Point;
+    }
+    else if (typeStr == "DIRECTIONAL")
+    {
+        light.type = LightType::Directional;
+    }
+
+    if (prefab.contains("color"))
+        light.color = JsonParser::ToVector3f(prefab["color"]);
+    light.intensity = prefab.value("intensity", 1.0f);
+
+    // direction属性
+    if (prefab.contains("direction"))
+    {
+        light.direction = JsonParser::ToVector3f(prefab["direction"]);
+    }
+    // point属性
+    light.range = prefab.value("range", 10.0f);
+    light.attenuation = prefab.value("attenuation", 1.0f);
+
+    light.castShadows = prefab.value("shadows", false);
+    light.shadowBias = prefab.value("shadowBias", 0.005f);
+}
 void GameObjectFactory::ParseAudioComponent(GameWorld &gameWorld, GameObject &gameObject, const json &prefab)
 {
     auto &audio = gameObject.AddComponent<AudioComponent>();

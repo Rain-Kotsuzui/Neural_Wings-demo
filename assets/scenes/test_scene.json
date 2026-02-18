@@ -35,7 +35,7 @@
         {
             "name": "texture_sphere",
             "tag": "sphere",
-            "prefab": "assets/prefabs/sphere.json",
+            "prefab": "assets/prefabs/light_sphere.json",
             "position": [
                 0,
                 0,
@@ -79,7 +79,7 @@
                                     ]
                                 },
                                 "vs": "assets/shaders/default.vs",
-                                "fs": "assets/shaders/reflect_Skybox.fs",
+                                "fs": "assets/shaders/lighting/lighting.fs",
                                 "blendMode": "NONE",
                                 "depthWrite": true,
                                 "depthTest": true
@@ -103,7 +103,7 @@
         {
             "name": "cube_camera",
             "tag": "cube",
-            "prefab": "assets/prefabs/sound_cube.json",
+            "prefab": "assets/prefabs/light_cube.json",
             "position": [
                 20,
                 0,
@@ -117,33 +117,6 @@
             "physics": {
                 "mass": 100,
                 "elasticity": 0.9
-            },
-            "render": {
-                "defaultMaterial": {
-                    "name": "baseColor(若无vs.默认使用assets/shaders/default.vs)",
-                    "fs": "assets/shaders/default.fs"
-                },
-                "meshPasses": [
-                    {
-                        "meshIndex": 0,
-                        "name": "Mesh_0",
-                        "passes": [
-                            {
-                                "name": "texture(若无fs.默认使用assets/shaders/texture.fs)",
-                                "hints": "[path,animeSpeed]",
-                                "textures": {
-                                    "u_diffuseMap": [
-                                        "assets/textures/gif/2.gif",
-                                        10
-                                    ]
-                                },
-                                "blendMode": "NONE",
-                                "depthWrite": true,
-                                "depthTest": true
-                            }
-                        ]
-                    }
-                ]
             },
             "scripts": [
                 {

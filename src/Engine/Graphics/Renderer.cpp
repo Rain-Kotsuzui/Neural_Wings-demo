@@ -19,7 +19,7 @@ void Renderer::Init(const std::string &configViewPath, GameWorld &gameWorld)
 {
     m_postProcesser = std::make_unique<PostProcesser>();
     m_renderViewer = std::make_unique<RenderViewer>();
-
+    m_lightingManager = std::make_unique<LightingManager>();
     this->LoadViewConfig(configViewPath, gameWorld);
 }
 
@@ -385,6 +385,8 @@ void Renderer::RenderSinglePass(const Mesh &mesh, const Model &model, const int 
 
         pass.shader->Begin();
 
+        m_lightingManager->UploadToShader(pass.shader, camera.Position());
+
         switch (pass.blendMode)
         {
         case BLEND_OPIQUE:
@@ -410,6 +412,9 @@ void Renderer::RenderSinglePass(const Mesh &mesh, const Model &model, const int 
         pass.shader->SetAll(MVP, M, camera.Position(), realTime, gameTime, pass.baseColor, pass.customFloats, pass.customVector2, pass.customVector3, pass.customVector4);
         pass.shader->SetMat4("matProj", matProj);
         pass.shader->SetMat4("matView", matView);
+
+        pass.shader->SetVec3("emissiveColor", pass.emissiveColor / 255.0f);
+        pass.shader->SetFloat("emissiveIntensity", pass.emissiveIntensity);
 
         int texUnit = 1;
         if (pass.useDiffuseMap)
@@ -496,6 +501,12 @@ void Renderer::DrawParticle(GameWorld &gameWorld, mCamera &camera, float aspect)
 
     particleSys.Render(m_RTPool, realTime, gameTime, VP, matProj, gameWorld, camera);
 }
+
+void Renderer::Update(GameWorld &gameworld)
+{
+    m_lightingManager->Update(gameworld);
+}
+
 // Debug
 #include <iostream>
 void Renderer::DrawCoordinateAxes(Vector3f position, Quat4f rotation, float axisLength, float thickness)
