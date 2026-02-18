@@ -327,6 +327,7 @@ TextureCubemap ResourceManager::GenTextureCubemap(Shader shader, Texture2D panor
     UnloadMesh(cube);
 
     return cubemap;
+}
 void ResourceManager::GameWorldUnloadAll()
 {
     for (auto &pair : m_models)
@@ -352,7 +353,7 @@ void ResourceManager::GameWorldUnloadAll()
     for (auto &pair : m_cubemaps)
         UnloadTexture(pair.second);
     m_cubemaps.clear();
-  
+
     for (auto &pair : m_sounds)
     {
         UnloadSound(pair.second);
@@ -380,7 +381,7 @@ void ResourceManager::UnloadAll()
     for (auto &pair : m_cubemaps)
         UnloadTexture(pair.second);
     m_cubemaps.clear();
-  
+
     for (auto &pair : m_musics)
     {
         StopMusicStream(pair.second);
