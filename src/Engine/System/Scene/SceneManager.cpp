@@ -159,6 +159,7 @@ void SceneManager::AddShaders(GameObject &gameObject, const json &renderData, Ga
     rd.showAngVol = renderData.value("showAngVol", false);
     rd.showVol = renderData.value("showVol", false);
     rd.showCenter = renderData.value("showCenter", false);
+    rd.castShadows = renderData.value("castShadows", true);
 
     if (renderData.contains("defaultMaterial"))
     {

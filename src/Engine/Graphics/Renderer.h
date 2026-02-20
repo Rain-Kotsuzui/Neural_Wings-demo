@@ -31,6 +31,8 @@ public:
 
     void Update(GameWorld &gameworld);
 
+    static RenderTexture2D LoadRT(int width, int height, PixelFormat format);
+
 private:
     std::unique_ptr<Skybox> m_skybox;
     bool m_useSkybox = false;

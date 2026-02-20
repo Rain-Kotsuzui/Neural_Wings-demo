@@ -123,6 +123,7 @@ void GameObjectFactory::ParseRenderComponent(GameWorld &gameWorld, GameObject &g
     rd.showAngVol = prefab.value("showAngVol", false);
     rd.showVol = prefab.value("showVol", false);
     rd.showCenter = prefab.value("showCenter", false);
+    rd.castShadows = prefab.value("castShadows", true);
 
     if (prefab.contains("defaultMaterial"))
     {

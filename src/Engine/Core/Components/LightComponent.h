@@ -21,4 +21,6 @@ struct LightComponent : public IComponent
     // point light
     float range = 10.0f;
     float attenuation = 1.0f; // 衰减因子
+
+    int shadowIndex = -1;
 };

@@ -9,9 +9,9 @@
                     0
                 ],
                 "scale": [
-                    1,
-                    1,
-                    1
+                    100,
+                    0.1,
+                    100
                 ],
                 "rotation": [
                     0,
@@ -29,6 +29,7 @@
                 "showAngVol": false,
                 "showVol": false,
                 "showCenter": false,
+                "castShadows": false,
                 "defaultMaterial": {
                     "name": "baseColor(若无vs.默认使用assets/shaders/default.vs)",
                     "fs": "assets/shaders/default.fs",
@@ -48,21 +49,17 @@
                                 "name": "texture(若无fs.默认使用assets/shaders/texture.fs)",
                                 "textures": {
                                     "u_diffuseMap": [
-                                        "assets/textures/test_1.png",
+                                        "assets/textures/test_3.png",
                                         1
                                     ]
                                 },
+                                "fs": "assets/shaders/lighting/lighting.fs",
                                 "blendMode": "NONE",
                                 "depthWrite": true,
                                 "depthTest": true
                             }
                         ]
                     }
-                ],
-                "scale": [
-                    1,
-                    1,
-                    1
                 ]
             }
         }

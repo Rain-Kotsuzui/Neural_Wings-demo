@@ -51,17 +51,22 @@
         },
         {
             "LightComponent": {
-                "type": "POINT",
+                "type": "DIRECTIONAL",
                 "color": [
                     255,
                     255,
                     255
                 ],
-                "intensity": 1.0,
+                "direction": [
+                    0,
+                    -1,
+                    0
+                ],
+                "intensity": 0.5,
                 "range": 100.0,
                 "attenuation": 1.0,
                 "shadows": true,
-                "shadowBias": 0.005
+                "shadowBias": 0.00001
             }
         }
     ]
