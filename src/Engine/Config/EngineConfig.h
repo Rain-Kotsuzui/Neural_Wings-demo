@@ -19,6 +19,7 @@ struct EngineConfig : public Config
 
     std::string serverIP = DEFAULT_SERVER_HOST;
     uint16_t serverPort = DEFAULT_SERVER_PORT;
+    std::string nickname = "";
 
     void toJson(json &j) const
     {
@@ -46,6 +47,8 @@ protected:
             const auto &networkJson = configJson.at("network");
             this->serverIP = networkJson.value("serverIP", this->serverIP);
             this->serverPort = networkJson.value("serverPort", this->serverPort);
+            // Nickname is server-authoritative and should not be loaded from local config.
+            this->nickname.clear();
         }
         this->initialScreen = SCREEN_STATE_START;
     }

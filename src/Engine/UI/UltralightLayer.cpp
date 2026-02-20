@@ -408,9 +408,9 @@ std::string UltralightLayer::GetCurrentRoute() const
     // Evaluate JavaScript to get the current route
     // window.location.hash gives us the current hash
     ultralight::String result = m_view->EvaluateScript("window.location.hash");
-
-    // ultralight::String should have utf8() method
-    return result.utf8().data();
+    auto utf8 = result.utf8();
+    const char *raw = utf8.data();
+    return raw ? std::string(raw) : std::string();
 }
 
 std::string UltralightLayer::GetAppState(const std::string &key) const
@@ -419,9 +419,11 @@ std::string UltralightLayer::GetAppState(const std::string &key) const
         return "";
 
     // Evaluate JavaScript to get a value from window.vueAppState
-    std::string script = "JSON.stringify(window.vueAppState." + key + ")";
+    std::string script = "JSON.stringify(window.vueAppState && window.vueAppState." + key + ")";
     ultralight::String result = m_view->EvaluateScript(script.c_str());
-    std::string resultStr = result.utf8().data();
+    auto utf8 = result.utf8();
+    const char *raw = utf8.data();
+    std::string resultStr = raw ? std::string(raw) : std::string();
 
     // Remove surrounding quotes if it's a string value
     if (resultStr.length() >= 2 && resultStr.front() == '"' && resultStr.back() == '"')

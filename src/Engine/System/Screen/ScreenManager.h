@@ -8,9 +8,12 @@
 #include "Engine/UI/UI.h"
 #include "Engine/Network/Client/NetworkClient.h"
 #include "Engine/Network/Client/ClientIdentity.h"
+#include "Engine/Network/Protocol/Messages.h"
+#include "Engine/Network/Chat/ChatManager.h"
 
 #include <string>
 #include <memory>
+#include <deque>
 
 class ScreenManager
 {
@@ -35,6 +38,10 @@ public:
 
 private:
     void ChangeScreen(int newState);
+    void PushChatMessageToUI(ChatMessageType type, ClientID senderID,
+                             const std::string &senderName, const std::string &text);
+    void FlushPendingChatToUI();
+    void PollGlobalChatSendRequest();
 
     std::unique_ptr<ResourceManager> m_resourceManager;
     std::unique_ptr<AudioManager> m_audioManager;
@@ -50,6 +57,7 @@ private:
 
     TimeManager m_timeManager;
     float m_accumulator;
+    std::deque<ChatEntry> m_pendingChatToUI;
 
     // Track the last applied runtime configuration so screens can sync from
     // the actual window state instead of only the config file on disk.

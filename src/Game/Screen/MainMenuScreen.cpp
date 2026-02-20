@@ -19,7 +19,9 @@ void MainMenuScreen::OnEnter()
         screenManager->GetUILayer()->LoadRoute(MAIN_MENU);
         screenManager->GetUILayer()->ExecuteScript(
             "window.vueAppState = window.vueAppState || {};"
-            "window.vueAppState.nextScreen = '';");
+            "window.vueAppState.nextScreen = '';"
+            "window.vueAppState.chatSendRequested = false;"
+            "window.vueAppState.chatActive = false;");
     }
 }
 void MainMenuScreen::OnExit()

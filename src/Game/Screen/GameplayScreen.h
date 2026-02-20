@@ -25,5 +25,12 @@ private:
     void ConfigCallback(ScriptingFactory &scriptingFactory,
                         PhysicsStageFactory &physicsStageFactory,
                         ParticleFactory &particleFactory);
-    // ...
+
+    // ── Chat ──────────────────────────────────────────────────
+    bool m_chatActive = false;
+    int m_framesInScreen = 0; // guard against first-frame Enter
+    bool m_skipExitThisFrame = false; // avoid ESC close-chat also triggering Exit
+    void ActivateChat();
+    void DeactivateChat();
+    void PollChatUI();
 };

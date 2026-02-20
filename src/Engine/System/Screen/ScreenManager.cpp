@@ -1,6 +1,9 @@
 #include "ScreenManager.h"
 #include "raylib.h"
 #include "ScreenState.h"
+#include "Game/Screen/MyScreenState.h"
+#include "Engine/Network/Chat/ChatManager.h"
+#include <algorithm>
 
 #if defined(PLATFORM_WEB)
 #include <emscripten/emscripten.h>
@@ -35,6 +38,13 @@ ScreenManager::ScreenManager(const EngineConfig &config, const std::string audio
     m_networkClient = std::make_shared<NetworkClient>();
     m_clientIdentity.LoadOrGenerate();
     m_networkClient->SetUUID(m_clientIdentity.GetUUID());
+    m_networkClient->SetOnChatMessage(
+        [this](ChatMessageType type, ClientID senderID,
+               const std::string &senderName, const std::string &text)
+        {
+            PushChatMessageToUI(type, senderID, senderName, text);
+        });
+    m_networkClient->Connect(config.serverIP, config.serverPort);
     TraceLog(LOG_INFO, "CLIENT: UUID = %s", m_clientIdentity.GetUUIDString().c_str());
 
     m_resourceManager = std::make_unique<ResourceManager>();
@@ -65,6 +75,9 @@ ScreenManager::~ScreenManager()
 }
 void ScreenManager::ApplySettings(const EngineConfig &newConfig)
 {
+    const std::string oldServerIP = m_activeConfig.serverIP;
+    const uint16_t oldServerPort = m_activeConfig.serverPort;
+
 #if defined(PLATFORM_WEB)
     if (newConfig.fullScreen)
     {
@@ -106,6 +119,22 @@ void ScreenManager::ApplySettings(const EngineConfig &newConfig)
         m_activeConfig.screenHeight = GetScreenHeight();
     }
     m_activeConfig.targetFPS = newConfig.targetFPS;
+    m_activeConfig.serverIP = newConfig.serverIP;
+    m_activeConfig.serverPort = newConfig.serverPort;
+
+    if (m_networkClient)
+    {
+        const bool endpointChanged =
+            (oldServerIP != newConfig.serverIP) ||
+            (oldServerPort != newConfig.serverPort);
+
+        if (endpointChanged)
+        {
+            if (m_networkClient->GetConnectionState() != ConnectionState::Disconnected)
+                m_networkClient->Disconnect();
+            m_networkClient->Connect(newConfig.serverIP, newConfig.serverPort);
+        }
+    }
 }
 
 const EngineConfig &ScreenManager::GetActiveConfig() const
@@ -147,6 +176,13 @@ bool ScreenManager::UpdateFrame()
     }
 
     m_currentScreen->Update(m_timeManager.GetDeltaTime());
+
+    // Poll global network while outside gameplay.
+    if (m_networkClient && m_currentScreen &&
+        m_currentScreen->GetScreenState() != GAMEPLAY)
+    {
+        m_networkClient->Poll();
+    }
     if (m_uiLayer)
     {
 
@@ -155,6 +191,8 @@ bool ScreenManager::UpdateFrame()
             static_cast<uint32_t>(GetScreenHeight()));
         m_uiLayer->HandleInput();
         m_uiLayer->Update();
+        FlushPendingChatToUI();
+        PollGlobalChatSendRequest();
     }
 
     BeginDrawing();
@@ -217,4 +255,91 @@ void ScreenManager::ChangeScreen(int newState)
         if (m_currentScreen)
             m_currentScreen->OnEnter();
     }
+}
+
+void ScreenManager::PushChatMessageToUI(ChatMessageType type, ClientID senderID,
+                                        const std::string &senderName,
+                                        const std::string &text)
+{
+    ChatEntry entry;
+    entry.type = type;
+    entry.senderID = senderID;
+    entry.senderName = senderName;
+    entry.text = text;
+    m_pendingChatToUI.push_back(std::move(entry));
+
+    constexpr size_t kMaxQueuedIncomingChat = 4096;
+    while (m_pendingChatToUI.size() > kMaxQueuedIncomingChat)
+        m_pendingChatToUI.pop_front();
+}
+
+void ScreenManager::FlushPendingChatToUI()
+{
+    if (!m_uiLayer || m_pendingChatToUI.empty())
+        return;
+
+    constexpr size_t kMaxPushPerFrame = 64;
+    size_t count = std::min(kMaxPushPerFrame, m_pendingChatToUI.size());
+
+    std::string batch = "[";
+    for (size_t i = 0; i < count; ++i)
+    {
+        if (i > 0)
+            batch += ",";
+        batch += ChatManager::EntryToJSON(m_pendingChatToUI.front());
+        m_pendingChatToUI.pop_front();
+    }
+    batch += "]";
+
+    std::string script =
+        "if (window.__NW_CHAT_PUSH_BATCH__) window.__NW_CHAT_PUSH_BATCH__(" + batch + ");"
+        "else if (window.__NW_CHAT_PUSH__) {"
+        "var __nwBatch=" + batch + ";"
+        "for (var i=0;i<__nwBatch.length;i++) window.__NW_CHAT_PUSH__(__nwBatch[i]);"
+        "}";
+    m_uiLayer->ExecuteScript(script);
+}
+
+void ScreenManager::PollGlobalChatSendRequest()
+{
+    if (!m_uiLayer || !m_networkClient)
+        return;
+
+    if (m_uiLayer->GetAppState("chatSendRequested") != "true")
+        return;
+
+    std::string text = m_uiLayer->GetAppState("chatSendText");
+    m_uiLayer->ExecuteScript(
+        "window.vueAppState.chatSendRequested = false;"
+        "window.vueAppState.chatSendText = '';");
+
+    if (text.empty() || !m_networkClient->IsConnected())
+        return;
+
+    ChatMessageType chatType = ChatMessageType::Public;
+    ClientID targetID = INVALID_CLIENT_ID;
+    std::string msgText = text;
+
+    if (text.size() > 3 &&
+        (text.rfind("/w ", 0) == 0 || text.rfind("/whisper ", 0) == 0))
+    {
+        size_t start = (text.rfind("/w ", 0) == 0) ? 3 : 9;
+        size_t spacePos = text.find(' ', start);
+        if (spacePos != std::string::npos)
+        {
+            try
+            {
+                targetID = static_cast<ClientID>(
+                    std::stoul(text.substr(start, spacePos - start)));
+                msgText = text.substr(spacePos + 1);
+                chatType = ChatMessageType::Whisper;
+            }
+            catch (...)
+            {
+            }
+        }
+    }
+
+    if (!msgText.empty())
+        m_networkClient->SendChatMessage(chatType, msgText, targetID);
 }
