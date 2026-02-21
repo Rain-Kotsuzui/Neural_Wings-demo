@@ -21,6 +21,7 @@ void MainMenuScreen::OnEnter()
             "window.vueAppState = window.vueAppState || {};"
             "window.vueAppState.nextScreen = '';"
             "window.vueAppState.chatSendRequested = false;"
+            "window.vueAppState.chatSendQueue = [];"
             "window.vueAppState.chatActive = false;");
     }
 }

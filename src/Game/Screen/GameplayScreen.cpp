@@ -118,6 +118,7 @@ void GameplayScreen::OnEnter()
                 "window.vueAppState.chatMessages = [];"
                 "window.vueAppState.chatSendRequested = false;"
                 "window.vueAppState.chatSendText = '';"
+                "window.vueAppState.chatSendQueue = [];"
                 "window.vueAppState.chatActive = false;"
                 "window.vueAppState.chatInputText = '';");
         }
@@ -359,33 +360,34 @@ void GameplayScreen::PollChatUI()
 
         if (!text.empty())
         {
-            // Parse whisper: "/w <id> message" or "/whisper <id> message"
-            ChatMessageType chatType = ChatMessageType::Public;
-            ClientID targetID = INVALID_CLIENT_ID;
-            std::string msgText = text;
-
-            if (text.size() > 3 && (text.substr(0, 3) == "/w " || text.substr(0, 9) == "/whisper "))
+            // Escape text for safe embedding in a JS string literal
+            std::string escaped;
+            escaped.reserve(text.size() + 8);
+            escaped += '"';
+            for (char c : text)
             {
-                size_t start = (text[1] == 'w' && text[2] == ' ') ? 3 : 9;
-                size_t spacePos = text.find(' ', start);
-                if (spacePos != std::string::npos)
-                {
-                    try
-                    {
-                        targetID = static_cast<ClientID>(std::stoul(text.substr(start, spacePos - start)));
-                        msgText = text.substr(spacePos + 1);
-                        chatType = ChatMessageType::Whisper;
-                    }
-                    catch (...)
-                    {
-                        // Invalid ID, send as public
-                    }
-                }
+                if (c == '\\')
+                    escaped += "\\\\";
+                else if (c == '"')
+                    escaped += "\\\"";
+                else if (c == '\n')
+                    escaped += "\\n";
+                else if (c == '\r')
+                    escaped += "\\r";
+                else
+                    escaped += c;
             }
+            escaped += '"';
 
-            m_world->GetNetworkClient().SendChatMessage(chatType, msgText, targetID);
+            // Enqueue via the global chatSendQueue so the rate-limited
+            // pipeline in ScreenManager handles the actual send.
+            ui->ExecuteScript(
+                "window.vueAppState = window.vueAppState || {};"
+                "if (!Array.isArray(window.vueAppState.chatSendQueue))"
+                "  window.vueAppState.chatSendQueue = [];"
+                "window.vueAppState.chatSendQueue.push(" +
+                escaped + ");");
         }
         // Keep chat open after sending
     }
 }
-

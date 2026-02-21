@@ -30,6 +30,9 @@ private:
 
     // ── Server check bridge (single global NetworkClient only) ─────
     void UpdatePingCheck(float deltaTime);
+    bool m_waitingServerCheck = false;
+    float m_serverCheckTimer = 0.0f;
+    static constexpr float SERVER_CHECK_TIMEOUT = 5.0f;
 
     // ── Nickname bridge ────────────────────────────────────────────
     void HandleNicknameApplyRequest();

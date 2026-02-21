@@ -43,6 +43,12 @@ private:
     void FlushPendingChatToUI();
     void PollGlobalChatSendRequest();
 
+    // ── Chat send queue with rate limiting ──────────────────────────
+    std::deque<std::string> m_chatSendQueue;
+    static constexpr size_t CHAT_SEND_QUEUE_MAX = 64;
+    float m_chatSendCooldown = 0.0f;
+    static constexpr float CHAT_SEND_INTERVAL = 0.30f; // 300 ms
+
     std::unique_ptr<ResourceManager> m_resourceManager;
     std::unique_ptr<AudioManager> m_audioManager;
 

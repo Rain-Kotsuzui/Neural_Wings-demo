@@ -7,8 +7,6 @@ const isActive = ref(false);
 const inputRef = ref(null);
 const messagesEndRef = ref(null);
 const route = ref(window.location.hash || "");
-const pendingSendQueue = [];
-let sendFlushTimer = null;
 
 function syncRoute() {
   route.value = window.location.hash || "";
@@ -21,7 +19,6 @@ function isVisibleRoute() {
   const r = route.value;
   return (
     r.startsWith("#/menu") ||
-    r.startsWith("#/options") ||
     r.startsWith("#/gameplay")
   );
 }
@@ -96,17 +93,19 @@ function onInput() {
   syncInputToAppState();
 }
 
-function flushPendingSends() {
-  if (pendingSendQueue.length === 0) {
-    return;
-  }
+/**
+ * Push a message directly into the JS-side send queue (an array on
+ * vueAppState). The C++ side drains this array atomically each frame,
+ * so no messages can be lost between read and clear.
+ */
+function enqueueSend(text) {
   window.vueAppState = window.vueAppState || {};
-  if (window.vueAppState.chatSendRequested === true) {
-    return;
+  if (!Array.isArray(window.vueAppState.chatSendQueue)) {
+    window.vueAppState.chatSendQueue = [];
   }
-  const nextText = pendingSendQueue.shift();
-  window.vueAppState.chatSendText = nextText;
-  window.vueAppState.chatSendRequested = true;
+  if (window.vueAppState.chatSendQueue.length < 128) {
+    window.vueAppState.chatSendQueue.push(text);
+  }
 }
 
 function isEnterKey(e) {
@@ -152,11 +151,8 @@ function submitInput() {
     return;
   }
 
-  if (pendingSendQueue.length < 128) {
-    pendingSendQueue.push(text);
-  }
+  enqueueSend(text);
   clearInput();
-  flushPendingSends();
 }
 
 function onEscapePressed() {
@@ -222,17 +218,13 @@ onMounted(() => {
   window.vueAppState.chatInputText = "";
   window.vueAppState.chatSendText = "";
   window.vueAppState.chatSendRequested = false;
-  sendFlushTimer = window.setInterval(flushPendingSends, 16);
+  window.vueAppState.chatSendQueue = [];
   syncRoute();
   window.addEventListener("hashchange", syncRoute);
   window.addEventListener("keydown", onGlobalKeydown);
 });
 
 onBeforeUnmount(() => {
-  if (sendFlushTimer !== null) {
-    window.clearInterval(sendFlushTimer);
-    sendFlushTimer = null;
-  }
   delete window.__NW_CHAT_PUSH__;
   delete window.__NW_CHAT_PUSH_BATCH__;
   delete window.__NW_CHAT_ACTIVATE__;
@@ -247,18 +239,11 @@ onBeforeUnmount(() => {
   <div v-if="isVisibleRoute()" class="chat-hud" :class="{ active: isActive, gameplay: isGameplayRoute() }">
     <!-- Message history (always visible, semi-transparent when inactive) -->
     <div v-if="isActive || isGameplayRoute()" class="chat-messages" :class="{ faded: !isActive }">
-      <div
-        v-for="(msg, idx) in messages"
-        :key="idx"
-        class="chat-line"
-        :class="getTypeClass(msg.type)"
-      >
+      <div v-for="(msg, idx) in messages" :key="idx" class="chat-line" :class="getTypeClass(msg.type)">
         <span v-if="getTypeLabel(msg.type)" class="chat-type-label">{{
           getTypeLabel(msg.type)
         }}</span>
-        <span v-if="msg.senderName && msg.type !== 'system'" class="chat-sender"
-          >{{ msg.senderName }}:</span
-        >
+        <span v-if="msg.senderName && msg.type !== 'system'" class="chat-sender">{{ msg.senderName }}:</span>
         <span class="chat-text">{{ msg.text }}</span>
       </div>
       <div ref="messagesEndRef"></div>
@@ -266,16 +251,8 @@ onBeforeUnmount(() => {
 
     <!-- Input bar (only when active) -->
     <div v-if="isActive" class="chat-input-bar">
-      <input
-        ref="inputRef"
-        v-model="inputText"
-        type="text"
-        class="chat-input"
-        placeholder="Type a message... (/w <id> for whisper)"
-        maxlength="256"
-        @keydown="onInputKeydown"
-        @input="onInput"
-      />
+      <input ref="inputRef" v-model="inputText" type="text" class="chat-input" placeholder="Type /help for commands"
+        maxlength="256" @keydown="onInputKeydown" @input="onInput" />
     </div>
   </div>
 </template>
@@ -358,7 +335,8 @@ onBeforeUnmount(() => {
 }
 
 .chat-text {
-  /* keep normal weight */
+  /* Preserve server-sent line breaks such as /help multi-line output. */
+  white-space: pre-wrap;
 }
 
 .chat-input-bar {

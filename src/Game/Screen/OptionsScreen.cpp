@@ -70,6 +70,8 @@ void OptionsScreen::OnEnter()
 
     m_modifiedConfig = m_currentConfig;
     m_pendingSync = true;
+    m_waitingServerCheck = false;
+    m_serverCheckTimer = 0.0f;
     m_waitingNicknameFetch = false;
     m_nicknameFetchTimer = 0.0f;
 
@@ -134,6 +136,8 @@ void OptionsScreen::OnExit()
         auto &netClient = screenManager->GetNetworkClientRef();
         netClient.SetOnNicknameUpdateResult({});
     }
+    m_waitingServerCheck = false;
+    m_serverCheckTimer = 0.0f;
     m_waitingNicknameFetch = false;
     m_nicknameFetchTimer = 0.0f;
 
@@ -331,8 +335,6 @@ void OptionsScreen::ApplyConfigToUI()
 
 void OptionsScreen::UpdatePingCheck(float deltaTime)
 {
-    (void)deltaTime;
-
     if (!screenManager)
         return;
 
@@ -340,24 +342,68 @@ void OptionsScreen::UpdatePingCheck(float deltaTime)
     if (!uiLayer)
         return;
 
-    if (uiLayer->GetAppState("serverCheckRequested") != "true")
+    auto &netClient = screenManager->GetNetworkClientRef();
+    const auto &activeConfig = screenManager->GetActiveConfig();
+
+    if (uiLayer->GetAppState("serverCheckRequested") == "true")
+    {
+        uiLayer->ExecuteScript(
+            "window.vueAppState.serverCheckRequested = false;"
+            "window.vueAppState.serverStatus = 'checking';");
+
+        std::string targetIP = uiLayer->GetAppState("serverIP");
+        if (targetIP.empty())
+            targetIP = activeConfig.serverIP;
+        const uint16_t targetPort = activeConfig.serverPort;
+
+        m_serverCheckTimer = 0.0f;
+
+        const bool matchesActiveEndpoint =
+            (targetIP == activeConfig.serverIP) &&
+            (targetPort == activeConfig.serverPort);
+        if (matchesActiveEndpoint && netClient.IsConnected())
+        {
+            m_waitingServerCheck = false;
+            uiLayer->ExecuteScript("window.vueAppState.serverStatus = 'online';");
+            return;
+        }
+
+        // Single global client: perform a fresh connect attempt for this probe.
+        if (netClient.GetConnectionState() != ConnectionState::Disconnected)
+            netClient.Disconnect();
+
+        if (!netClient.Connect(targetIP, targetPort))
+        {
+            m_waitingServerCheck = false;
+            uiLayer->ExecuteScript("window.vueAppState.serverStatus = 'offline';");
+            return;
+        }
+
+        m_waitingServerCheck = true;
+        return;
+    }
+
+    if (!m_waitingServerCheck)
         return;
 
-    uiLayer->ExecuteScript("window.vueAppState.serverCheckRequested = false;");
-    uiLayer->ExecuteScript("window.vueAppState.serverStatus = 'checking';");
-
-    // IMPORTANT:
-    // nbnet's game client state is process-global, so spawning a second
-    // NetworkClient here corrupts the main connection state.
-    // Server check must use the existing global client only.
-    auto &netClient = screenManager->GetNetworkClientRef();
     if (netClient.IsConnected())
     {
+        m_waitingServerCheck = false;
+        m_serverCheckTimer = 0.0f;
         uiLayer->ExecuteScript("window.vueAppState.serverStatus = 'online';");
+        return;
     }
-    else
+
+    m_serverCheckTimer += deltaTime;
+    if (netClient.GetConnectionState() == ConnectionState::Disconnected ||
+        m_serverCheckTimer >= SERVER_CHECK_TIMEOUT)
     {
+        m_waitingServerCheck = false;
+        m_serverCheckTimer = 0.0f;
+        if (netClient.GetConnectionState() != ConnectionState::Disconnected)
+            netClient.Disconnect();
         uiLayer->ExecuteScript("window.vueAppState.serverStatus = 'offline';");
+        return;
     }
 }
 

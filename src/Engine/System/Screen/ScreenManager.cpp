@@ -293,10 +293,11 @@ void ScreenManager::FlushPendingChatToUI()
 
     std::string script =
         "if (window.__NW_CHAT_PUSH_BATCH__) window.__NW_CHAT_PUSH_BATCH__(" + batch + ");"
-        "else if (window.__NW_CHAT_PUSH__) {"
-        "var __nwBatch=" + batch + ";"
-        "for (var i=0;i<__nwBatch.length;i++) window.__NW_CHAT_PUSH__(__nwBatch[i]);"
-        "}";
+                                                                                      "else if (window.__NW_CHAT_PUSH__) {"
+                                                                                      "var __nwBatch=" +
+        batch + ";"
+                "for (var i=0;i<__nwBatch.length;i++) window.__NW_CHAT_PUSH__(__nwBatch[i]);"
+                "}";
     m_uiLayer->ExecuteScript(script);
 }
 
@@ -305,41 +306,104 @@ void ScreenManager::PollGlobalChatSendRequest()
     if (!m_uiLayer || !m_networkClient)
         return;
 
-    if (m_uiLayer->GetAppState("chatSendRequested") != "true")
-        return;
+    const float dt = m_timeManager.GetDeltaTime();
 
-    std::string text = m_uiLayer->GetAppState("chatSendText");
-    m_uiLayer->ExecuteScript(
-        "window.vueAppState.chatSendRequested = false;"
-        "window.vueAppState.chatSendText = '';");
-
-    if (text.empty() || !m_networkClient->IsConnected())
-        return;
-
-    ChatMessageType chatType = ChatMessageType::Public;
-    ClientID targetID = INVALID_CLIENT_ID;
-    std::string msgText = text;
-
-    if (text.size() > 3 &&
-        (text.rfind("/w ", 0) == 0 || text.rfind("/whisper ", 0) == 0))
+    // ── 1. Drain the JS-side send queue into C++ queue ─────────────
+    std::string raw = m_uiLayer->GetAppState("chatSendQueue");
+    if (!raw.empty() && raw != "null" && raw != "undefined" && raw != "[]")
     {
-        size_t start = (text.rfind("/w ", 0) == 0) ? 3 : 9;
-        size_t spacePos = text.find(' ', start);
-        if (spacePos != std::string::npos)
+        m_uiLayer->ExecuteScript("window.vueAppState.chatSendQueue = [];");
+
+        if (raw.size() >= 2 && raw.front() == '[' && raw.back() == ']')
         {
-            try
+            std::string inner = raw.substr(1, raw.size() - 2);
+            size_t pos = 0;
+            while (pos < inner.size())
             {
-                targetID = static_cast<ClientID>(
-                    std::stoul(text.substr(start, spacePos - start)));
-                msgText = text.substr(spacePos + 1);
-                chatType = ChatMessageType::Whisper;
-            }
-            catch (...)
-            {
+                if (inner[pos] != '"')
+                {
+                    ++pos;
+                    continue;
+                }
+                size_t start = pos + 1;
+                size_t end = start;
+                while (end < inner.size())
+                {
+                    if (inner[end] == '\\')
+                    {
+                        end += 2;
+                        continue;
+                    }
+                    if (inner[end] == '"')
+                        break;
+                    ++end;
+                }
+                std::string elem = inner.substr(start, end - start);
+                // Unescape basic JSON
+                std::string text;
+                text.reserve(elem.size());
+                for (size_t i = 0; i < elem.size(); ++i)
+                {
+                    if (elem[i] == '\\' && i + 1 < elem.size())
+                    {
+                        char next = elem[i + 1];
+                        if (next == '"' || next == '\\' || next == '/')
+                        {
+                            text += next;
+                            ++i;
+                        }
+                        else if (next == 'n')
+                        {
+                            text += '\n';
+                            ++i;
+                        }
+                        else
+                        {
+                            text += elem[i];
+                        }
+                    }
+                    else
+                    {
+                        text += elem[i];
+                    }
+                }
+                if (!text.empty() && m_chatSendQueue.size() < CHAT_SEND_QUEUE_MAX)
+                    m_chatSendQueue.push_back(std::move(text));
+
+                pos = (end < inner.size()) ? end + 1 : inner.size();
+                while (pos < inner.size() && (inner[pos] == ',' || inner[pos] == ' '))
+                    ++pos;
             }
         }
     }
 
-    if (!msgText.empty())
-        m_networkClient->SendChatMessage(chatType, msgText, targetID);
+    // Legacy single-slot path (GameplayScreen)
+    if (m_uiLayer->GetAppState("chatSendRequested") == "true")
+    {
+        std::string text = m_uiLayer->GetAppState("chatSendText");
+        m_uiLayer->ExecuteScript(
+            "window.vueAppState.chatSendRequested = false;"
+            "window.vueAppState.chatSendText = '';");
+        if (!text.empty() && m_chatSendQueue.size() < CHAT_SEND_QUEUE_MAX)
+            m_chatSendQueue.push_back(std::move(text));
+    }
+
+    // ── 2. Rate-limited send: at most 1 message per CHAT_SEND_INTERVAL ──
+    if (m_chatSendCooldown > 0.0f)
+        m_chatSendCooldown -= dt;
+
+    if (m_chatSendQueue.empty() || !m_networkClient->IsConnected())
+        return;
+
+    if (m_chatSendCooldown > 0.0f)
+        return; // still cooling down, messages stay queued
+
+    // Send exactly one message
+    const std::string &msg = m_chatSendQueue.front();
+    if (m_networkClient->SendChatMessage(
+            ChatMessageType::Public, msg, INVALID_CLIENT_ID))
+    {
+        m_chatSendCooldown = CHAT_SEND_INTERVAL;
+        m_chatSendQueue.pop_front();
+    }
 }

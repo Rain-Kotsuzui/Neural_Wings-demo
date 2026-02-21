@@ -215,6 +215,7 @@ function checkServer() {
   if (!serverIP.value) return;
   serverStatus.value = "checking";
   window.vueAppState.serverIP = serverIP.value;
+  window.vueAppState.serverStatus = "checking";
   window.vueAppState.serverCheckRequested = true;
 
   // Poll for serverStatus changes from the C++ engine

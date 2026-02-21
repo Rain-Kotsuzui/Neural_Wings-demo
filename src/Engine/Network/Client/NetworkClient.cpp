@@ -76,14 +76,14 @@ void NetworkClient::SendPositionUpdate(NetObjectID objectID,
     m_transport->Send(pkt, 1); // unreliable channel
 }
 
-void NetworkClient::SendChatMessage(ChatMessageType chatType,
+bool NetworkClient::SendChatMessage(ChatMessageType chatType,
                                     const std::string &text,
                                     ClientID targetID)
 {
     if (!IsConnected())
-        return;
+        return false;
     auto pkt = PacketSerializer::WriteChatRequest(chatType, targetID, text);
-    m_transport->Send(pkt, 0); // reliable channel
+    return m_transport->Send(pkt, 0); // reliable channel
 }
 
 void NetworkClient::SendNicknameUpdate(const std::string &nickname)
@@ -92,6 +92,11 @@ void NetworkClient::SendNicknameUpdate(const std::string &nickname)
         return;
     auto pkt = PacketSerializer::WriteNicknameUpdateRequest(nickname);
     m_transport->Send(pkt, 0); // reliable channel
+}
+
+void NetworkClient::FlushSend()
+{
+    m_transport->FlushSend();
 }
 
 // ── Incoming dispatch ──────────────────────────────────────────────

@@ -148,10 +148,21 @@ void NBNetTransport::Poll(uint32_t /*timeoutMs*/)
 }
 
 // ── Send ───────────────────────────────────────────────────────────
-void NBNetTransport::Send(const uint8_t *data, size_t len, uint8_t channel)
+bool NBNetTransport::Send(const uint8_t *data, size_t len, uint8_t channel)
 {
     if (!m_started || m_state != ConnectionState::Connected || !data || len == 0)
-        return;
+        return false;
+
+    // Guard against nbnet-internal stale/closed state to prevent
+    // assert(!connection->is_stale) crash in NBN_Connection_EnqueueOutgoingMessage.
+    if (!nbn_game_client.server_connection ||
+        nbn_game_client.server_connection->is_stale ||
+        nbn_game_client.server_connection->is_closed)
+    {
+        // Sync our state so callers see Disconnected immediately.
+        m_state = ConnectionState::Disconnected;
+        return false;
+    }
 
     if (NBN_GameClient_SendByteArray(
             const_cast<uint8_t *>(data),
@@ -159,5 +170,17 @@ void NBNetTransport::Send(const uint8_t *data, size_t len, uint8_t channel)
             MapChannel(channel)) < 0)
     {
         std::cerr << "[NBNetTransport] SendByteArray failed\n";
+        return false;
+    }
+    return true;
+}
+
+void NBNetTransport::FlushSend()
+{
+    if (!m_started)
+        return;
+    if (NBN_GameClient_SendPackets() < 0)
+    {
+        std::cerr << "[NBNetTransport] FlushSend SendPackets failed\n";
     }
 }

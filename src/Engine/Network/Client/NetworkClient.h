@@ -49,9 +49,12 @@ public:
     // ── Sending ────────────────────────────────────────────────────
     void SendPositionUpdate(NetObjectID objectID,
                             const NetTransformState &transform);
-    void SendChatMessage(ChatMessageType chatType, const std::string &text,
+    bool SendChatMessage(ChatMessageType chatType, const std::string &text,
                          ClientID targetID = INVALID_CLIENT_ID);
     void SendNicknameUpdate(const std::string &nickname);
+
+    /// Flush outgoing packet queue immediately (call after a batch of Sends).
+    void FlushSend();
 
     // ── Nickname state ─────────────────────────────────────────────
     void SetDesiredNickname(const std::string &nickname) { m_desiredNickname = nickname; }
