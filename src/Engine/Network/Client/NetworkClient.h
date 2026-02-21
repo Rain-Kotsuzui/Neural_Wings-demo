@@ -18,6 +18,12 @@ public:
                            const std::vector<NetBroadcastEntry> &entries)>;
     using OnObjectDespawnFn =
         std::function<void(ClientID ownerClientID, NetObjectID objectID)>;
+    using OnChatMessageFn =
+        std::function<void(ChatMessageType chatType, ClientID senderID,
+                           const std::string &senderName, const std::string &text)>;
+    using OnNicknameUpdateResultFn =
+        std::function<void(NicknameUpdateStatus status,
+                           const std::string &authoritativeNickname)>;
 
     NetworkClient();
     ~NetworkClient();
@@ -33,6 +39,7 @@ public:
 
     // ── State ──────────────────────────────────────────────────────
     bool IsConnected() const;
+    ConnectionState GetConnectionState() const;
     ClientID GetLocalClientID() const { return m_localClientID; }
 
     // ── Identity ───────────────────────────────────────────────────
@@ -42,6 +49,17 @@ public:
     // ── Sending ────────────────────────────────────────────────────
     void SendPositionUpdate(NetObjectID objectID,
                             const NetTransformState &transform);
+    bool SendChatMessage(ChatMessageType chatType, const std::string &text,
+                         ClientID targetID = INVALID_CLIENT_ID);
+    void SendNicknameUpdate(const std::string &nickname);
+
+    /// Flush outgoing packet queue immediately (call after a batch of Sends).
+    void FlushSend();
+
+    // ── Nickname state ─────────────────────────────────────────────
+    void SetDesiredNickname(const std::string &nickname) { m_desiredNickname = nickname; }
+    const std::string &GetDesiredNickname() const { return m_desiredNickname; }
+    const std::string &GetAuthoritativeNickname() const { return m_authoritativeNickname; }
 
     // ── Callbacks ──────────────────────────────────────────────────
     void SetOnPositionBroadcast(OnPositionBroadcastFn fn)
@@ -52,6 +70,14 @@ public:
     {
         m_onObjectDespawn = std::move(fn);
     }
+    void SetOnChatMessage(OnChatMessageFn fn)
+    {
+        m_onChatMessage = std::move(fn);
+    }
+    void SetOnNicknameUpdateResult(OnNicknameUpdateResultFn fn)
+    {
+        m_onNicknameUpdateResult = std::move(fn);
+    }
 
 private:
     void OnRawReceive(const uint8_t *data, size_t len, uint8_t channelID);
@@ -61,4 +87,8 @@ private:
     NetUUID m_uuid{};
     OnPositionBroadcastFn m_onPositionBroadcast;
     OnObjectDespawnFn m_onObjectDespawn;
+    OnChatMessageFn m_onChatMessage;
+    OnNicknameUpdateResultFn m_onNicknameUpdateResult;
+    std::string m_desiredNickname;
+    std::string m_authoritativeNickname;
 };

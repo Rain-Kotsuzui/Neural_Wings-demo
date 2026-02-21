@@ -18,7 +18,8 @@ public:
     bool Connect(const std::string &host, uint16_t port) override;
     void Disconnect() override;
     void Poll(uint32_t timeoutMs = 0) override;
-    void Send(const uint8_t *data, size_t len, uint8_t channel = 0) override;
+    bool Send(const uint8_t *data, size_t len, uint8_t channel = 0) override;
+    void FlushSend() override;
 
     bool IsConnected() const override { return m_state == ConnectionState::Connected; }
     ConnectionState GetState() const override { return m_state; }

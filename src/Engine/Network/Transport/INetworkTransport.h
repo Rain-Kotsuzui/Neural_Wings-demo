@@ -27,11 +27,15 @@ public:
 
     /// Send to the server (client-side) or to a specific internal peer.
     /// `channel` 0 = reliable, 1 = unreliable.
-    virtual void Send(const uint8_t *data, size_t len, uint8_t channel = 0) = 0;
-    void Send(const std::vector<uint8_t> &data, uint8_t channel = 0)
+    /// Returns true on success, false if the send failed.
+    virtual bool Send(const uint8_t *data, size_t len, uint8_t channel = 0) = 0;
+    bool Send(const std::vector<uint8_t> &data, uint8_t channel = 0)
     {
-        Send(data.data(), data.size(), channel);
+        return Send(data.data(), data.size(), channel);
     }
+
+    /// Flush outgoing packet queue immediately (call after enqueuing via Send).
+    virtual void FlushSend() {}
 
     // ── State ──────────────────────────────────────────────────────
     virtual bool IsConnected() const = 0;

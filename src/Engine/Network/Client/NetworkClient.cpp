@@ -16,6 +16,10 @@ NetworkClient::~NetworkClient()
 // ── Connect ────────────────────────────────────────────────────────
 bool NetworkClient::Connect(const std::string &host, uint16_t port)
 {
+    ConnectionState state = m_transport->GetState();
+    if (state == ConnectionState::Connecting || state == ConnectionState::Connected)
+        return true;
+
     m_transport->SetOnConnect([this]()
                               {
         std::cout << "[NetworkClient] Connected – sending Hello with UUID\n";
@@ -56,6 +60,11 @@ bool NetworkClient::IsConnected() const
     return m_transport->IsConnected() && m_localClientID != INVALID_CLIENT_ID;
 }
 
+ConnectionState NetworkClient::GetConnectionState() const
+{
+    return m_transport->GetState();
+}
+
 // ── Sending ────────────────────────────────────────────────────────
 void NetworkClient::SendPositionUpdate(NetObjectID objectID,
                                        const NetTransformState &transform)
@@ -65,6 +74,29 @@ void NetworkClient::SendPositionUpdate(NetObjectID objectID,
     auto pkt = PacketSerializer::WritePositionUpdate(
         m_localClientID, objectID, transform);
     m_transport->Send(pkt, 1); // unreliable channel
+}
+
+bool NetworkClient::SendChatMessage(ChatMessageType chatType,
+                                    const std::string &text,
+                                    ClientID targetID)
+{
+    if (!IsConnected())
+        return false;
+    auto pkt = PacketSerializer::WriteChatRequest(chatType, targetID, text);
+    return m_transport->Send(pkt, 0); // reliable channel
+}
+
+void NetworkClient::SendNicknameUpdate(const std::string &nickname)
+{
+    if (!IsConnected())
+        return;
+    auto pkt = PacketSerializer::WriteNicknameUpdateRequest(nickname);
+    m_transport->Send(pkt, 0); // reliable channel
+}
+
+void NetworkClient::FlushSend()
+{
+    m_transport->FlushSend();
 }
 
 // ── Incoming dispatch ──────────────────────────────────────────────
@@ -84,6 +116,8 @@ void NetworkClient::OnRawReceive(const uint8_t *data, size_t len,
         m_localClientID = msg.assignedClientID;
         std::cout << "[NetworkClient] Received Welcome – my ClientID = "
                   << m_localClientID << "\n";
+        if (!m_desiredNickname.empty())
+            SendNicknameUpdate(m_desiredNickname);
         break;
     }
     case NetMessageType::PositionBroadcast:
@@ -98,6 +132,22 @@ void NetworkClient::OnRawReceive(const uint8_t *data, size_t len,
         auto msg = PacketSerializer::Read<MsgObjectDespawn>(data, len);
         if (m_onObjectDespawn)
             m_onObjectDespawn(msg.ownerClientID, msg.objectID);
+        break;
+    }
+    case NetMessageType::ChatBroadcast:
+    {
+        auto chat = PacketSerializer::ReadChatBroadcast(data, len);
+        if (m_onChatMessage)
+            m_onChatMessage(chat.chatType, chat.senderClientID,
+                            chat.senderName, chat.text);
+        break;
+    }
+    case NetMessageType::NicknameUpdateResult:
+    {
+        auto result = PacketSerializer::ReadNicknameUpdateResult(data, len);
+        m_authoritativeNickname = result.nickname;
+        if (m_onNicknameUpdateResult)
+            m_onNicknameUpdateResult(result.status, result.nickname);
         break;
     }
     default:

@@ -3,7 +3,6 @@
 #include "Engine/Config/EngineConfig.h"
 #include "Engine/Network/Client/NetworkClient.h"
 #include "MyScreenState.h"
-#include <memory>
 
 class OptionsScreen : public IGameScreen
 {
@@ -29,16 +28,17 @@ private:
     void ApplyVueSettings(); // Apply settings from Vue to m_modifiedConfig
     void ApplyConfigToUI();
 
-    // ── Server ping check ──────────────────────────────────────────
-    enum class PingState
-    {
-        Idle,
-        Connecting,
-        Done
-    };
-    PingState m_pingState = PingState::Idle;
-    std::unique_ptr<NetworkClient> m_pingClient;
-    float m_pingTimer = 0.0f;
-    static constexpr float PING_TIMEOUT = 3.0f;
+    // ── Server check bridge (single global NetworkClient only) ─────
     void UpdatePingCheck(float deltaTime);
+    bool m_waitingServerCheck = false;
+    float m_serverCheckTimer = 0.0f;
+    static constexpr float SERVER_CHECK_TIMEOUT = 5.0f;
+
+    // ── Nickname bridge ────────────────────────────────────────────
+    void HandleNicknameApplyRequest();
+    void StartNicknameFetch();
+    void UpdateNicknameFetch(float deltaTime);
+    bool m_waitingNicknameFetch = false;
+    float m_nicknameFetchTimer = 0.0f;
+    static constexpr float NICKNAME_FETCH_TIMEOUT = 5.0f;
 };
