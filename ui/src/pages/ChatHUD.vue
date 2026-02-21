@@ -4,6 +4,8 @@ import { ref, nextTick, onMounted, onBeforeUnmount } from "vue";
 const messages = ref([]);
 const inputText = ref("");
 const isActive = ref(false);
+const chatChannelMode = ref("public");
+const chatWhisperTarget = ref("");
 const inputRef = ref(null);
 const messagesEndRef = ref(null);
 const route = ref(window.location.hash || "");
@@ -39,8 +41,40 @@ function scrollToBottom() {
   });
 }
 
+function applyChatModeMarker(msg) {
+  if (!msg || typeof msg !== "object") {
+    return msg;
+  }
+  if (msg.type !== "system" || typeof msg.text !== "string") {
+    return msg;
+  }
+
+  const match = msg.text.match(/^\[CHAT_MODE:(PUBLIC|WHISPER)(?::([^\]]*))?\]\s*(.*)$/);
+  if (!match) {
+    return msg;
+  }
+
+  if (match[1] === "WHISPER") {
+    chatChannelMode.value = "whisper";
+    chatWhisperTarget.value = (match[2] || "").trim();
+  } else {
+    chatChannelMode.value = "public";
+    chatWhisperTarget.value = "";
+  }
+
+  const plainText = (match[3] || "").trim();
+  if (!plainText) {
+    return null;
+  }
+  return { ...msg, text: plainText };
+}
+
 function pushMessage(msg) {
-  messages.value.push(msg);
+  const normalized = applyChatModeMarker(msg);
+  if (!normalized) {
+    return;
+  }
+  messages.value.push(normalized);
   if (messages.value.length > 300) {
     messages.value.shift();
   }
@@ -52,7 +86,10 @@ function pushBatch(batch) {
     return;
   }
   for (const msg of batch) {
-    messages.value.push(msg);
+    const normalized = applyChatModeMarker(msg);
+    if (normalized) {
+      messages.value.push(normalized);
+    }
   }
   if (messages.value.length > 300) {
     messages.value.splice(0, messages.value.length - 300);
@@ -205,6 +242,26 @@ function getTypeLabel(type) {
   }
 }
 
+function getChannelStatusText() {
+  if (chatChannelMode.value === "whisper") {
+    if (chatWhisperTarget.value) {
+      return `Whisper ${chatWhisperTarget.value}`;
+    }
+    return "Whisper";
+  }
+  return "Public";
+}
+
+function getInputPlaceholder() {
+  if (chatChannelMode.value === "whisper") {
+    if (chatWhisperTarget.value) {
+      return `Whisper to ${chatWhisperTarget.value} (/a to public, /help for commands)`;
+    }
+    return "Whisper mode (/a to public, /help for commands)";
+  }
+  return "Public chat (/w <nickname> to whisper, /help for commands)";
+}
+
 onMounted(() => {
   // Register global hooks for C++ to call
   window.__NW_CHAT_PUSH__ = pushMessage;
@@ -251,8 +308,13 @@ onBeforeUnmount(() => {
 
     <!-- Input bar (only when active) -->
     <div v-if="isActive" class="chat-input-bar">
-      <input ref="inputRef" v-model="inputText" type="text" class="chat-input" placeholder="Type /help for commands"
-        maxlength="256" @keydown="onInputKeydown" @input="onInput" />
+      <div class="chat-input-row">
+        <div class="chat-channel-status" :class="{ whisper: chatChannelMode === 'whisper' }">
+          {{ getChannelStatusText() }}
+        </div>
+        <input ref="inputRef" v-model="inputText" type="text" class="chat-input" :placeholder="getInputPlaceholder()"
+          maxlength="256" @keydown="onInputKeydown" @input="onInput" />
+      </div>
     </div>
   </div>
 </template>
@@ -343,8 +405,35 @@ onBeforeUnmount(() => {
   margin-top: 8px;
 }
 
+.chat-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-channel-status {
+  flex: 0 0 auto;
+  max-width: 40%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(138, 255, 127, 0.35);
+  color: #8aff7f;
+  font-size: 12px;
+  letter-spacing: 0.3px;
+}
+
+.chat-channel-status.whisper {
+  border-color: rgba(206, 147, 216, 0.55);
+  color: #ce93d8;
+}
+
 .chat-input {
-  width: 100%;
+  width: auto;
+  flex: 1 1 auto;
   padding: 12px 14px;
   background: rgba(0, 0, 0, 0.75);
   border: 1px solid rgba(138, 255, 127, 0.4);
