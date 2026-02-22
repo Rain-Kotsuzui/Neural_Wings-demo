@@ -49,6 +49,8 @@ public:
     // ── Sending ────────────────────────────────────────────────────
     void SendPositionUpdate(NetObjectID objectID,
                             const NetTransformState &transform);
+    void SendObjectRelease(NetObjectID objectID);
+    void SendHeartbeat();
     bool SendChatMessage(ChatMessageType chatType, const std::string &text,
                          ClientID targetID = INVALID_CLIENT_ID);
     void SendNicknameUpdate(const std::string &nickname);

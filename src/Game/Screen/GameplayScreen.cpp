@@ -155,9 +155,18 @@ void GameplayScreen::OnExit()
 {
     if (m_chatActive)
         DeactivateChat();
+
     auto &netClient = m_world->GetNetworkClient();
+
+    // Send ObjectRelease for all local objects → server broadcasts
+    // ObjectDespawn to other clients so they destroy our remote plane.
+    // Connection stays alive for lobby / chat / other screens.
+    m_world->GetNetworkSyncSystem().ReleaseLocalObjects(*m_world, netClient);
+
+    // Clear network callbacks (sync system is cleaned up above)
     netClient.SetOnPositionBroadcast({});
     netClient.SetOnObjectDespawn({});
+
     EnableCursor();
 }
 

@@ -177,11 +177,33 @@ bool ScreenManager::UpdateFrame()
 
     m_currentScreen->Update(m_timeManager.GetDeltaTime());
 
-    // Poll global network while outside gameplay.
-    if (m_networkClient && m_currentScreen &&
-        m_currentScreen->GetScreenState() != GAMEPLAY)
+    // Poll global network while outside gameplay, and send keep-alive heartbeats
+    // so idle menu/options sessions are not timed out by the server.
+    if (m_networkClient && m_currentScreen)
     {
-        m_networkClient->Poll();
+        if (m_currentScreen->GetScreenState() != GAMEPLAY)
+        {
+            m_networkClient->Poll();
+
+            if (m_networkClient->IsConnected())
+            {
+                m_heartbeatCooldown -= m_timeManager.GetDeltaTime();
+                if (m_heartbeatCooldown <= 0.0f)
+                {
+                    m_networkClient->SendHeartbeat();
+                    m_heartbeatCooldown = HEARTBEAT_INTERVAL;
+                }
+            }
+            else
+            {
+                m_heartbeatCooldown = 0.0f;
+            }
+        }
+        else
+        {
+            // Gameplay has high-frequency position sync already.
+            m_heartbeatCooldown = 0.0f;
+        }
     }
     if (m_uiLayer)
     {

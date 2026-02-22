@@ -44,6 +44,7 @@ void NetworkClient::Disconnect()
     {
         auto pkt = PacketSerializer::WriteClientDisconnect(m_localClientID);
         m_transport->Send(pkt, 0);
+        m_transport->FlushSend(); // ensure the disconnect packet is actually transmitted
     }
     m_transport->Disconnect();
     m_localClientID = INVALID_CLIENT_ID;
@@ -74,6 +75,23 @@ void NetworkClient::SendPositionUpdate(NetObjectID objectID,
     auto pkt = PacketSerializer::WritePositionUpdate(
         m_localClientID, objectID, transform);
     m_transport->Send(pkt, 1); // unreliable channel
+}
+
+void NetworkClient::SendObjectRelease(NetObjectID objectID)
+{
+    if (!IsConnected())
+        return;
+    auto pkt = PacketSerializer::WriteObjectRelease(m_localClientID, objectID);
+    m_transport->Send(pkt, 0); // reliable channel
+    m_transport->FlushSend();  // ensure it goes out immediately
+}
+
+void NetworkClient::SendHeartbeat()
+{
+    if (!IsConnected())
+        return;
+    auto pkt = PacketSerializer::WriteHeartbeat(m_localClientID);
+    m_transport->Send(pkt, 0); // reliable keep-alive
 }
 
 bool NetworkClient::SendChatMessage(ChatMessageType chatType,
