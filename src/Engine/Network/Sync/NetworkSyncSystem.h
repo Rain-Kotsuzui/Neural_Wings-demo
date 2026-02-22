@@ -44,10 +44,18 @@ public:
     float correctionBlendRate = 10.0f;      // convergence speed (units/sec lerp factor)
 
 private:
+    // ── Receive / apply pipeline ───────────────────────────────────
     /// Internal: apply a remote broadcast to the world.
     void ApplyRemoteBroadcast(GameWorld &world, NetworkClient &client);
     void ApplyRemoteInterpolation(GameWorld &world, NetworkClient &client, float deltaTime);
     void ApplyRemoteDespawn(GameWorld &world, NetworkClient &client);
+
+    // ── Remote entity lifecycle guards ─────────────────────────────
+    void RemoveRemoteObjects(GameWorld &world, ClientID localClientID, bool removeAllRemotes);
+    bool IsRemoteRespawnSuppressed(uint64_t key, double nowSec) const;
+    void MarkRemoteDespawned(ClientID ownerClientID, NetObjectID objectID, double nowSec);
+    void PruneRemoteRespawnSuppressions(double nowSec);
+
     GameObject *FindOrSpawnRemoteObject(GameWorld &world, ClientID ownerClientID, NetObjectID objectID);
     static uint64_t MakeRemoteKey(ClientID ownerClientID, NetObjectID objectID);
 
@@ -82,10 +90,15 @@ private:
         Quat4f displayRotation = Quat4f::IDENTITY;
         bool hasDisplayState = false;
     };
+    struct RemoteRespawnSuppression
+    {
+        double expireTimeSec = 0.0;
+    };
 
     std::vector<RemoteEntry> m_pendingRemote;
     std::vector<DespawnEntry> m_pendingDespawn;
     std::unordered_map<uint64_t, RemoteTrack> m_remoteTracks;
+    std::unordered_map<uint64_t, RemoteRespawnSuppression> m_remoteRespawnSuppressions;
     bool m_callbackBound = false;
     std::string m_remotePlayerPrefabPath = "assets/prefabs/remote_player.json";
 
@@ -93,4 +106,7 @@ private:
 
     // Send rate limiter
     float m_sendAccumulator = 0.0f;
+
+    // Ignore stale unreliable broadcasts briefly after a despawn.
+    double m_remoteRespawnSuppressionSec = 1.2;
 };

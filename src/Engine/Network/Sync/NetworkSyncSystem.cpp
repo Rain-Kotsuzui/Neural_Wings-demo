@@ -33,6 +33,29 @@ namespace
         float h11 = t3 - t2;
         return p0 * h00 + v0 * (h10 * dt) + p1 * h01 + v1 * (h11 * dt);
     }
+
+    GameObject *FindLiveRemoteObject(GameWorld &world,
+                                     ClientID ownerClientID,
+                                     NetObjectID objectID)
+    {
+        for (const auto &objPtr : world.GetGameObjects())
+        {
+            GameObject *obj = objPtr.get();
+            if (obj == nullptr || obj->IsWaitingDestroy())
+                continue;
+            if (!obj->HasComponent<NetworkSyncComponent>() ||
+                !obj->HasComponent<TransformComponent>())
+                continue;
+
+            auto &sync = obj->GetComponent<NetworkSyncComponent>();
+            if (sync.ownerClientID == ownerClientID &&
+                sync.netObjectID == objectID)
+            {
+                return obj;
+            }
+        }
+        return nullptr;
+    }
 } // namespace
 
 // ── Cleanup ────────────────────────────────────────────────────────
@@ -41,6 +64,7 @@ void NetworkSyncSystem::Cleanup()
     m_pendingRemote.clear();
     m_pendingDespawn.clear();
     m_remoteTracks.clear();
+    m_remoteRespawnSuppressions.clear();
     m_callbackBound = false;
     m_sendAccumulator = 0.0f;
 }
@@ -108,14 +132,20 @@ void NetworkSyncSystem::Init(NetworkClient &client)
 // ── Update ─────────────────────────────────────────────────────────
 void NetworkSyncSystem::Update(GameWorld &world, NetworkClient &client, float deltaTime)
 {
+    const double nowSec = NowSeconds();
+    PruneRemoteRespawnSuppressions(nowSec);
+
     if (!client.IsConnected())
     {
+        // Connection lost: purge all remote entities to avoid stale ghosts.
+        RemoveRemoteObjects(world, INVALID_CLIENT_ID, true);
         m_pendingRemote.clear();
         m_pendingDespawn.clear();
         m_remoteTracks.clear();
         m_sendAccumulator = 0.0f;
         return;
     }
+    const ClientID localID = client.GetLocalClientID();
 
     // 1. Upload local flight state (rate-limited) ────────────────────
     m_sendAccumulator += deltaTime;
@@ -183,6 +213,9 @@ void NetworkSyncSystem::Update(GameWorld &world, NetworkClient &client, float de
         s_loggedLocalSync = true;
     }
 
+    // Defensive cleanup: never keep non-local entities owned by our own client id.
+    RemoveRemoteObjects(world, localID, false);
+
     // 2. Apply remote flight states ──────────────────────────────────
     ApplyRemoteBroadcast(world, client);
     ApplyRemoteDespawn(world, client);
@@ -197,11 +230,19 @@ void NetworkSyncSystem::ApplyRemoteBroadcast(GameWorld &world,
         return;
 
     ClientID localID = client.GetLocalClientID();
+    const double nowSec = NowSeconds();
 
     for (auto &remote : m_pendingRemote)
     {
+        if (remote.clientID == INVALID_CLIENT_ID || remote.objectID == INVALID_NET_OBJECT_ID)
+            continue;
+
         // Skip our own echo.
         if (remote.clientID == localID)
+            continue;
+
+        const uint64_t key = MakeRemoteKey(remote.clientID, remote.objectID);
+        if (IsRemoteRespawnSuppressed(key, nowSec))
             continue;
 
         // Ensure the corresponding remote object exists in world.
@@ -210,7 +251,6 @@ void NetworkSyncSystem::ApplyRemoteBroadcast(GameWorld &world,
         if (target == nullptr)
             continue;
 
-        const uint64_t key = MakeRemoteKey(remote.clientID, remote.objectID);
         auto &track = m_remoteTracks[key];
 
         RemoteSnapshot snap{};
@@ -387,15 +427,8 @@ void NetworkSyncSystem::ApplyRemoteInterpolation(GameWorld &world, NetworkClient
 
 GameObject *NetworkSyncSystem::FindOrSpawnRemoteObject(GameWorld &world, ClientID ownerClientID, NetObjectID objectID)
 {
-    auto syncedEntities = world.GetEntitiesWith<NetworkSyncComponent, TransformComponent>();
-    for (auto *obj : syncedEntities)
-    {
-        if (obj == nullptr || !obj->HasComponent<NetworkSyncComponent>() || !obj->HasComponent<TransformComponent>())
-            continue;
-        auto &sync = obj->GetComponent<NetworkSyncComponent>();
-        if (sync.ownerClientID == ownerClientID && sync.netObjectID == objectID)
-            return obj;
-    }
+    if (GameObject *existing = FindLiveRemoteObject(world, ownerClientID, objectID))
+        return existing;
 
     const std::string remoteName = "remote_plane_" + std::to_string(ownerClientID) + "_" + std::to_string(objectID);
     GameObject &newObj = GameObjectFactory::CreateFromPrefab(remoteName, "RemotePlayer", m_remotePlayerPrefabPath, world);
@@ -428,9 +461,13 @@ void NetworkSyncSystem::ApplyRemoteDespawn(GameWorld &world, NetworkClient &clie
 
     for (const auto &despawn : m_pendingDespawn)
     {
+        if (despawn.ownerClientID == INVALID_CLIENT_ID || despawn.objectID == INVALID_NET_OBJECT_ID)
+            continue;
+
         if (despawn.ownerClientID == localID)
             continue;
         const uint64_t key = MakeRemoteKey(despawn.ownerClientID, despawn.objectID);
+        MarkRemoteDespawned(despawn.ownerClientID, despawn.objectID, NowSeconds());
         m_remoteTracks.erase(key);
 
         for (auto *obj : syncedEntities)
@@ -452,6 +489,58 @@ void NetworkSyncSystem::ApplyRemoteDespawn(GameWorld &world, NetworkClient &clie
     }
 
     m_pendingDespawn.clear();
+}
+
+void NetworkSyncSystem::RemoveRemoteObjects(GameWorld &world, ClientID localClientID, bool removeAllRemotes)
+{
+    const double nowSec = NowSeconds();
+    auto syncedEntities = world.GetEntitiesWith<NetworkSyncComponent, TransformComponent>();
+    for (auto *obj : syncedEntities)
+    {
+        if (obj == nullptr || !obj->HasComponent<NetworkSyncComponent>() || !obj->HasComponent<TransformComponent>())
+            continue;
+
+        auto &sync = obj->GetComponent<NetworkSyncComponent>();
+        if (sync.isLocalPlayer)
+            continue;
+
+        const bool shouldRemove = removeAllRemotes ||
+                                  (localClientID != INVALID_CLIENT_ID && sync.ownerClientID == localClientID);
+        if (!shouldRemove)
+            continue;
+
+        MarkRemoteDespawned(sync.ownerClientID, sync.netObjectID, nowSec);
+        m_remoteTracks.erase(MakeRemoteKey(sync.ownerClientID, sync.netObjectID));
+        obj->SetActive(false);
+        obj->SetIsWaitingDestroy(true);
+    }
+}
+
+bool NetworkSyncSystem::IsRemoteRespawnSuppressed(uint64_t key, double nowSec) const
+{
+    auto it = m_remoteRespawnSuppressions.find(key);
+    if (it == m_remoteRespawnSuppressions.end())
+        return false;
+    return it->second.expireTimeSec > nowSec;
+}
+
+void NetworkSyncSystem::MarkRemoteDespawned(ClientID ownerClientID, NetObjectID objectID, double nowSec)
+{
+    const uint64_t key = MakeRemoteKey(ownerClientID, objectID);
+    m_remoteRespawnSuppressions[key] = RemoteRespawnSuppression{nowSec + m_remoteRespawnSuppressionSec};
+}
+
+void NetworkSyncSystem::PruneRemoteRespawnSuppressions(double nowSec)
+{
+    for (auto it = m_remoteRespawnSuppressions.begin(); it != m_remoteRespawnSuppressions.end();)
+    {
+        if (it->second.expireTimeSec <= nowSec)
+        {
+            it = m_remoteRespawnSuppressions.erase(it);
+            continue;
+        }
+        ++it;
+    }
 }
 
 uint64_t NetworkSyncSystem::MakeRemoteKey(ClientID ownerClientID, NetObjectID objectID)

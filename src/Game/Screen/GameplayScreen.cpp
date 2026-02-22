@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "Game/Screen/MyScreenState.h"
 #include "Game/HUD/ChatHud.h"
+#include "Game/HUD/EntityPlateHud.h"
 #include "Game/HUD/MyHudState.h"
 #include "Game/Systems/Physics/SolarStage.h"
 #include "Game/Systems/Physics/NetworkVerifyStage.h"
@@ -38,6 +39,8 @@ GameplayScreen::GameplayScreen(ScreenManager *sm)
 
     // Register gameplay HUDs in one place; future HUDs can be added here.
     auto hudFactory = std::make_unique<HudFactory>();
+    hudFactory->Register(ENTITY_PLATE_HUD, [this]()
+                         { return std::make_unique<EntityPlateHud>(m_world.get()); });
     hudFactory->Register(CHAT_HUD, [this]()
                          { return std::make_unique<ChatHud>(screenManager, &m_world->GetInputManager()); });
     m_hudManager = std::make_unique<HudManager>(std::move(hudFactory));
@@ -118,7 +121,8 @@ void GameplayScreen::OnEnter()
     if (m_hudManager)
     {
         m_hudManager->Clear();
-        // Keep Chat HUD always mounted in gameplay. It handles its own active state.
+        // Keep gameplay overlays mounted in stable order.
+        m_hudManager->AddHud(ENTITY_PLATE_HUD);
         m_hudManager->AddHud(CHAT_HUD);
     }
 
