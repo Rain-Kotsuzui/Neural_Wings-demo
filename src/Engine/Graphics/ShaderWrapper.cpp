@@ -52,7 +52,7 @@ ShaderWrapper::ShaderWrapper(const std::string &vsPath, const std::vector<std::s
 #if defined(PLATFORM_WEB)
     const char *dummyFsCode =
         "#version 300 es\n"
-        "precision mediump float;\n"
+        "precision highp float;\n"
         "void main() {}\n";
 
     unsigned int fShaderId = rlCompileShader(dummyFsCode, RL_FRAGMENT_SHADER);
@@ -210,6 +210,7 @@ void ShaderWrapper::SetTexture(const std::string &name, Texture2D texture, int u
         rlActiveTextureSlot(unit);
         rlEnableTexture(texture.id);
         SetShaderValue(m_shader, loc, &unit, SHADER_UNIFORM_INT);
+        rlActiveTextureSlot(0);
     }
 }
 void ShaderWrapper::SetCubeMap(const std::string &name, TextureCubemap cubemap, int unit)

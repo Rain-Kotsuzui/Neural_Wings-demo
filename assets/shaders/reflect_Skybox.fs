@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec3 fragPosition;
 in vec2 fragTexCoord;
@@ -14,7 +14,7 @@ uniform float realTime;
 uniform float gameTime;
 uniform vec4 baseColor;
 
-uniform sampler2D u_diffuseMap;
+uniform highp sampler2D u_diffuseMap;
 uniform int u_diffuseMap_frameCount;
 uniform float u_diffuseMap_animSpeed;
 

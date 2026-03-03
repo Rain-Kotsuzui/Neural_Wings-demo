@@ -49,7 +49,11 @@ set(BUILD_GAMES OFF CACHE BOOL "" FORCE)
 
 
 add_compile_definitions(SUPPORT_FILEFORMAT_HDR)
-set(OPENGL_VERSION "ES 3.0" CACHE STRING "OpenGL version" FORCE)
+if(EMSCRIPTEN)
+    set(OPENGL_VERSION "ES 3.0" CACHE STRING "OpenGL version" FORCE)
+else()
+    set(OPENGL_VERSION "3.3" CACHE STRING "OpenGL version" FORCE)
+endif()
 FetchContent_MakeAvailable(raylib raygui nlohmann_json)
 
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c")
@@ -104,13 +108,14 @@ if(PLATFORM STREQUAL "Web")
         "-sMAX_WEBGL_VERSION=2"
         "-sFULL_ES3=1"
 
+        "-sFORCE_FILESYSTEM=1"
+
         "-sALLOW_MEMORY_GROWTH=1"
         "-sINITIAL_MEMORY=268435456"
 
         "--js-library" "${CMAKE_CURRENT_SOURCE_DIR}/src/Engine/Network/Transport/nbnet_bridge.js"
 
         "--shell-file" "${CMAKE_CURRENT_SOURCE_DIR}/src/shell.html"
-        "--preload-file" "${CMAKE_CURRENT_SOURCE_DIR}/assets@assets"
 
         "-sASSERTIONS=1"
         "-g3"

@@ -1,10 +1,10 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec3 fragPosition;
 out vec4 finalColor;
 
-uniform samplerCube skyboxMap;
+uniform highp samplerCube skyboxMap;
 uniform vec4 tintColor;
 
 void main() {

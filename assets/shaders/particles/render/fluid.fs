@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -15,7 +15,7 @@ in float vFar;
 out vec4 finalColor;
 
 uniform mat4 matProj;
-uniform sampler2D dataTex;
+uniform highp sampler2D dataTex;
 uniform int maxParticles;
 vec4 GetPos(int id) {
     return texelFetch(dataTex, ivec2(0, id), 0);
@@ -36,8 +36,8 @@ vec4 GetLife(int id) {
     return texelFetch(dataTex, ivec2(5, id), 0);
 }
 
-uniform sampler2D sceneDepth;
-uniform sampler2D tex;
+uniform highp sampler2D sceneDepth;
+uniform highp sampler2D tex;
 
 // 自定义
 

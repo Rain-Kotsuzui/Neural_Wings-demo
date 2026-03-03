@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 in vec3 vertexPosition;
 uniform mat4 model;
 uniform mat4 lightVP;

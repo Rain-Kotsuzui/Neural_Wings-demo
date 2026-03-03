@@ -1,13 +1,13 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 in vec2 fragTexCoord;
 out vec4 finalColor;
 
-uniform sampler2D u_normal;
-uniform sampler2D u_simpleFluid;
-uniform sampler2D u_thickness;
-uniform sampler2D u_fluidDepth;
-uniform sampler2D u_sceneTex;
+uniform highp sampler2D u_normal;
+uniform highp sampler2D u_simpleFluid;
+uniform highp sampler2D u_thickness;
+uniform highp sampler2D u_fluidDepth;
+uniform highp sampler2D u_sceneTex;
 uniform samplerCube skyboxMap;
 
 uniform vec3 cameraPosition;

@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 // raylib提供
 in vec3 vertexPosition; // loc 0

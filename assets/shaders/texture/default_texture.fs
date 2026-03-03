@@ -1,9 +1,9 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 in vec2 fragTexCoord;
 in vec3 fragNormal;
 
-uniform sampler2D u_diffuseMap;
+uniform highp sampler2D u_diffuseMap;
 uniform int u_diffuseMap_frameCount;
 uniform float u_diffuseMap_animSpeed;
 uniform vec4 baseColor;

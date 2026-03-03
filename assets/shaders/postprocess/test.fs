@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec2 fragTexCoord;
 out vec4 finalColor;
@@ -12,7 +12,7 @@ uniform float deltaGameTime;
 uniform vec2 screenResolution;
 
 // 自定义参数
-uniform sampler2D u_screen;
+uniform highp sampler2D u_screen;
 
 void main() {
     vec3 result = texture(u_screen, fragTexCoord).rgb;

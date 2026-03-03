@@ -1,11 +1,11 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec2 fragTexCoord;
 out vec4 finalColor;
 
-uniform sampler2D u_screen;
-uniform sampler2D u_screen_depth;
+uniform highp sampler2D u_screen;
+uniform highp sampler2D u_screen_depth;
 uniform vec3 cameraPosition;
 uniform vec3 cameraDir;
 uniform mat4 invVP;

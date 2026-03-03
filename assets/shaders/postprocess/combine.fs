@@ -1,11 +1,11 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec2 fragTexCoord;
 out vec4 fragColor;
 
-uniform sampler2D u_baseTex;
-uniform sampler2D u_brightTex;
+uniform highp sampler2D u_baseTex;
+uniform highp sampler2D u_brightTex;
 
 uniform float u_bloomIntensity;
 

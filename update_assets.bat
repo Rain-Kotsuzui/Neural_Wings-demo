@@ -1,6 +1,6 @@
 @echo off
-set EMSDK_PYTHON=D:\lib\emsdk\upstream\emscripten\tools\file_packager.py
+set PYTHON_EXE=D:\Program\Anaconda\python.exe
+set PACKAGER_PATH=D:\lib\emsdk\upstream\emscripten\tools\file_packager.py
 set OUT_DIR=build_web
-
-%EMSDK_PYTHON% %OUT_DIR%/Neural_Wings-demo.data --js-output=%OUT_DIR%/assets_metadata.js --preload ../assets@assets --no-compile
+"%PYTHON_EXE%" "%PACKAGER_PATH%" "%OUT_DIR%\Neural_Wings-demo.data" --js-output="%OUT_DIR%\assets_metadata.js" --preload assets@assets
 pause

@@ -32,7 +32,7 @@ void PostProcesser::SetUpRTPool(const std::vector<std::string> &names, int width
         {
             processName = processName.substr(prefix.length());
 #if defined(PLATFORM_WEB)
-            format = PIXELFORMAT_UNCOMPRESSED_R16G16B16A16;
+            format = PIXELFORMAT_UNCOMPRESSED_R32G32B32A32;
             filter = TEXTURE_FILTER_POINT;
 #else
             format = PIXELFORMAT_UNCOMPRESSED_R32G32B32A32;
@@ -290,8 +290,10 @@ void PostProcesser::PostProcess(GameWorld &gameWorld, CameraManager &cameraManag
         for (auto const &[name, value] : mat.customVector4)
             mat.shader->SetVec4(name, value);
 
+        rlActiveTextureSlot(0);
         rlSetTexture(firstInputId);
         DrawTextureQuad(screenRes.x(), screenRes.y(), true);
+
         mat.shader->End();
         EndTextureMode();
     }

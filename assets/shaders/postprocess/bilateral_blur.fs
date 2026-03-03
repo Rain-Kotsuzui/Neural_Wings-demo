@@ -1,12 +1,12 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 in vec2 fragTexCoord;
 in float vNear;
 in float vFar;
 
 out vec4 finalColor;
 
-uniform sampler2D u_Tex;
+uniform highp sampler2D u_Tex;
 uniform vec2 u_dir;
 
 uniform float u_radius;

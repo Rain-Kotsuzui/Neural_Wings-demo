@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 // 标准输入
 in vec3 pPosition;
@@ -23,7 +23,7 @@ out vec4 outSizeRotation; // (s1,s2,rotation,padding)
 out vec4 outLifeRand; // (totalLife,remainingLife,randomID,ID )
 
 // 引擎内置参数
-uniform sampler2D dataTex;
+uniform highp sampler2D dataTex;
 uniform int maxParticles;
 uniform float deltaTime;
 uniform float gameTime;

@@ -1,9 +1,9 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 in vec2 fragTexCoord;
 out vec4 finalColor;
 
-uniform sampler2D u_screen;
+uniform highp sampler2D u_screen;
 uniform vec2 u_direction;
 uniform float u_radius;
 

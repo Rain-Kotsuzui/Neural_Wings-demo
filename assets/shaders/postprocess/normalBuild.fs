@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 in vec2 fragTexCoord;
 out vec4 finalColor;
 
@@ -10,7 +10,7 @@ uniform vec3 cameraRight;
 uniform float cameraFov;
 uniform vec2 screenResolution;
 
-uniform sampler2D u_fluidDepth;
+uniform highp sampler2D u_fluidDepth;
 
 vec3 getWorldPos(vec2 uv) {
     float d = texture(u_fluidDepth, uv).r;

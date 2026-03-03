@@ -157,7 +157,7 @@ void LightingManager::InitShadowMaps(int width, int height, ResourceManager &rm)
     {
 
 #if defined(PLATFORM_WEB)
-        m_shadowMaps[i] = Renderer::LoadRT(width, height, PIXELFORMAT_UNCOMPRESSED_R16G16B16A16);
+        m_shadowMaps[i] = Renderer::LoadRT(width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32);
         SetTextureFilter(m_shadowMaps[i].texture, TEXTURE_FILTER_POINT);
 #else
         m_shadowMaps[i] = Renderer::LoadRT(width, height, PIXELFORMAT_UNCOMPRESSED_R32G32B32A32);

@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -13,7 +13,7 @@ out vec4 finalColor;
 
 uniform int tex_frameCount;
 uniform float tex_animSpeed;
-uniform sampler2D dataTex;
+uniform highp sampler2D dataTex;
 uniform int maxParticles;
 uniform float gameTime;
 uniform float realTime;
@@ -37,8 +37,8 @@ vec4 GetLife(int id) {
     return texelFetch(dataTex, ivec2(5, id), 0);
 }
 
-uniform sampler2D sceneDepth;
-uniform sampler2D tex;
+uniform highp sampler2D sceneDepth;
+uniform highp sampler2D tex;
 
 // 自定义
 

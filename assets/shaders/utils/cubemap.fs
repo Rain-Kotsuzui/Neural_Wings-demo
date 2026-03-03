@@ -1,10 +1,10 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec3 fragPosition;
 out vec4 finalColor;
 
-uniform sampler2D equirectangularMap;
+uniform highp sampler2D equirectangularMap;
 
 const vec2 invAtan = vec2(0.1591f, 0.3183f);
 

@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 
 in vec3 fragPosition;
 in vec3 fragNormal;
@@ -25,7 +25,7 @@ struct Light {
 #define MAX_POINT_SHADOWS 6
 
 uniform samplerCube pointShadowMaps[MAX_POINT_SHADOWS];
-uniform sampler2D shadowMaps[MAX_SHADOW_CASTERS];
+uniform highp sampler2D shadowMaps[MAX_SHADOW_CASTERS];
 
 uniform mat4 lightVPs[MAX_SHADOW_CASTERS];
 uniform Light lights[MAX_LIGHTS];
@@ -36,7 +36,7 @@ uniform float emissiveIntensity;
 uniform vec3 viewPos;
 uniform vec4 baseColor;
 
-uniform sampler2D u_diffuseMap;
+uniform highp sampler2D u_diffuseMap;
 uniform int u_diffuseMap_frameCount;
 uniform float u_diffuseMap_animSpeed;
 uniform float gameTime;

@@ -1,5 +1,5 @@
 #version 300 es 
-precision mediump float;
+precision highp float;
 out vec4 fragColor;
 void main() {
     float depth = gl_FragCoord.z;
