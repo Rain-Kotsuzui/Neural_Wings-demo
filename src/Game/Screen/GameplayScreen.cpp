@@ -76,6 +76,8 @@ void GameplayScreen::ConfigCallback(ScriptingFactory &scriptingFactory, PhysicsS
                               { return std::make_unique<WeaponScript>(); });
     scriptingFactory.Register("BulletScript", []()
                               { return std::make_unique<BulletScript>(); });
+    scriptingFactory.Register("TrackingBulletScript", []()
+                              { return std::make_unique<TrackingBulletScript>(); });
     scriptingFactory.Register("RayScript", []()
                               { return std::make_unique<RayScript>(); });
     scriptingFactory.Register("LocalPlayerSyncScript", []()

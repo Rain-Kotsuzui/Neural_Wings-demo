@@ -41,6 +41,12 @@
       "tag": "bullet",
       "prefab": "assets/prefabs/bullet.json",
       "count": 1
+    },
+    {
+      "name": "missile",
+      "tag": "bullet",
+      "prefab": "assets/prefabs/tracking_bullet.json",
+      "count": 1
     }
   ],
   "entities": [
@@ -153,7 +159,12 @@
       ],
       "physics": {
         "mass": 500,
-        "elasticity": 1.0
+        "elasticity": 1.0,
+        "velocity": [
+          0,
+          0,
+          50
+        ]
       },
       "render": {
         "baseColor": [
@@ -331,8 +342,10 @@
         },
         {
           "WeaponScript": {
-            "velocity": 200,
-            "fireRate": 0.05
+            "velocity_0": 200,
+            "velocity_1": 30,
+            "fireRate_0": 0.05,
+            "fireRate_1": 0.3
           }
         },
         {
