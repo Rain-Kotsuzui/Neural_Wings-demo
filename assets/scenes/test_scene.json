@@ -353,7 +353,10 @@
             "RollPower": 200,
             "ZoomSpeed": 0.1,
             "MinCamDist": 1,
-            "MaxCamDist": 25
+            "MaxCamDist": 45,
+            "AlignmentStrength": 200,
+            "AlignmentTheta": 45,
+            "AlignmentDamping": 0.5
           }
         }
       ]

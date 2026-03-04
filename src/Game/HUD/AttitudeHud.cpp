@@ -74,17 +74,17 @@ void AttitudeHud::Draw()
         float reticleX = aimScreenPos.x;
         float reticleY = aimScreenPos.y;
         DrawRing({reticleX, reticleY},
-                 5.0f * (speedFactor * 5.0f + 1.0f),
+                 5.0f * (speedFactor * 6.0f + 1.0f),
                  7.0f * (speedFactor * 5.0f + 1.0f),
-                 0, 360, 0, Fade(LIME, 0.8f));
+                 0, 360, 0, Fade(RED, 0.8f));
         float lineLen = 15.0f * (speedFactor * 2.0f + 1.0f);
-        DrawLineEx({reticleX - lineLen - 5, reticleY}, {reticleX - 5, reticleY}, 2.0f, LIME);
-        DrawLineEx({reticleX + 5, reticleY}, {reticleX + lineLen + 5, reticleY}, 2.0f, LIME);
+        DrawLineEx({reticleX - lineLen - 5, reticleY}, {reticleX - 5, reticleY}, 2.0f, RED);
+        DrawLineEx({reticleX + 5, reticleY}, {reticleX + lineLen + 5, reticleY}, 2.0f, RED);
     }
 
-    // DrawRing({screenX, screenY}, 5.0f * (speedFactor * 24.0f + 1.0f), 7.0f * (speedFactor * 20.0f + 1.0f), 0, 360, 0, Fade(LIME, 0.8f));
-    // DrawLineEx({(screenX - 20 * (speedFactor * 20.0f + 1.0f)), screenY}, {(screenX - 10), screenY}, 2.0f, LIME);
-    // DrawLineEx({(screenX + 10), screenY}, {(screenX + 20 * (speedFactor * 20.0f + 1.0f)), screenY}, 2.0f, LIME);
+    DrawRing({screenX, screenY}, 0.3f * (speedFactor * 30.0f + 1.0f), 1.0f * (speedFactor * 20.0f + 1.0f), 0, 360, 0, Fade(LIME, 0.8f));
+    DrawLineEx({(screenX - 5 * (speedFactor * 20.0f + 1.0f)), screenY}, {(screenX - 2), screenY}, 2.0f, LIME);
+    DrawLineEx({(screenX + 2), screenY}, {(screenX + 5 * (speedFactor * 20.0f + 1.0f)), screenY}, 2.0f, LIME);
 
     int centerStep = static_cast<int>(pitchDeg / dynamicLadderGap) * static_cast<int>(dynamicLadderGap);
     int dynamicFovLimit = static_cast<int>(m_fovLimit * (1.0f + speedFactor * 10.5f));

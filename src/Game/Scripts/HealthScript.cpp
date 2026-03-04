@@ -1,8 +1,15 @@
 #include "HealthScript.h"
 #include "Engine/Core/GameObject/GameObject.h"
 #include "Engine/Core/GameWorld.h"
+#include "Engine/Core/Components/Components.h"
 #include "Game/Events/CombatEvents.h"
 
+void HealthScript::Initialize(const json &data)
+{
+    m_flashDuration = data.value("flashDuration", 0.2f);
+    maxHP = data.value("maxHP", 100.0f);
+    currentHP = maxHP;
+}
 void HealthScript::OnCreate()
 {
     auto &em = owner->GetOwnerWorld()->GetEventManager();

@@ -53,6 +53,12 @@
             "keys": [
                 "LEFT_CONTROL"
             ]
+        },
+        {
+            "action": "MainView",
+            "keys": [
+                "MOUSE_MIDDLE_BUTTON"
+            ]
         }
     ],
     "axisbindings": [
