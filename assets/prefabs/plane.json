@@ -142,21 +142,6 @@
             }
         },
         {
-            "ScriptComponent": {
-                "PlayerControlScript": {
-                    "Thrust": 3000,
-                    "LiftCoefficient": 0.01,
-                    "DragCoefficient": 0.1,
-                    "PitchPower": 200,
-                    "YawPower": 200,
-                    "RollPower": 400,
-                    "ZoomSpeed": 0.1,
-                    "MinCamDist": 4,
-                    "MaxCamDist": 50
-                }
-            }
-        },
-        {
             "ParticleEmitterComponent": {
                 "activate": true,
                 "emitters": [

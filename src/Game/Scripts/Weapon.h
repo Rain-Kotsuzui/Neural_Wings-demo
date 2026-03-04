@@ -10,6 +10,8 @@ public:
     float m_fireTimer = 0.0f;
     BulletScript() = default;
     void OnFixedUpdate(float fixedDeltaTime) override;
+
+    void Initialize(const json &data) override;
     void OnWake() override;
 };
 
@@ -21,4 +23,5 @@ public:
     void OnUpdate(float deltaTime) override;
     float m_bulletVelocity = 0.0f;
     float m_fireTimer = 0.0f;
+    float m_fireRate = 0.15f;
 };
