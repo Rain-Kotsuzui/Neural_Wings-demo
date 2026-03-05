@@ -94,9 +94,64 @@ jobs:
           name: ${{ env.PACKAGE_NAME }}
           path: ${{ env.ZIP_PATH }}
 
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+
+      - name: Configure Web CMake
+        run: emcmake cmake -S . -B build_web -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Web
+        run: cmake --build build_web --parallel
+
+      - name: Package Web
+        run: |
+          $webOut = "build_web"
+          $webEntry = Join-Path $webOut "Neural_Wings-demo.html"
+          if (-not (Test-Path $webEntry)) {
+            throw "Web build output not found: $webEntry"
+          }
+
+          $nameSuffix = if ("${{ github.ref_type }}" -eq "tag") { "${{ github.ref_name }}" } else { "manual-${{ github.run_number }}" }
+          $webPackageName = "Neural_Wings-demo-web-$nameSuffix"
+          $stageRoot = Join-Path $env:RUNNER_TEMP "package-web"
+          $stageDir = Join-Path $stageRoot $webPackageName
+          New-Item -ItemType Directory -Path $stageDir -Force | Out-Null
+
+          Get-ChildItem $webOut -File -Filter "Neural_Wings-demo.*" | ForEach-Object {
+            Copy-Item $_.FullName $stageDir -Force
+          }
+
+          if (Test-Path (Join-Path $webOut "ui/dist")) {
+            New-Item -ItemType Directory -Path (Join-Path $stageDir "ui") -Force | Out-Null
+            Copy-Item (Join-Path $webOut "ui/dist") (Join-Path $stageDir "ui/dist") -Recurse -Force
+          }
+
+          if (Test-Path "assets") {
+            Copy-Item "assets" (Join-Path $stageDir "assets") -Recurse -Force
+          }
+
+          $webZipPath = Join-Path $env:GITHUB_WORKSPACE "$webPackageName.zip"
+          if (Test-Path $webZipPath) {
+            Remove-Item $webZipPath -Force
+          }
+          Compress-Archive -Path (Join-Path $stageDir "*") -DestinationPath $webZipPath -CompressionLevel Optimal
+
+          "WEB_PACKAGE_NAME=$webPackageName" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "WEB_ZIP_PATH=$webZipPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Upload Web Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.WEB_PACKAGE_NAME }}
+          path: ${{ env.WEB_ZIP_PATH }}
+
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ env.ZIP_PATH }}
+          files: |
+            ${{ env.ZIP_PATH }}
+            ${{ env.WEB_ZIP_PATH }}
           generate_release_notes: true
