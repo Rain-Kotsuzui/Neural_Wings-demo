@@ -57,6 +57,7 @@ private:
     void DrawVector(Vector3f position, Vector3f direction, float axisLength, float thickness);
     void DrawHitbox(GameWorld &gameWorld, CameraManager &cameraManager);
     void DrawAABB(GameWorld &gameWorld, CameraManager &cameraManager);
+    void DrawRenderAABB(GameWorld &gameWorld, CameraManager &cameraManager);
 };
 
 struct Plane

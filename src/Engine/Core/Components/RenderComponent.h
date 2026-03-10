@@ -4,12 +4,11 @@
 #include "Engine/Math/Math.h"
 #include "Engine/Graphics/RenderMaterial.h"
 #include <unordered_map>
-#include <limits>
 
 struct renderAABB
 {
-    Vector3f min = Vector3f::ONE * std::numeric_limits<float>::max();
-    Vector3f max = Vector3f::ONE * std::numeric_limits<float>::min();
+    Vector3f min = FLT_MAX;
+    Vector3f max = -FLT_MAX;
     renderAABB() = default;
     renderAABB(const Vector3f &min, const Vector3f &max) : min(min), max(max) {}
 };

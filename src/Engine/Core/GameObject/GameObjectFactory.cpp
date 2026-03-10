@@ -123,8 +123,8 @@ renderAABB GameObjectFactory::GetMeshAABB(const Mesh &mesh)
 
         for (int i = 1; i < mesh.vertexCount; i++)
         {
-            aabb.min = Vector3f::Min(aabb.min, Vector3f(mesh.vertices[0], mesh.vertices[1], mesh.vertices[2]));
-            aabb.max = Vector3f::Max(aabb.max, Vector3f(mesh.vertices[0], mesh.vertices[1], mesh.vertices[2]));
+            aabb.min = Vector3f::Min(aabb.min, Vector3f(mesh.vertices[i * 3], mesh.vertices[i * 3 + 1], mesh.vertices[i * 3 + 2]));
+            aabb.max = Vector3f::Max(aabb.max, Vector3f(mesh.vertices[i * 3], mesh.vertices[i * 3 + 1], mesh.vertices[i * 3 + 2]));
         }
     }
 
