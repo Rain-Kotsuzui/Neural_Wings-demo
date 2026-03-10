@@ -289,11 +289,16 @@ void Renderer::DrawWorldObjects(GameWorld &world, Camera3D &rawCamera, mCamera &
         matProj = MatrixOrtho(-right, right, -top, top, camera.getNearPlane(), camera.getFarPlane());
     }
     Matrix4f VP = matProj * matView;
-
+    Frustum frustum;
+    frustum.Extract(VP);
     for (const auto *gameObject : world.GetActivateGameObjects())
     {
         if (gameObject->HasComponent<TransformComponent>() && gameObject->HasComponent<RenderComponent>())
         {
+            renderAABB worldAABB = gameObject->GetWorldRenderAABB();
+            if (!frustum.IsBoxVisible(worldAABB))
+                continue;
+
             const auto &tf = gameObject->GetComponent<TransformComponent>();
             const auto &render = gameObject->GetComponent<RenderComponent>();
 
