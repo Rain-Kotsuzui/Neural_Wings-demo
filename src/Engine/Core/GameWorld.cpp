@@ -51,6 +51,16 @@ GameWorld::~GameWorld()
 {
     OnDestroy();
 }
+
+void GameWorld::Reset(const std::string &sceneConfigPath, const std::string &renderView)
+{
+    OnDestroy();
+    m_pools.clear();
+
+    m_sceneManager->LoadScene(sceneConfigPath, *this);
+    m_renderer->Init(renderView, *this);
+}
+
 void GameWorld::OnDestroy()
 {
     for (auto &obj : m_gameObjects)

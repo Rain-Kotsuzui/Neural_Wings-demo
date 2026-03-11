@@ -292,6 +292,12 @@ void GameplayScreen::Update(float deltaTime)
         follow->Rotate(lookHorizontal, lookVertical);
         // follow->UpdateFixed(dir, up);
     }
+
+    if (!chatBlocksInput && !suppressExit &&
+        m_inputManager.IsActionPressed("Reset"))
+    {
+        m_world->Reset();
+    }
 }
 
 void GameplayScreen::Draw()

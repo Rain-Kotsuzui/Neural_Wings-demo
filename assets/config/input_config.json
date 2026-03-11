@@ -1,6 +1,12 @@
 {
     "keybindings": [
         {
+            "action": "Reset",
+            "keys": [
+                "P"
+            ]
+        },
+        {
             "action": "Forward",
             "keys": [
                 "UP"
