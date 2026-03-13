@@ -17,6 +17,7 @@ struct StepResult
 class AIEnvironment
 {
 public:
+    AIEnvironment() = default;
     AIEnvironment(GameWorld *gameWorld);
     ~AIEnvironment();
     void Init();

@@ -38,6 +38,18 @@
       "webRoot": "${workspaceFolder}",
       "userDataDir": true,
       "preLaunchTask": "Start Web Server"
+    },
+    {
+      "name": "Train AI (PPO)",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/ai_train/check.py",
+      "console": "integratedTerminal",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/ai_train"
+      },
+      "preLaunchTask": "Build AI Module"
     }
   ]
 }
