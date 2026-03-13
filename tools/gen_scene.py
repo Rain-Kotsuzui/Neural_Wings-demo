@@ -104,7 +104,7 @@ def rand_scale_u_shape(min_val=1, max_val=800):
 
 
 def generate_scene():
-    scene_range = 800  # 扩大范围增加宏大感
+    scene_range = 2800  # 扩大范围增加宏大感
 
     scene = {
         "name": "Cyber_Glitch_Void",
@@ -201,7 +201,7 @@ def generate_scene():
     })
 
     # 3. 巨大赛博星体 (Planets)
-    for i in range(10):
+    for i in range(20):
         color = rand_color()
         scale = rand_scale_u_shape(100, 300)
         scene["entities"].append({
@@ -216,7 +216,7 @@ def generate_scene():
         })
 
     # 4. 随机干扰碎片 (Glitch Cubes)
-    for i in range(0):
+    for i in range(10):
         color = rand_frag_color()
         scene["entities"].append({
             "name": f"debris_{i}",
@@ -236,7 +236,7 @@ def generate_scene():
             "scripts": [{"RotatorScript": {"angluarVelocity": rand_vec3(-2, 2)}}]
         })
 
-    for i in range(2):
+    for i in range(20):
         color = rand_frag_color()
         scene["entities"].append({
             "name": f"debris_{i}",
@@ -256,7 +256,7 @@ def generate_scene():
             "scripts": [{"RotatorScript": {"angluarVelocity": rand_vec3(-0, 0)}}]
         })
 
-    for i in range(0):
+    for i in range(3):
         color = rand_david_color()
         scene["entities"].append({
             "name": f"debris_{i}",

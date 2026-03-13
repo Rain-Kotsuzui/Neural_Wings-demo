@@ -77,7 +77,7 @@
       ],
       "fovy": 70.0,
       "nearPlane": 0.1,
-      "farPlane": 2000.0,
+      "farPlane": 4000.0,
       "projection": "PERSPECTIVE"
     },
     {

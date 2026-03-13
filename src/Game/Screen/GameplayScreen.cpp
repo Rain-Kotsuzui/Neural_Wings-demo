@@ -366,7 +366,7 @@ void GameplayScreen::Draw()
     else
     {
         Texture2D aiTex = m_aiEnvironment->GetFbo().texture;
-        Rectangle destRec = {GetScreenWidth() / 2.0f - 400, 20, 800, 800};
+        Rectangle destRec = {20, 20, 800, 800};
         Rectangle srcRec = {0, 0, (float)aiTex.width, (float)-aiTex.height};
         DrawTexturePro(aiTex, srcRec, destRec, {0, 0}, 0.0f, WHITE);
 

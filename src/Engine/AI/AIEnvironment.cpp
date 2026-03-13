@@ -63,7 +63,7 @@ StepResult AIEnvironment::Step(const std::vector<float> &actions)
     render.RenderAIView("AIView", *m_gameWorld, m_aiFbo);
 
     StepResult out;
-    out.image_data = render.CaptureFrame(m_aiFbo);
+    out.image_data = CaptureRGBD("AIView");
     out.reward = CalculateReward();
     out.done = IsDone();
     return out;
@@ -81,16 +81,19 @@ bool AIEnvironment::IsDone()
 #else
 #include "external/glad.h"
 #endif
-std::vector<float> AIEnvironment::CaptureRGBD()
+std::vector<float> AIEnvironment::CaptureRGBD(const std::string &cameraName)
 {
+    float near = m_gameWorld->GetCameraManager().GetCamera(cameraName)->getNearPlane();
+    float far = m_gameWorld->GetCameraManager().GetCamera(cameraName)->getFarPlane();
+
     std::vector<float> data(width * height * 4);
     std::vector<uint8_t> rgb(width * height * 4); // RGBA
-    std::vector<uint8_t> depth(width * height);
+    std::vector<float> depth(width * height);
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_aiFbo.id);
 
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, rgb.data());
-    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, depth.data());
+    glReadPixels(0, 0, width, height, GL_DEPTH_COMPONENT, GL_FLOAT, depth.data());
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
@@ -99,7 +102,11 @@ std::vector<float> AIEnvironment::CaptureRGBD()
         data[i * 4 + 0] = rgb[i * 4 + 0] / 255.0f;
         data[i * 4 + 1] = rgb[i * 4 + 1] / 255.0f;
         data[i * 4 + 2] = rgb[i * 4 + 2] / 255.0f;
-        data[i * 4 + 3] = depth[i];
+
+        float z_ndc = depth[i] * 2.0f - 1.0f;
+        float linearDepth = (2.0f * near * far) / (far + near - z_ndc * (far - near));
+
+        data[i * 4 + 3] = linearDepth;
     }
     return data;
 }

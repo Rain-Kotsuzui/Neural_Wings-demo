@@ -28,7 +28,7 @@ public:
     void RenderScene(GameWorld &world, CameraManager &cameraManager);
 
     void RenderAIView(const std::string &cameraName, GameWorld &world, RenderTexture2D &target);
-    std::vector<float> CaptureFrame(RenderTexture2D &target);
+    // std::vector<float> CaptureFrame(RenderTexture2D &target);
 
     Skybox *GetSkybox() { return m_skybox.get(); }
 

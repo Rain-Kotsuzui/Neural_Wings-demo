@@ -30,6 +30,7 @@ private:
     GameWorld *m_gameWorld;
 
     RenderTexture2D m_aiFbo;
+
     int width = 64;
     int height = 64;
 
@@ -37,7 +38,7 @@ private:
     float m_dt = 1.0f / 60.0f;
 
     float CalculateReward();
-    std::vector<float> CaptureRGBD();
+    std::vector<float> CaptureRGBD(const std::string &cameraName);
     bool IsDone();
 };
 #endif

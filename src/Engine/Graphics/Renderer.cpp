@@ -209,17 +209,17 @@ void Renderer::RenderAIView(const std::string &cameraName, GameWorld &world, Ren
     }
     EndTextureMode();
 }
-std::vector<float> Renderer::CaptureFrame(RenderTexture2D &target)
-{
-    std::vector<float> frame;
-    frame.resize(target.texture.width * target.texture.height * 3);
+// std::vector<float> Renderer::CaptureFrame(RenderTexture2D &target)
+// {
+//     std::vector<float> frame;
+//     frame.resize(target.texture.width * target.texture.height * 3);
 
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, target.id);
-    glReadPixels(0, 0, target.texture.width, target.texture.height, GL_RGB, GL_FLOAT, frame.data());
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+//     glBindFramebuffer(GL_READ_FRAMEBUFFER, target.id);
+//     glReadPixels(0, 0, target.texture.width, target.texture.height, GL_RGB, GL_FLOAT, frame.data());
+//     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-    return frame;
-}
+//     return frame;
+// }
 void Renderer::RawRenderParticle(GameWorld &gameWorld, CameraManager &cameraManager)
 {
     // rlDisableDepthMask();
