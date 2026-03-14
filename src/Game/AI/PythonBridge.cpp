@@ -11,6 +11,7 @@ PYBIND11_MODULE(nw_engine, m)
          .def(py::init<>())
          .def("initContext", &AIEnvironment::initContext)
          .def("init", &AIEnvironment::Init)
+         .def("getTime", &AIEnvironment::GetTime)
          .def("reset", [](AIEnvironment &self)
               {
         StepResult res = self.Reset();

@@ -27,6 +27,10 @@ def test():
     while True:
         action = [0.1, 0.0, 0.5, 1.0, 0.0, 1.0]
         obs, reward, done = env.step(action)
+        time = env.getTime()
+        if (time > 10):
+            env.reset()
+            continue
         rgb = obs[:, :, :3]
         depth = obs[:, :, 3]
 
@@ -38,7 +42,7 @@ def test():
 
         cv2.imshow("AI RGB Eye", rgb_view)
         cv2.imshow("AI Depth Eye", depth_view/4000)
-        print(f"Reward: {reward:.4f} | Done: {done}")
+        print(f"Reward: {reward:.4f} | Done: {done} | Time: {time:.2f}")
 
         if cv2.waitKey(1) & 0xFF == ord('q') or done:
             break

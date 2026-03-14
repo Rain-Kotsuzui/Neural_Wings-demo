@@ -164,17 +164,21 @@ StepResult AIEnvironment::Reset()
 {
     m_currentTime = 0.0f;
     m_gameWorld->Reset();
-    auto *player = m_gameWorld->GetEntitiesByTag("Player")[0];
-    auto *target = m_gameWorld->GetEntitiesByTag("Enemy")[0];
+    auto *player = m_gameWorld->GetEntitiesByTag("player")[0];
+    std::vector<GameObject *> target = m_gameWorld->GetEntitiesByTag("enemy");
+    if (!target.empty())
+    {
+        auto *target = m_gameWorld->GetEntitiesByTag("enemy")[0];
 
-    static std::random_device rd;
-    static std::mt19937 gen(rd());
-    static std::uniform_real_distribution<float> dis(0.0f, 1.0f);
-    player->GetComponent<TransformComponent>().SetWorldPosition(Vector3f(dis(gen) * 500 + 500, dis(gen) * 500 + 500, dis(gen) * 500 + 500));
-    target->GetComponent<TransformComponent>().SetWorldPosition(Vector3f(dis(gen) * 500 + 500, dis(gen) * 500 + 500, dis(gen) * 500 + 500));
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        static std::uniform_real_distribution<float> dis(0.0f, 1.0f);
+        player->GetComponent<TransformComponent>().SetWorldPosition(Vector3f(dis(gen) * 500 + 500, dis(gen) * 500 + 500, dis(gen) * 500 + 500));
+        target->GetComponent<TransformComponent>().SetWorldPosition(Vector3f(dis(gen) * 500 + 500, dis(gen) * 500 + 500, dis(gen) * 500 + 500));
 
-    player->GetComponent<RigidbodyComponent>().velocity = Vector3f(dis(gen) * 100, dis(gen) * 100, dis(gen) * 100);
-    m_gameWorld->UpdateTransforms();
+        player->GetComponent<RigidbodyComponent>().velocity = Vector3f(dis(gen) * 100, dis(gen) * 100, dis(gen) * 100);
+        m_gameWorld->UpdateTransforms();
+    }
     return Step({0, 0, 0, 0, 0, 0});
 }
 StepResult AIEnvironment::Step(const std::vector<float> &actions)

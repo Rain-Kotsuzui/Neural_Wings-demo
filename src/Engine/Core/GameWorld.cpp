@@ -59,6 +59,7 @@ void GameWorld::Reset(const std::string &sceneConfigPath, const std::string &ren
 
     m_sceneManager->LoadScene(sceneConfigPath, *this);
     m_renderer->Init(renderView, *this);
+    SyncActiveEntities();
 }
 
 void GameWorld::OnDestroy()

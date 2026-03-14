@@ -130,8 +130,6 @@ void InputManager::Update()
             // 模拟输入
             if (m_mockKeyStates.count(keyCode) && m_mockKeyStates[keyCode] > 0.5f)
             {
-                // debug
-                std::cout << "actions: " << actionName << std::endl;
                 isCurrentlyDown = true;
                 break;
             }

@@ -26,6 +26,7 @@ public:
     StepResult Step(const std::vector<float> &action);
 
     RenderTexture2D &GetFbo();
+    float GetTime() const { return m_currentTime; }
 
 private:
     std::unique_ptr<GameWorld> m_gameWorld;
