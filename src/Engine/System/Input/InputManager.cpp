@@ -127,14 +127,16 @@ void InputManager::Update()
         const auto &keyCodes = m_bindings[actionName];
         for (int keyCode : keyCodes)
         {
-            // TODO:raylib检测按键是否按下，移动端重写此处
-            if (IsKeyDown(keyCode) || IsMouseButtonDown(keyCode))
+            // 模拟输入
+            if (m_mockKeyStates.count(keyCode) && m_mockKeyStates[keyCode] > 0.5f)
             {
+                // debug
+                std::cout << "actions: " << actionName << std::endl;
                 isCurrentlyDown = true;
                 break;
             }
-            // 模拟输入
-            if (m_mockKeyStates.count(keyCode) && m_mockKeyStates[keyCode] > 0.5f)
+            // TODO:raylib检测按键是否按下，移动端重写此处
+            if (IsKeyDown(keyCode) || IsMouseButtonDown(keyCode))
             {
                 isCurrentlyDown = true;
                 break;
@@ -207,6 +209,7 @@ void InputManager::SetKeyState(const std::string &keyName, float value)
     int keyCode = KeyNameToKeyCode(keyName);
     if (keyCode != -1)
     {
+        // std::cout << "keyName: " << keyName << std::endl;
         m_mockKeyStates[keyCode] = value;
     }
 }

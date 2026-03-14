@@ -3,8 +3,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include "Engine/Core/GameWorld.h"
-#include "Engine/Graphics/Renderer.h"
+#include "Engine/Engine.h"
 
 struct StepResult
 {
@@ -17,8 +16,9 @@ struct StepResult
 class AIEnvironment
 {
 public:
-    AIEnvironment() = default;
-    AIEnvironment(GameWorld *gameWorld);
+    static void initContext();
+    AIEnvironment();
+    // AIEnvironment(GameWorld *gameWorld);
     ~AIEnvironment();
     void Init();
 
@@ -28,7 +28,9 @@ public:
     RenderTexture2D &GetFbo();
 
 private:
-    GameWorld *m_gameWorld;
+    std::unique_ptr<GameWorld> m_gameWorld;
+    std::unique_ptr<ResourceManager> resourceManager;
+    std::unique_ptr<AudioManager> audioManager;
 
     RenderTexture2D m_aiFbo;
 
@@ -41,5 +43,9 @@ private:
     float CalculateReward();
     std::vector<float> CaptureRGBD(const std::string &cameraName);
     bool IsDone();
+
+    void ConfigCallback(ScriptingFactory &scriptingFactory,
+                        PhysicsStageFactory &physicsStageFactory,
+                        ParticleFactory &particleFactory);
 };
 #endif

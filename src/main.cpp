@@ -11,6 +11,7 @@ void UpdateDrawFrame()
 {
     g_App->UpdateFrame();
 }
+
 int main()
 {
     EngineConfig config;

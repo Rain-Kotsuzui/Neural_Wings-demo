@@ -8,6 +8,7 @@ sys.path.append(debug_path)
 try:
     import nw_engine
     print("Core module found!")
+    nw_engine.AIEnv.initContext()
     env = nw_engine.AIEnv()
     print("AI Environment initialized successfully!")
 except ImportError as e:

@@ -2,7 +2,6 @@
 #include "Engine/System/System.h"
 #include "Engine/Core/GameWorld.h"
 #include "Engine/Graphics/Graphics.h"
-#include "Engine/AI/AIEnvironment.h"
 #include "MyScreenState.h"
 
 class HudManager;
@@ -31,6 +30,6 @@ private:
                         ParticleFactory &particleFactory);
 
     // AI环境
-    std::unique_ptr<AIEnvironment> m_aiEnvironment;
-    bool m_AITrain = false;
+    // std::unique_ptr<AIEnvironment> m_aiEnvironment;
+    // bool m_AITrain = false;
 };

@@ -43,13 +43,20 @@
       "name": "Train AI (PPO)",
       "type": "python",
       "request": "launch",
-      "program": "${workspaceFolder}/ai_train/check.py",
+      "justMyCode": false,
+      "program": "${workspaceFolder}/ai_train/visualize_sensors.py",
       "console": "integratedTerminal",
       "cwd": "${workspaceFolder}",
       "env": {
         "PYTHONPATH": "${workspaceFolder}/ai_train"
       },
       "preLaunchTask": "Build AI Module"
+    },
+    {
+      "name": "C++: Attach to Python",
+      "type": "cppvsdbg",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
     }
   ]
 }

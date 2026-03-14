@@ -54,7 +54,7 @@ FetchContent_MakeAvailable(raylib raygui nlohmann_json pybind11)
 file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c")
 
 file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp" MAIN_SOURCE_PATH)
-file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/Engine/AI/PythonBridge.cpp" PYTHON_BRIDGE_PATH)
+file(REAL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/src/Game/AI/PythonBridge.cpp" PYTHON_BRIDGE_PATH)
 
 set(CORE_SOURCES ${SOURCES})
 list(REMOVE_ITEM CORE_SOURCES ${MAIN_SOURCE_PATH} ${PYTHON_BRIDGE_PATH})
@@ -214,8 +214,8 @@ else()
 
     target_link_libraries(${PROJECT_NAME} PRIVATE NW_Core)
     pybind11_add_module(nw_engine
-        src/Engine/AI/AIEnvironment.cpp
-        src/Engine/AI/PythonBridge.cpp
+        src/Game/AI/AIEnvironment.cpp
+        src/Game/AI/PythonBridge.cpp
     )
 
     target_include_directories(nw_engine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
