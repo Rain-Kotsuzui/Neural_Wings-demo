@@ -17,6 +17,7 @@ GameWorld::GameWorld(std::function<void(ScriptingFactory &, PhysicsStageFactory 
       m_nextObjectID(0)
 {
     m_timeManager = std::make_unique<TimeManager>();
+    m_timerManager = std::make_unique<TimerManager>();
     m_cameraManager = std::make_unique<CameraManager>();
     m_inputManager = std::make_unique<InputManager>();
     m_physicsSystem = std::make_unique<PhysicsSystem>();
@@ -50,6 +51,17 @@ GameWorld::~GameWorld()
 {
     OnDestroy();
 }
+
+void GameWorld::Reset(const std::string &sceneConfigPath, const std::string &renderView)
+{
+    OnDestroy();
+    m_pools.clear();
+
+    m_sceneManager->LoadScene(sceneConfigPath, *this);
+    m_renderer->Init(renderView, *this);
+    SyncActiveEntities();
+}
+
 void GameWorld::OnDestroy()
 {
     for (auto &obj : m_gameObjects)
@@ -58,6 +70,7 @@ void GameWorld::OnDestroy()
     }
     DestroyWaitingObjects();
     m_gameObjects.clear();
+    m_activateGameObjects.clear();
 
     m_audioManager->ClearOneShots();
     m_resourceManager->GameWorldUnloadAll();
@@ -91,6 +104,7 @@ bool GameWorld::FixedUpdate(float fixedDeltaTime)
 bool GameWorld::Update(float DeltaTime)
 {
     m_timeManager->Tick();
+    m_timerManager->Update(DeltaTime);
 
     m_scriptingSystem->Update(*this, DeltaTime);
     this->SyncActiveEntities();
@@ -161,7 +175,7 @@ void GameWorld::DestroyWaitingObjects()
     bool anyObjectDestroyed = false;
     for (auto &obj : m_gameObjects)
     {
-        if (obj->IsWaitingDestroy())
+        if (obj && obj->IsWaitingDestroy())
         {
             // 先释放脚本等组件，防止析构时先析构其他组件导致脚本崩溃
             obj->OnDestroy();
@@ -178,7 +192,7 @@ void GameWorld::DestroyWaitingObjects()
                 m_gameObjects.end(),
                 [](const std::unique_ptr<GameObject> &object)
                 {
-                    return object->IsWaitingDestroy();
+                    return object && object->IsWaitingDestroy();
                 }),
             m_gameObjects.end());
     }
@@ -234,15 +248,17 @@ GameObject *GameWorld::FindEntityByName(const std::string &name) const
     }
     return nullptr;
 }
-GameObjectPool &GameWorld::GetOrCreatePool(const std::string &name, const std::string &prefabPath, size_t preloadCount)
+GameObjectPool &GameWorld::GetOrCreatePool(const std::string &name, const std::string &tag, const std::string &prefabPath, size_t preloadCount)
 {
     if (m_pools.find(name) == m_pools.end())
     {
         auto pool = std::make_unique<GameObjectPool>(prefabPath, *this);
         if (preloadCount > 0)
-            pool->Preload(preloadCount);
+            pool->Preload(preloadCount, name, tag);
         m_pools[name] = std::move(pool);
-        std::cout << "[GameWorld]: Created pool: " << name << " using prefab: " << prefabPath << std::endl;
+
+        if (__SHOWINFO__)
+            std::cout << "[GameWorld]: Created pool: " << name << " using prefab: " << prefabPath << std::endl;
     }
     return *m_pools[name];
 }

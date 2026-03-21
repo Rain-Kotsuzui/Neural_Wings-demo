@@ -56,11 +56,11 @@
                                 "fs": "assets/shaders/lighting/lighting.fs",
                                 "emissive": {
                                     "color": [
-                                        100,
-                                        100,
-                                        100
+                                        255,
+                                        255,
+                                        0
                                     ],
-                                    "intensity": 0.5
+                                    "intensity": 3.0
                                 },
                                 "blendMode": "NONE",
                                 "depthWrite": true,
@@ -138,21 +138,6 @@
                         "maxDist": 40.0,
                         "multiVoice": 12
                     }
-                }
-            }
-        },
-        {
-            "ScriptComponent": {
-                "PlayerControlScript": {
-                    "Thrust": 3000,
-                    "LiftCoefficient": 0.01,
-                    "DragCoefficient": 0.1,
-                    "PitchPower": 200,
-                    "YawPower": 200,
-                    "RollPower": 400,
-                    "ZoomSpeed": 0.1,
-                    "MinCamDist": 4,
-                    "MaxCamDist": 50
                 }
             }
         },

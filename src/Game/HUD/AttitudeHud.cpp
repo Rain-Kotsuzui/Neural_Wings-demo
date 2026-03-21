@@ -3,6 +3,7 @@
 #include "Engine/Core/Components/Components.h"
 #include "Engine/Network/Client/NetworkClient.h"
 #include "Engine/Network/Sync/NetworkSyncComponent.h"
+#include "Engine/System/Ray/mRay.h"
 #include <cmath>
 
 AttitudeHud::AttitudeHud(GameWorld *world) : m_world(world) {}
@@ -30,6 +31,9 @@ void AttitudeHud::Draw()
 
     const auto &tf = player->GetComponent<TransformComponent>();
     const auto &rb = player->GetComponent<RigidbodyComponent>();
+    auto *mainCam = m_world->GetCameraManager().GetMainCamera();
+    if (!mainCam)
+        return;
 
     float airspeed = rb.velocity.Length();
     float speedFactor = std::clamp(airspeed / 100.0f, 0.0f, 1.0f);
@@ -37,6 +41,7 @@ void AttitudeHud::Draw()
     float dynamicLadderWidth = m_ladderWidth * (1.0f - speedFactor * 0.9f);
     float dynamicLadderGap = m_ladderGap * (1.0f - speedFactor * 0.9f);
 
+    Vector3f nosePos = tf.GetWorldPosition();
     Vector3f forward = tf.GetForward();
     Vector3f right = tf.GetRight();
     Vector3f up = tf.GetUp();
@@ -49,15 +54,50 @@ void AttitudeHud::Draw()
     float screenX = GetScreenWidth() / 2.0f;
     float screenY = GetScreenHeight() / 2.0f;
 
-    DrawRing({screenX, screenY}, 5.0f * (speedFactor * 24.0f + 1.0f), 7.0f * (speedFactor * 20.0f + 1.0f), 0, 360, 0, Fade(LIME, 0.8f));
-    DrawLineEx({(screenX - 20 * (speedFactor * 20.0f + 1.0f)), screenY}, {(screenX - 10), screenY}, 2.0f, LIME);
-    DrawLineEx({(screenX + 10), screenY}, {(screenX + 20 * (speedFactor * 20.0f + 1.0f)), screenY}, 2.0f, LIME);
+    mRay aimRay(nosePos, forward);
+    mRaycastHit hit = aimRay.Raycast(3000.0f, *m_world, player);
+    Vector3f worldAimPoint;
+    if (hit.hit)
+    {
+        worldAimPoint = hit.point;
+    }
+    else
+    {
+        worldAimPoint = nosePos + forward * 3000.0f;
+    }
+    Vector3f toPoint = (worldAimPoint - mainCam->Position()).Normalized();
+    float dotProduct = toPoint * mainCam->Direction();
+    Vector2 aimScreenPos;
+    if (dotProduct > 0)
+    {
+        aimScreenPos = GetWorldToScreen(worldAimPoint, mainCam->GetRawCamera());
+        float reticleX = aimScreenPos.x;
+        float reticleY = aimScreenPos.y;
+        DrawRing({reticleX, reticleY},
+                 5.0f * (speedFactor * 6.0f + 1.0f),
+                 7.0f * (speedFactor * 5.0f + 1.0f),
+                 0, 360, 0, Fade(RED, 0.8f));
+        float lineLen = 15.0f * (speedFactor * 2.0f + 1.0f);
+        DrawLineEx({reticleX - lineLen - 5, reticleY}, {reticleX - 5, reticleY}, 2.0f, RED);
+        DrawLineEx({reticleX + 5, reticleY}, {reticleX + lineLen + 5, reticleY}, 2.0f, RED);
+    }
+
+    mRay camRay(mainCam->getPosition(), mainCam->getDirection());
+    hit = camRay.Raycast(3000.0f, *m_world, player);
+    Color color = YELLOW;
+    if (hit.hit)
+    {
+        color = RED;
+    }
+    DrawRing({screenX, screenY}, 0.3f * (speedFactor * 30.0f + 1.0f), 1.0f * (speedFactor * 20.0f + 1.0f), 0, 360, 0, color);
+    DrawLineEx({(screenX - 5 * (speedFactor * 20.0f + 1.0f)), screenY}, {(screenX - 2), screenY}, 2.0f, color);
+    DrawLineEx({(screenX + 2), screenY}, {(screenX + 5 * (speedFactor * 20.0f + 1.0f)), screenY}, 2.0f, color);
 
     int centerStep = static_cast<int>(pitchDeg / dynamicLadderGap) * static_cast<int>(dynamicLadderGap);
     int dynamicFovLimit = static_cast<int>(m_fovLimit * (1.0f + speedFactor * 10.5f));
 
     float horizonWidth = dynamicLadderWidth * 6.0f;
-    DrawHorizonLine(pitchDeg, rollRad, screenX, screenY, horizonWidth, GREEN, dynamicPixelsPerDegree);
+    DrawHorizonLine(pitchDeg, rollRad, screenX, screenY, horizonWidth, YELLOW, dynamicPixelsPerDegree);
 
     for (int step = centerStep - dynamicFovLimit; step <= centerStep + dynamicFovLimit; step += (int)m_ladderGap)
     {
@@ -66,7 +106,7 @@ void AttitudeHud::Draw()
         if (step == 0)
             continue;
         float width = dynamicLadderWidth;
-        Color color = Fade(LIME, 0.7f);
+        Color color = Fade(YELLOW, 0.7f);
         DrawPitchLine(pitchDeg, rollRad, (float)step, screenX, screenY, width, color, dynamicPixelsPerDegree);
     }
 }

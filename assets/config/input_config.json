@@ -1,6 +1,12 @@
 {
     "keybindings": [
         {
+            "action": "Reset",
+            "keys": [
+                "P"
+            ]
+        },
+        {
             "action": "Forward",
             "keys": [
                 "UP"
@@ -53,18 +59,36 @@
             "keys": [
                 "LEFT_CONTROL"
             ]
+        },
+        {
+            "action": "MainView",
+            "keys": [
+                "MOUSE_MIDDLE_BUTTON"
+            ]
+        },
+        {
+            "action": "SwitchWeaponPrev",
+            "keys": [
+                "Z"
+            ]
+        },
+        {
+            "action": "SwitchWeaponNext",
+            "keys": [
+                "X"
+            ]
         }
     ],
     "axisbindings": [
         {
             "axis": "LookHorizontal",
             "type": "MouseX",
-            "sensitivity": 0.2
+            "sensitivity": 0.1
         },
         {
             "axis": "LookVertical",
             "type": "MouseY",
-            "sensitivity": 0.2,
+            "sensitivity": 0.1,
             "invert": true
         },
         {

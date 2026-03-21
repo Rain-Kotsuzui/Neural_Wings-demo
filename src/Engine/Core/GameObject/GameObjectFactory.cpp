@@ -1,4 +1,3 @@
-#pragma once
 #include "GameObjectFactory.h"
 #include "Engine/Math/Math.h"
 #include "Engine/Core/Components/Components.h"
@@ -112,11 +111,40 @@ void GameObjectFactory::ParseAudioComponent(GameWorld &gameWorld, GameObject &ga
     }
 }
 
+renderAABB GameObjectFactory::GetMeshAABB(const Mesh &mesh)
+{
+    renderAABB aabb;
+    if (__SHOWINFO__)
+        std::cout << "[GameObjectFactory]:mesh vertex count: " << mesh.vertexCount << std::endl;
+    if (mesh.vertices != NULL)
+    {
+        aabb.min = Vector3f::Min(aabb.min, Vector3f(mesh.vertices[0], mesh.vertices[1], mesh.vertices[2]));
+        aabb.max = Vector3f::Max(aabb.max, Vector3f(mesh.vertices[0], mesh.vertices[1], mesh.vertices[2]));
+
+        for (int i = 1; i < mesh.vertexCount; i++)
+        {
+            aabb.min = Vector3f::Min(aabb.min, Vector3f(mesh.vertices[i * 3], mesh.vertices[i * 3 + 1], mesh.vertices[i * 3 + 2]));
+            aabb.max = Vector3f::Max(aabb.max, Vector3f(mesh.vertices[i * 3], mesh.vertices[i * 3 + 1], mesh.vertices[i * 3 + 2]));
+        }
+    }
+
+    return aabb;
+}
 void GameObjectFactory::ParseRenderComponent(GameWorld &gameWorld, GameObject &gameObject, const json &prefab)
 {
     auto &rd = gameObject.AddComponent<RenderComponent>();
     auto &rm = gameWorld.GetResourceManager();
     rd.model = rm.GetModel(prefab.value("model", "primitive://cube"));
+    if (rd.model.meshCount > 0)
+    {
+        rd.localAABB = GetMeshAABB(rd.model.meshes[0]);
+        for (int i = 1; i < rd.model.meshCount; i++)
+        {
+            renderAABB mBox = GetMeshAABB(rd.model.meshes[i]);
+            rd.localAABB.min = Vector3f::Min(rd.localAABB.min, mBox.min);
+            rd.localAABB.max = Vector3f::Max(rd.localAABB.max, mBox.max);
+        }
+    }
 
     rd.isVisible = prefab.value("isVisible", true);
     rd.showWires = prefab.value("showWires", false);
@@ -125,7 +153,10 @@ void GameObjectFactory::ParseRenderComponent(GameWorld &gameWorld, GameObject &g
     rd.showVol = prefab.value("showVol", false);
     rd.showCenter = prefab.value("showCenter", false);
     rd.castShadows = prefab.value("castShadows", true);
-
+    if (prefab.contains("baseColor"))
+    {
+        rd.totalBaseColor = JsonParser::ToVector4f(prefab["baseColor"]);
+    }
     if (prefab.contains("defaultMaterial"))
     {
         auto &matData = prefab["defaultMaterial"];
@@ -195,11 +226,11 @@ void GameObjectFactory::ParseRigidBodyComponent(GameObject &gameObject, const js
         std::cerr << "Unknown collider type: " << colliderType << std::endl;
 
     if (prefab.contains("hitBox"))
-    {
         rb.SetHitbox(JsonParser::ToVector3f(prefab["hitBox"]));
-    }
     else
         rb.SetHitbox(tf.GetLocalScale());
+
+    rb.Collidable = prefab.value("isCollidable", true);
 }
 void GameObjectFactory::ParseScriptComponent(GameWorld &gameWorld, GameObject &gameObject, const json &prefab)
 {

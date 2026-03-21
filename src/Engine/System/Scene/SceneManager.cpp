@@ -77,8 +77,9 @@ void SceneManager::ParseGameObjectPools(const json &objectsPools, GameWorld &gam
     {
         std::string poolName = poolData["name"];
         std::string prefab = poolData["prefab"];
+        std::string tag = poolData.value("tag", "Untagged");
         int poolSize = poolData.value("count", 1);
-        gameWorld.GetOrCreatePool(poolName, prefab, poolSize);
+        gameWorld.GetOrCreatePool(poolName, tag, prefab, poolSize);
     }
 }
 
@@ -106,13 +107,18 @@ void SceneManager::ParseEntity(const json &entityData, GameWorld &gameWorld, Gam
     if (entityData.contains("scale"))
     {
         // 逐分量相乘
-        tf.SetLocalScale(tf.GetLocalScale() & JsonParser::ToVector3f(entityData["scale"]));
+        Vector3f scale = JsonParser::ToVector3f(entityData["scale"]);
+        tf.SetLocalScale(tf.GetLocalScale() & scale);
         if (obj.HasComponent<RigidbodyComponent>())
         {
             auto &rb = obj.GetComponent<RigidbodyComponent>();
-            // rb.SetHitbox(rb.Get tf.GetLocalScale());
-            rb.scaleHitboxBox(tf.GetLocalScale());
+            rb.ScaleHitbox(scale);
         }
+        // if (obj.HasComponent<RenderComponent>())
+        // {
+        //     auto &render = obj.GetComponent<RenderComponent>();
+        //     render.scale = render.scale & tf.GetLocalScale();
+        // }
     }
 
     if (entityData.contains("physics"))
@@ -131,6 +137,10 @@ void SceneManager::ParseEntity(const json &entityData, GameWorld &gameWorld, Gam
     {
         AddParticle(gameWorld, obj, entityData["particles"]);
     }
+    if (entityData.contains("light"))
+    {
+        AddLight(obj, entityData["light"], gameWorld);
+    }
 
     if (parent != nullptr)
     {
@@ -146,6 +156,38 @@ void SceneManager::ParseEntity(const json &entityData, GameWorld &gameWorld, Gam
     }
     obj.SetActive(entityData.value("isActive", true));
 }
+void SceneManager::AddLight(GameObject &gameObject, const json &lightData, GameWorld &gameWorld)
+{
+    if (!gameObject.HasComponent<LightComponent>())
+        gameObject.AddComponent<LightComponent>();
+    auto &light = gameObject.GetComponent<LightComponent>();
+    light.owner = &gameObject;
+    std::string typeStr = lightData.value("type", "Directional");
+    if (typeStr == "POINT")
+    {
+        light.type = LightType::Point;
+    }
+    else if (typeStr == "DIRECTIONAL")
+    {
+        light.type = LightType::Directional;
+    }
+
+    if (lightData.contains("color"))
+        light.color = JsonParser::ToVector3f(lightData["color"]);
+    light.intensity = lightData.value("intensity", 1.0f);
+
+    // direction属性
+    if (lightData.contains("direction"))
+    {
+        light.direction = JsonParser::ToVector3f(lightData["direction"]);
+    }
+    // point属性
+    light.range = lightData.value("range", 10.0f);
+    light.attenuation = lightData.value("attenuation", 1.0f);
+
+    light.castShadows = lightData.value("shadows", false);
+    light.shadowBias = lightData.value("shadowBias", 0.005f);
+}
 void SceneManager::AddShaders(GameObject &gameObject, const json &renderData, GameWorld &gameWorld)
 {
     auto &rd = gameObject.GetComponent<RenderComponent>();
@@ -153,6 +195,8 @@ void SceneManager::AddShaders(GameObject &gameObject, const json &renderData, Ga
 
     if (renderData.contains("renderScale"))
         rd.scale = rd.scale & JsonParser::ToVector3f(renderData["renderScale"]);
+    if (renderData.contains("baseColor"))
+        rd.totalBaseColor = JsonParser::ToVector4f(renderData["baseColor"]);
 
     rd.isVisible = renderData.value("isVisible", true);
     rd.showWires = renderData.value("showWires", false);
@@ -197,15 +241,20 @@ void SceneManager::AddRigidbody(GameObject &gameObject, const json &rigidData)
         return;
     }
     auto &rb = gameObject.GetComponent<RigidbodyComponent>();
+    auto &tf = gameObject.GetComponent<TransformComponent>();
+
     rb.mass = rigidData.value("mass", rb.mass);
     rb.drag = rigidData.value("drag", rb.drag);
     rb.angularDrag = rigidData.value("angularDrag", rb.angularDrag);
     rb.elasticity = rigidData.value("elasticity", rb.elasticity);
-
+    rb.Collidable = rigidData.value("collidable", rb.Collidable);
     if (rigidData.contains("velocity"))
         rb.velocity = JsonParser::ToVector3f(rigidData["velocity"]);
     if (rigidData.contains("angularVelocity"))
         rb.angularVelocity = JsonParser::ToVector3f(rigidData["angularVelocity"]);
+
+    if (rigidData.contains("hitBox"))
+        rb.SetHitbox(JsonParser::ToVector3f(rigidData["hitBox"]));
 }
 
 void SceneManager::AddScripts(GameWorld &gameWorld, GameObject &gameObject, const json &scripts)

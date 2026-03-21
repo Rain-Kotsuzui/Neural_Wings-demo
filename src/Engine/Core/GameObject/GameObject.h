@@ -37,6 +37,7 @@ public:
 
     unsigned int GetID() const;
     AABB GetWorldAABB(Vector3f (*outCorners)[8] = nullptr) const;
+    renderAABB GetWorldRenderAABB() const;
 
     void SetName(const std::string &name);
     void SetTag(const std::string &tag);
@@ -73,7 +74,9 @@ T &GameObject::AddComponent(TArgs &&...args)
     if (HasComponent<T>())
     {
         // throw std::runtime_error("Component already exists.");
-        std::cout << "[GameObject " << this->m_id << "] Component already exists." << std::endl;
+
+        if (__SHOWINFO__)
+            std::cout << "[GameObject " << this->m_id << "] Component already exists." << std::endl;
         return GetComponent<T>();
     }
 
@@ -101,7 +104,9 @@ T &GameObject::GetComponent() const
     oss << "Component not found: type=" << typeid(T).name()
         << ", objectID=" << m_id
         << ", objectName=" << m_name;
-    std::cout << oss.str() << std::endl;
+
+    if (__SHOWINFO__)
+        std::cout << oss.str() << std::endl;
     throw std::runtime_error(oss.str());
 }
 

@@ -30,6 +30,9 @@ public:
               const std::string &renderView = "assets/view/test_view.json",
               const std::string &effectLibPath = "assets/Library/particle_effects.json");
     ~GameWorld();
+    void Reset(const std::string &sceneConfigPath = "assets/scenes/test_scene.json",
+               const std::string &renderView = "assets/view/test_view.json");
+
     void OnDestroy();
 
     GameObject &CreateGameObject();
@@ -55,6 +58,7 @@ public:
     EventManager &GetEventManager() { return *m_eventManager; };
 
     TimeManager &GetTimeManager() { return *m_timeManager; };
+    TimerManager &GetTimerManager() { return *m_timerManager; };
 
     ParticleFactory &GetParticleFactory() { return *m_particleFactory; };
     ParticleSystem &GetParticleSystem() { return *m_particleSystem; };
@@ -65,6 +69,19 @@ public:
 
     /// Inject a shared NetworkClient owned by ScreenManager.
     void SetNetworkClient(std::shared_ptr<NetworkClient> client) { m_networkClient = std::move(client); }
+
+    std::vector<GameObject *> GetEntitiesByTag(const std::string &tag)
+    {
+        std::vector<GameObject *> results;
+        for (auto *obj : m_activateGameObjects)
+        {
+            if (!obj->IsWaitingDestroy() && obj->GetTag() == tag)
+            {
+                results.push_back(obj);
+            }
+        }
+        return results;
+    }
 
     template <typename... Components>
     std::vector<GameObject *> GetEntitiesWith()
@@ -85,7 +102,7 @@ public:
 
     GameObject *FindEntityByName(const std::string &name) const;
 
-    GameObjectPool &GetOrCreatePool(const std::string &name, const std::string &prefab, size_t preloadCount = 0);
+    GameObjectPool &GetOrCreatePool(const std::string &name, const std::string &tag, const std::string &prefab, size_t preloadCount = 0);
     GameObjectPool &GetPool(const std::string &name) const;
 
 private:
@@ -93,6 +110,7 @@ private:
     void DestroyWaitingObjects();
 
     std::unique_ptr<TimeManager> m_timeManager;
+    std::unique_ptr<TimerManager> m_timerManager;
 
     unsigned m_nextObjectID = 0;
     std::vector<std::unique_ptr<GameObject>> m_gameObjects;

@@ -8,29 +8,26 @@ GameObjectPool::GameObjectPool(std::string prefab_path, GameWorld &world) : m_pr
 }
 GameObjectPool::~GameObjectPool()
 {
-    for (auto *obj : m_pool)
-    {
-        if (obj)
-            obj->OnDestroy();
-    }
     m_pool.clear();
-    std::cout << "[ObjectPool]: Pool destroyed and objects marked for cleanup." << std::endl;
+
+    if (__SHOWINFO__)
+        std::cout << "[ObjectPool]: Pool destroyed and objects marked for cleanup." << std::endl;
 }
-void GameObjectPool::Preload(size_t count)
+void GameObjectPool::Preload(size_t count, const std::string name, const std::string &tag)
 {
     for (size_t i = 0; i < count; ++i)
     {
-        GameObject &obj = GameObjectFactory::CreateFromPrefab("PoolObj", "Pool", m_prefab_path, m_world);
+        GameObject &obj = GameObjectFactory::CreateFromPrefab(name + "_" + std::to_string(i), tag, m_prefab_path, m_world);
         obj.SetActive(false);
         m_pool.push_back(&obj);
     }
 }
-GameObject *GameObjectPool::Spawn(const std::string &name, const Vector3f &position, const Quat4f &rotation)
+GameObject *GameObjectPool::Spawn(const std::string &name, const std::string &tag, const Vector3f &position, const Quat4f &rotation)
 {
     GameObject *obj = nullptr;
     if (m_pool.empty())
     {
-        obj = &GameObjectFactory::CreateFromPrefab(name, "Pool", m_prefab_path, m_world);
+        obj = &GameObjectFactory::CreateFromPrefab(name, tag, m_prefab_path, m_world);
     }
     else
     {
@@ -63,6 +60,7 @@ void GameObjectPool::Recycle(GameObject *obj)
         auto &rb = obj->GetComponent<RigidbodyComponent>();
         rb.velocity = Vector3f::ZERO;
         rb.angularVelocity = Vector3f::ZERO;
+        rb.angularMomentum = Vector3f::ZERO;
         rb.ClearForces();
     }
     if (obj->HasComponent<ScriptComponent>())
